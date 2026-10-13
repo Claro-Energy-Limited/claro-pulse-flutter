@@ -3,30 +3,46 @@ import 'package:flutter/foundation.dart';
 
 import 'api/auth_interceptor.dart';
 import 'api/claro_pulse_api.dart';
+import 'api/mock_claro_pulse_api.dart';
 import 'auth/session_expiry.dart';
 import 'auth/token_store.dart';
 import 'config/api_config.dart';
 
-/// Builds the app's shared services once, ported from the Kotlin `ServiceLocator`.
+/// The app's shared services, ported from the Kotlin `ServiceLocator`.
 ///
-/// Kept as a plain object for now, like the Kotlin app. If the team picks Riverpod
-/// or Bloc, these become providers; nothing else in `core/` needs to change.
+/// Kept as a plain object, like the Kotlin app. If the team later picks
+/// Riverpod or Bloc, these become providers; screens need little change.
 class AppServices {
-  AppServices._({
+  AppServices({
     required this.tokenStore,
     required this.sessionExpiry,
     required this.api,
+    required this.isMock,
   });
 
   final TokenStore tokenStore;
   final SessionExpiry sessionExpiry;
   final ClaroPulseApi api;
 
-  /// Call once in `main()` before `runApp`.
+  /// True when [api] is the built-in fake backend (see [useMockApi]).
+  final bool isMock;
+
+  /// Builds everything once at start-up. Never blocks for long: storage reads
+  /// have a timeout (see [TokenStore]).
   static Future<AppServices> create() async {
     final tokenStore = TokenStore();
     await tokenStore.load();
     final sessionExpiry = SessionExpiry();
+
+    if (useMockApi) {
+      debugPrint('ClaroPulse: MOCK API in use (sign in with code ${MockClaroPulseApi.otpCode})');
+      return AppServices(
+        tokenStore: tokenStore,
+        sessionExpiry: sessionExpiry,
+        api: MockClaroPulseApi(),
+        isMock: true,
+      );
+    }
 
     // Rural, poor connectivity is normal for this app: a modest bump over the
     // defaults, not a long wait for a call that was never going to succeed.
@@ -52,17 +68,17 @@ class AppServices {
         ),
       );
 
-    // Request/response logging in debug builds only, like the Kotlin app.
     if (kDebugMode) {
       dio.interceptors.add(
         LogInterceptor(requestBody: true, responseBody: true, logPrint: (o) => debugPrint('$o')),
       );
     }
 
-    return AppServices._(
+    return AppServices(
       tokenStore: tokenStore,
       sessionExpiry: sessionExpiry,
-      api: ClaroPulseApi(dio),
+      api: HttpClaroPulseApi(dio),
+      isMock: false,
     );
   }
 }
