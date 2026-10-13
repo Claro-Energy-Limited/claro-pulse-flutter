@@ -1,5 +1,3 @@
-import 'dart:ui' show FontFeature, FontVariation;
-
 import 'package:flutter/painting.dart';
 
 /// Bundled in `assets/fonts` (declared in pubspec.yaml), not downloaded at runtime,

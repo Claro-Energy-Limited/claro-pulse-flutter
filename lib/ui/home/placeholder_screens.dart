@@ -9,8 +9,7 @@ import '../devices/device_kind.dart';
 
 // TEMPORARY. Each widget here is replaced by the real screen in a later phase:
 //   HomeTabPlaceholder     → phase 5 (device pager, flow card, weather)
-//   DevicesTabPlaceholder  → phase 4 (device list)
-//   QrScanPlaceholder, OverlayPlaceholder → phases 4 and 6
+//   QrScanPlaceholder, OverlayPlaceholder → phase 6
 // They already receive the same data the real screens will, so the home
 // screen's loading logic can be checked now.
 
@@ -151,71 +150,6 @@ class _HomeTabPlaceholderState extends State<HomeTabPlaceholder> {
   void _show(int index) {
     setState(() => _index = index);
     widget.onPageSettled(index);
-  }
-}
-
-class DevicesTabPlaceholder extends StatelessWidget {
-  const DevicesTabPlaceholder({
-    super.key,
-    required this.devices,
-    required this.isLoading,
-    required this.error,
-    required this.onRetry,
-    required this.onDeviceTap,
-    required this.onAddDevice,
-  });
-
-  final List<MyDevice>? devices;
-  final bool isLoading;
-  final String? error;
-  final VoidCallback onRetry;
-  final ValueChanged<MyDevice> onDeviceTap;
-  final VoidCallback onAddDevice;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.xl),
-      children: [
-        const SizedBox(height: ClaroSpacing.lg),
-        Text('Devices', style: ClaroType.title),
-        const SizedBox(height: ClaroSpacing.lg),
-        if (isLoading)
-          _spinner
-        else if (error != null)
-          _errorWithRetry(error!, onRetry)
-        else
-          for (final d in devices ?? const <MyDevice>[])
-            Padding(
-              padding: const EdgeInsets.only(bottom: ClaroSpacing.sm),
-              child: GestureDetector(
-                onTap: () => onDeviceTap(d),
-                child: _panel(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(d.deviceUid, style: ClaroType.subtitle),
-                            Text(
-                              d.addressLine ?? '',
-                              style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(_kindLabel(d), style: ClaroType.label.copyWith(color: ClaroColors.mint)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        const SizedBox(height: ClaroSpacing.lg),
-        ClaroPrimaryButton(text: 'Add a device', onPressed: onAddDevice),
-        _note('Full Devices tab arrives in phase 4.'),
-      ],
-    );
   }
 }
 

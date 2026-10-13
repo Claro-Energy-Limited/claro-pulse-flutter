@@ -236,7 +236,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         duration: ClaroMotion.base,
                         layoutBuilder: (current, previous) => Stack(
                           alignment: Alignment.topCenter,
-                          children: [...previous, if (current != null) current],
+                          children: [...previous, ?current],
                         ),
                         transitionBuilder: _transition,
                         child: KeyedSubtree(key: ValueKey(_step), child: _stepContent()),

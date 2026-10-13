@@ -8,9 +8,14 @@ phone number + OTP, see your solar pump / inverter devices, their live readings
 and activity charts, and add a device by QR scan or manual entry.
 
 - Flutter project (this repo): `C:\Claro-Pulse-Flutter`
-- Kotlin original (read-only reference): `C:\Claro-Pulse`
+- Kotlin original (read-only reference): `C:\Claro-Pulse` on the user's PC
   - Code: `C:\Claro-Pulse\app\src\main\java\in\claroenergy\claropulse\`
   - Resources: `C:\Claro-Pulse\app\src\main\res\`
+  - **Claude Code cannot access the Kotlin source** (it is not in any repo this
+    session can reach). Instead, each remaining phase's Kotlin behaviour is written
+    up in **`port-specs/phase-N-*.md`** (e.g. `port-specs/phase-4-devices.md`).
+    Treat those specs as the source of truth wherever this file says to read the
+    Kotlin code. If a spec doesn't cover something, ask rather than guess.
 - App ID: `in.claroenergy.claropulse` (same as the Kotlin app, so the Flutter
   app can replace it on phones). Do not change it.
 - Android only. No iOS, web or desktop.
@@ -26,7 +31,8 @@ app on an Android emulator ("Medium Phone API 37.0") from Android Studio.
 
 ## How to work
 
-1. **Read the Kotlin file(s) first.** Port behaviour exactly, including loading,
+1. **Read the phase spec in `port-specs/` first** (it stands in for the Kotlin
+   files). Port behaviour exactly, including loading,
    error, empty and "no data" states. Keep the reasoning from the Kotlin doc
    comments in the Dart doc comments (shortened is fine).
 2. **Say so explicitly when you deviate** from the Kotlin app (a code comment

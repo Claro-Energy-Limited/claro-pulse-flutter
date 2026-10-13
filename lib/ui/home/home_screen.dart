@@ -7,6 +7,8 @@ import '../../core/api/api_exception.dart';
 import '../../core/api/models/device_models.dart';
 import '../../core/services.dart';
 import '../complaints/complaints_tab.dart';
+import '../devices/device_detail_screen.dart';
+import '../devices/devices_tab.dart';
 import '../icons/claro_icons.dart';
 import '../profile/profile_tab.dart';
 import 'placeholder_screens.dart';
@@ -167,9 +169,9 @@ class _HomeScreenState extends State<HomeScreen> {
             message: 'Claiming "$scannedValue" arrives in phase 6.',
             onBack: () => _setRoute(const TabsRoute()),
           ),
-        DeviceDetailRoute(:final device) => OverlayPlaceholder(
-            title: device.deviceUid,
-            message: 'The device detail screen arrives in phase 4.',
+        DeviceDetailRoute(:final device) => DeviceDetailScreen(
+            device: device,
+            api: widget.services.api,
             onBack: () => _setRoute(const TabsRoute()),
           ),
         TabsRoute() => _tabsScaffold(),
@@ -224,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case HomeTab.devices:
         return SafeArea(
           bottom: false,
-          child: DevicesTabPlaceholder(
+          child: DevicesTab(
             devices: _devices,
             isLoading: _devices == null && _devicesError == null,
             error: _devicesError,

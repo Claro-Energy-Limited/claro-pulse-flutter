@@ -83,7 +83,11 @@ void main() {
 
     await tester.tap(find.text('CP-INV-0087'));
     await tester.pumpAndSettle();
-    expect(find.text('The device detail screen arrives in phase 4.'), findsOneWidget);
+    expect(
+      find.text('Historical charts will appear here once this device starts reporting extended telemetry.'),
+      findsOneWidget,
+    );
+    expect(find.text('Your devices'), findsNothing, reason: 'the detail screen replaces the tabs');
 
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
@@ -95,7 +99,8 @@ void main() {
     await tester.tap(find.text('Devices'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Add a device'));
+    // "Add a device" only appears in the empty state; with devices, it is the header button.
+    await tester.tap(find.byTooltip('Add device'));
     await tester.pumpAndSettle();
     expect(find.text('Scan device QR'), findsOneWidget);
 
