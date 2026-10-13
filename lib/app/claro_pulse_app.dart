@@ -4,7 +4,7 @@ import '../core/api/mock_claro_pulse_api.dart';
 import '../core/services.dart';
 import '../ui/auth/auth_screen.dart';
 import '../ui/components/claro_logo_mark.dart';
-import '../ui/home/home_placeholder_screen.dart';
+import '../ui/home/home_screen.dart';
 import 'theme/claro_colors.dart';
 import 'theme/claro_dimens.dart';
 import 'theme/claro_theme.dart';
@@ -78,10 +78,10 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
     if (services == null) return const _Splash(key: ValueKey('splash'));
 
     if (_signedIn) {
-      return HomePlaceholderScreen(
+      return HomeScreen(
         key: const ValueKey('home'),
         services: services,
-        onSignOut: _signOut,
+        onLogout: _signOut,
       );
     }
     return AuthScreen(

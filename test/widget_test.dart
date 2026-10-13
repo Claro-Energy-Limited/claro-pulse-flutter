@@ -22,7 +22,7 @@ Future<AppServices> _mockServices() async {
 void main() {
   setUp(() => FlutterSecureStorage.setMockInitialValues({}));
 
-  testWidgets('full sign-in with the mock API, then sign out', (tester) async {
+  testWidgets('full sign-in with the mock API, then log out', (tester) async {
     await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices));
     await tester.pumpAndSettle();
 
@@ -53,17 +53,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("You're signed in"), findsOneWidget);
 
-    // After the confirmation beat, home appears with the account's devices.
+    // After the confirmation beat, home appears with the account's first device.
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
-    expect(find.text('Signed in'), findsOneWidget);
-    expect(find.text('+91 9876543210'), findsOneWidget);
+    expect(find.text('My Site'), findsOneWidget);
     expect(find.text('CP-PUMP-0142'), findsOneWidget);
-    expect(find.text('MOCK DATA'), findsOneWidget);
 
-    // Sign out returns to the sign-in screen.
-    await tester.scrollUntilVisible(find.text('Sign out'), 200);
-    await tester.tap(find.text('Sign out'));
+    // Profile shows the number; Log out returns to the sign-in screen.
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    expect(find.text('+91 9876543210'), findsOneWidget);
+    await tester.tap(find.text('Log out'));
     await tester.pumpAndSettle();
     expect(find.text('Sign in'), findsOneWidget);
   });
@@ -77,7 +77,9 @@ void main() {
     await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices));
     await tester.pumpAndSettle();
 
-    expect(find.text('Signed in'), findsOneWidget);
+    expect(find.text('My Site'), findsOneWidget);
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
     expect(find.text('+91 9000000001'), findsOneWidget);
   });
 
@@ -88,7 +90,7 @@ void main() {
 
     await tester.pumpWidget(ClaroPulseApp(createServices: create));
     await tester.pumpAndSettle();
-    expect(find.text('Signed in'), findsOneWidget);
+    expect(find.text('My Site'), findsOneWidget);
 
     services.sessionExpiry.signalExpired();
     await tester.pumpAndSettle();
