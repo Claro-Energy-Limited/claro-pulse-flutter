@@ -1,122 +1,111 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'app/theme/claro_colors.dart';
+import 'app/theme/claro_dimens.dart';
+import 'app/theme/claro_theme.dart';
+import 'app/theme/claro_type.dart';
+import 'core/config/api_config.dart';
+import 'core/services.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final services = await AppServices.create();
+  runApp(ClaroPulseApp(signedIn: services.tokenStore.isSignedIn));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ClaroPulseApp extends StatelessWidget {
+  const ClaroPulseApp({super.key, required this.signedIn});
 
-  // This widget is the root of your application.
+  final bool signedIn;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'Claro Pulse',
+      debugShowCheckedModeBanner: false,
+      theme: ClaroTheme.dark,
+      home: ThemeCheckScreen(signedIn: signedIn),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+/// Temporary screen to confirm theme, fonts and assets are wired correctly.
+/// Replace it with the real sign-in and home screens.
+class ThemeCheckScreen extends StatelessWidget {
+  const ThemeCheckScreen({super.key, required this.signedIn});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  final bool signedIn;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(ClaroSpacing.xl),
           children: [
-            const Text('You have pushed the button this many times:'),
+            Text('Claro Pulse', style: ClaroType.displayLg),
+            const SizedBox(height: ClaroSpacing.sm),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              'Theme check: Plus Jakarta Sans for text, JetBrains Mono for numbers.',
+              style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
             ),
+            const SizedBox(height: ClaroSpacing.xl),
+            Container(
+              padding: const EdgeInsets.all(ClaroSpacing.lg),
+              decoration: BoxDecoration(
+                color: ClaroColors.inkPanel,
+                borderRadius: ClaroRadius.lg,
+                border: Border.all(color: ClaroColors.borderDark),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Flow rate', style: ClaroType.label.copyWith(color: ClaroColors.onInkMuted)),
+                  const SizedBox(height: ClaroSpacing.xs),
+                  Text('288.0 L/min', style: ClaroType.readoutXl.copyWith(color: ClaroColors.mint)),
+                  const SizedBox(height: ClaroSpacing.md),
+                  const Row(
+                    children: [
+                      _Pill(label: 'Online', color: ClaroColors.mint),
+                      SizedBox(width: ClaroSpacing.sm),
+                      _Pill(label: 'Dry run', color: ClaroColors.fault),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: ClaroSpacing.xl),
+            ClipRRect(
+              borderRadius: ClaroRadius.lg,
+              child: Image.asset('assets/images/device_hero_pump.png', height: 180, fit: BoxFit.cover),
+            ),
+            const SizedBox(height: ClaroSpacing.xl),
+            FilledButton(onPressed: () {}, child: const Text('Primary button')),
+            const SizedBox(height: ClaroSpacing.xl),
+            Text('Signed in: ${signedIn ? 'yes' : 'no'}', style: ClaroType.readoutSm),
+            Text('API: $apiBaseUrl', style: ClaroType.readoutSm.copyWith(color: ClaroColors.onInkMuted)),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.md, vertical: ClaroSpacing.xs),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: ClaroRadius.pill,
       ),
+      child: Text(label, style: ClaroType.label.copyWith(color: color)),
     );
   }
 }
