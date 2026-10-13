@@ -11,9 +11,10 @@ import '../devices/device_detail_screen.dart';
 import '../devices/devices_tab.dart';
 import '../icons/claro_icons.dart';
 import '../profile/profile_tab.dart';
+import 'home_tab.dart';
 import 'placeholder_screens.dart';
 
-enum HomeTab { home, devices, complaints, profile }
+enum HomeNavTab { home, devices, complaints, profile }
 
 /// Full-screen overlays that replace the tabs entirely. Each has exactly one
 /// way out, so a plain value is enough; no navigation library needed.
@@ -66,7 +67,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  HomeTab _tab = HomeTab.home;
+  HomeNavTab _tab = HomeNavTab.home;
   HomeRoute _route = const TabsRoute();
 
   List<MyDevice>? _devices;
@@ -78,6 +79,11 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<String, DeviceStatus> _statusById = {};
   final Map<String, String> _statusErrorById = {};
 
+  /// Devices whose status request is in flight. Not in the Kotlin app: the
+  /// pager reports page 0 on first show while the first device's status is
+  /// already loading, and this stops that becoming a second identical request.
+  final Set<String> _statusLoading = {};
+
   @override
   void initState() {
     super.initState();
@@ -85,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadStatusFor(String deviceId) async {
+    if (!_statusLoading.add(deviceId)) return;
     setState(() => _statusErrorById.remove(deviceId));
     try {
       final status = await widget.services.api.getDeviceStatus(deviceId);
@@ -93,6 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _statusErrorById[deviceId] = e.message);
+    } finally {
+      _statusLoading.remove(deviceId);
     }
   }
 
@@ -184,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: ClaroColors.ink,
       body: Column(
         children: [
-          if (_tab == HomeTab.home)
+          if (_tab == HomeNavTab.home)
             SafeArea(
               bottom: false,
               child: Padding(
@@ -201,14 +210,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _tabBody() {
     switch (_tab) {
-      case HomeTab.home:
+      case HomeNavTab.home:
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: ClaroSpacing.lg),
-              HomeTabPlaceholder(
+              HomeTab(
                 devices: _devices,
                 devicesError: _devicesError,
                 claims: _claims,
@@ -223,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         );
-      case HomeTab.devices:
+      case HomeNavTab.devices:
         return SafeArea(
           bottom: false,
           child: DevicesTab(
@@ -235,9 +244,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onAddDevice: () => _setRoute(const QrScanRoute()),
           ),
         );
-      case HomeTab.complaints:
+      case HomeNavTab.complaints:
         return const SafeArea(bottom: false, child: ComplaintsTab());
-      case HomeTab.profile:
+      case HomeNavTab.profile:
         return SafeArea(
           bottom: false,
           child: ProfileTab(phone: widget.services.tokenStore.phone, onLogout: widget.onLogout),
@@ -300,8 +309,8 @@ class _HomeHeader extends StatelessWidget {
 class _BottomNavBar extends StatelessWidget {
   const _BottomNavBar({required this.selected, required this.onSelect});
 
-  final HomeTab selected;
-  final ValueChanged<HomeTab> onSelect;
+  final HomeNavTab selected;
+  final ValueChanged<HomeNavTab> onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -319,26 +328,26 @@ class _BottomNavBar extends StatelessWidget {
             children: [
               _NavItem(
                 label: 'Home',
-                selected: selected == HomeTab.home,
-                onTap: () => onSelect(HomeTab.home),
+                selected: selected == HomeNavTab.home,
+                onTap: () => onSelect(HomeNavTab.home),
                 icon: (c) => NavHomeIcon(size: 22, color: c),
               ),
               _NavItem(
                 label: 'Devices',
-                selected: selected == HomeTab.devices,
-                onTap: () => onSelect(HomeTab.devices),
+                selected: selected == HomeNavTab.devices,
+                onTap: () => onSelect(HomeNavTab.devices),
                 icon: (c) => NavGridIcon(size: 22, color: c),
               ),
               _NavItem(
                 label: 'Complaints',
-                selected: selected == HomeTab.complaints,
-                onTap: () => onSelect(HomeTab.complaints),
+                selected: selected == HomeNavTab.complaints,
+                onTap: () => onSelect(HomeNavTab.complaints),
                 icon: (c) => Icon(Icons.warning, color: c, size: 22),
               ),
               _NavItem(
                 label: 'Profile',
-                selected: selected == HomeTab.profile,
-                onTap: () => onSelect(HomeTab.profile),
+                selected: selected == HomeNavTab.profile,
+                onTap: () => onSelect(HomeNavTab.profile),
                 icon: (c) => NavProfileIcon(size: 22, color: c),
               ),
             ],

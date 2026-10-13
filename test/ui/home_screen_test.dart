@@ -19,6 +19,13 @@ class _ScriptedApi extends MockClaroPulseApi {
   bool failDevices;
   final bool noDevices;
   int deviceCalls = 0;
+  final Map<String, int> statusCalls = {};
+
+  @override
+  Future<DeviceStatus> getDeviceStatus(String deviceId) {
+    statusCalls[deviceId] = (statusCalls[deviceId] ?? 0) + 1;
+    return super.getDeviceStatus(deviceId);
+  }
 
   @override
   Future<List<MyDevice>> listMyDevices() async {
@@ -38,7 +45,15 @@ Future<void> _pumpHome(WidgetTester tester, ClaroPulseApi api, {VoidCallback? on
     theme: ClaroTheme.dark,
     home: HomeScreen(services: services, onLogout: onLogout ?? () {}),
   ));
-  await tester.pumpAndSettle();
+  await _settle(tester);
+}
+
+/// The running pump's hero card animates forever, so `pumpAndSettle` would
+/// never return while the Home tab shows it. Pump a fixed time instead.
+Future<void> _settle(WidgetTester tester) async {
+  for (var i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 void main() {
@@ -53,7 +68,25 @@ void main() {
       expect(find.text(tab), findsOneWidget);
     }
     expect(find.text('CP-PUMP-0142'), findsOneWidget);
-    expect(find.text('RUNNING · ONLINE'), findsOneWidget);
+    expect(find.text('Pump running'), findsOneWidget);
+  });
+
+  testWidgets('swiping the Home pager reaches the inverter and loads its status once', (tester) async {
+    final api = _ScriptedApi();
+    await _pumpHome(tester, api);
+    expect(api.statusCalls, {'mock-pump-1': 1}, reason: 'page 0 is not fetched twice');
+
+    await tester.fling(find.text('CP-PUMP-0142'), const Offset(-400, 0), 1000);
+    await _settle(tester);
+    expect(find.text('CP-INV-0087'), findsOneWidget);
+    expect(find.text('Full readings coming soon'), findsOneWidget);
+    expect(api.statusCalls, {'mock-pump-1': 1, 'mock-inverter-1': 1});
+
+    // Swiping back reuses the pump's cached status.
+    await tester.fling(find.text('CP-INV-0087'), const Offset(400, 0), 1000);
+    await _settle(tester);
+    expect(find.text('Pump running'), findsOneWidget);
+    expect(api.statusCalls, {'mock-pump-1': 1, 'mock-inverter-1': 1});
   });
 
   testWidgets('switching tabs', (tester) async {
@@ -121,7 +154,7 @@ void main() {
 
     api.failDevices = false;
     await tester.tap(find.text('Try again'));
-    await tester.pumpAndSettle();
+    await _settle(tester);
     expect(find.text('CP-PUMP-0142'), findsOneWidget);
     expect(api.deviceCalls, 2);
   });

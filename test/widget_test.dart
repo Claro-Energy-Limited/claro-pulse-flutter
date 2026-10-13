@@ -54,8 +54,9 @@ void main() {
     expect(find.text("You're signed in"), findsOneWidget);
 
     // After the confirmation beat, home appears with the account's first device.
+    // Its running hero card animates forever, so pump a fixed time rather than settle.
     await tester.pump(const Duration(seconds: 1));
-    await tester.pumpAndSettle();
+    await _settleHome(tester);
     expect(find.text('My Site'), findsOneWidget);
     expect(find.text('CP-PUMP-0142'), findsOneWidget);
 
@@ -75,7 +76,7 @@ void main() {
       'phone': '9000000001',
     });
     await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices));
-    await tester.pumpAndSettle();
+    await _settleHome(tester);
 
     expect(find.text('My Site'), findsOneWidget);
     await tester.tap(find.text('Profile'));
@@ -89,7 +90,7 @@ void main() {
     Future<AppServices> create() async => services = await _mockServices();
 
     await tester.pumpWidget(ClaroPulseApp(createServices: create));
-    await tester.pumpAndSettle();
+    await _settleHome(tester);
     expect(find.text('My Site'), findsOneWidget);
 
     services.sessionExpiry.signalExpired();
@@ -97,4 +98,12 @@ void main() {
     expect(find.text('Sign in'), findsOneWidget);
     expect(services.sessionExpiry.expired.value, isFalse);
   });
+}
+
+/// The Home tab's running pump animates forever, so `pumpAndSettle` would never
+/// return while it is showing. Pump a fixed time instead.
+Future<void> _settleHome(WidgetTester tester) async {
+  for (var i = 0; i < 20; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
