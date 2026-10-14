@@ -11,6 +11,10 @@ import 'package:claropulse/core/auth/session_expiry.dart';
 import 'package:claropulse/core/auth/token_store.dart';
 import 'package:claropulse/core/services.dart';
 import 'package:claropulse/ui/home/home_screen.dart';
+import 'package:claropulse/ui/onboarding/camera_permission.dart';
+import 'package:claropulse/ui/onboarding/qr_scanner_screen.dart';
+import 'package:claropulse/ui/onboarding/camera_permission.dart';
+import 'package:claropulse/ui/onboarding/qr_scanner_screen.dart';
 
 /// The mock, but with a device list that fails or is empty, to check those states.
 class _ScriptedApi extends MockClaroPulseApi {
@@ -128,6 +132,8 @@ void main() {
   });
 
   testWidgets('add device goes to scan, manual entry, and back', (tester) async {
+    QrScannerScreen.permissionOverride = const FixedCameraPermission(CameraAccess.denied);
+    QrScannerScreen.permissionOverride = const FixedCameraPermission(CameraAccess.denied);
     await _pumpHome(tester, MockClaroPulseApi(latency: Duration.zero));
     await tester.tap(find.text('Devices'));
     await tester.pumpAndSettle();
@@ -135,16 +141,16 @@ void main() {
     // "Add a device" only appears in the empty state; with devices, it is the header button.
     await tester.tap(find.byTooltip('Add device'));
     await tester.pumpAndSettle();
-    expect(find.text('Scan device QR'), findsOneWidget);
+    expect(find.text('Camera access needed'), findsOneWidget);
 
-    await tester.tap(find.text('Enter ID manually'));
+    await tester.tap(find.text('Enter device ID manually instead'));
     await tester.pumpAndSettle();
     expect(find.text('Enter device ID'), findsOneWidget);
 
     // Back from manual entry returns to the scanner, not the tabs.
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
-    expect(find.text('Scan device QR'), findsOneWidget);
+    expect(find.text('Camera access needed'), findsOneWidget);
   });
 
   testWidgets('a failed device list shows the error, and retry recovers', (tester) async {

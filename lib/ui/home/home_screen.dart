@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-
+import '../onboarding/device_claim_screen.dart';
+import '../onboarding/manual_device_entry_screen.dart';
+import '../onboarding/qr_scanner_screen.dart';
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_type.dart';
@@ -12,7 +14,7 @@ import '../devices/devices_tab.dart';
 import '../icons/claro_icons.dart';
 import '../profile/profile_tab.dart';
 import 'home_tab.dart';
-import 'placeholder_screens.dart';
+
 
 enum HomeNavTab { home, devices, complaints, profile }
 
@@ -164,20 +166,29 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!didPop) _back();
       },
       child: switch (_route) {
-        QrScanRoute() => QrScanPlaceholder(
-            onEnterManually: () => _setRoute(const ManualEntryRoute()),
-            onClose: () => _setRoute(const TabsRoute()),
-          ),
-        ManualEntryRoute() => OverlayPlaceholder(
-            title: 'Enter device ID',
-            message: 'Manual device entry arrives in phase 6.',
-            onBack: () => _setRoute(const QrScanRoute()),
-          ),
-        ClaimConfirmRoute(:final scannedValue) => OverlayPlaceholder(
-            title: 'Confirm device',
-            message: 'Claiming "$scannedValue" arrives in phase 6.',
-            onBack: () => _setRoute(const TabsRoute()),
-          ),
+        QrScanRoute() => QrScannerScreen(
+          onScanned: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: false)),
+          onEnterManually: () => _setRoute(const ManualEntryRoute()),
+          onClose: () => _setRoute(const TabsRoute()),
+        ),
+        ManualEntryRoute() => ManualDeviceEntryScreen(
+          onSubmit: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: true)),
+          onBack: () => _setRoute(const QrScanRoute()),
+        ),
+        ClaimConfirmRoute(:final scannedValue, :final enteredManually) => DeviceClaimScreen(
+          scannedValue: scannedValue,
+          enteredManually: enteredManually,
+          api: widget.services.api,
+          onSubmitted: () {
+            // As in Kotlin: back to Home, and reload so a pending claim shows.
+            setState(() {
+              _route = const TabsRoute();
+              _tab = HomeNavTab.home;
+            });
+            _loadDevices();
+          },
+          onBack: () => _setRoute(const TabsRoute()),
+        ),
         DeviceDetailRoute(:final device) => DeviceDetailScreen(
             device: device,
             api: widget.services.api,
