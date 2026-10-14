@@ -26,35 +26,32 @@ class ClaroPrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEnabled = enabled && !loading;
-    final buttonColor = context.brandMint;
-    final textColor = isEnabled
-        ? (context.isDark ? ClaroColors.ink : ClaroColors.card)
-        : context.textSecondary;
-
     return Semantics(
       button: true,
       enabled: isEnabled,
       child: Material(
-        color: isEnabled ? buttonColor : buttonColor.withValues(alpha: 0.25),
+        color: isEnabled ? ClaroColors.mint : ClaroColors.mint.withValues(alpha: 0.25),
         borderRadius: ClaroRadius.md,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: isEnabled ? onPressed : null,
-          splashColor: textColor.withValues(alpha: 0.12),
-          highlightColor: textColor.withValues(alpha: 0.06),
+          splashColor: ClaroColors.ink.withValues(alpha: 0.12),
+          highlightColor: ClaroColors.ink.withValues(alpha: 0.06),
           child: SizedBox(
             width: double.infinity,
             height: 56,
             child: Center(
               child: loading
-                  ? SizedBox.square(
+                  ? const SizedBox.square(
                       dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: textColor),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: ClaroColors.ink),
                     )
                   : Text(
                       text,
                       style: ClaroType.subtitle.copyWith(
-                        color: textColor,
+                        // Dimmed with the fill when disabled: full ink on a faint
+                        // mint would still read as a live button.
+                        color: isEnabled ? ClaroColors.ink : ClaroColors.onInkMuted,
                       ),
                     ),
             ),

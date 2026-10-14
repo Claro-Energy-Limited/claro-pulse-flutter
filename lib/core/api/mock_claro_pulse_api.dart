@@ -42,6 +42,35 @@ class MockClaroPulseApi implements ClaroPulseApi {
   DateTime _lastStateChange = DateTime.now().toUtc().subtract(const Duration(hours: 3, minutes: 12));
 
   late final List<Complaint> _complaints = _seedComplaints();
+  late final List<PumpRun> _completedRuns = _seedRuns();
+
+  /// Litres per minute the simulated pump moves, and kWh per hour it uses.
+  static const _flowLpm = 285.0;
+  static const _kwhPerHour = 3.1;
+
+  PumpRun _runBetween(DateTime start, DateTime? end) {
+    final minutes = (end ?? DateTime.now().toUtc()).difference(start).inMinutes.clamp(0, 100000);
+    return PumpRun(
+      startedAt: start.toIso8601String(),
+      endedAt: end?.toIso8601String(),
+      waterLiters: (minutes * _flowLpm).roundToDouble(),
+      energyKwh: double.parse((minutes / 60 * _kwhPerHour).toStringAsFixed(1)),
+      avgFlowLpm: _flowLpm,
+    );
+  }
+
+  List<PumpRun> _seedRuns() {
+    final today = DateTime.now().toUtc();
+    DateTime at(int daysAgo, int hour, int minute) =>
+        DateTime.utc(today.year, today.month, today.day, hour, minute).subtract(Duration(days: daysAgo));
+    // Times are UTC; 04:35 UTC is 10:05 AM in India.
+    return [
+      _runBetween(at(1, 4, 35), at(1, 11, 0)),
+      _runBetween(at(2, 4, 20), at(2, 9, 40)),
+      _runBetween(at(3, 5, 10), at(3, 10, 15)),
+      _runBetween(at(4, 4, 45), at(4, 11, 30)),
+    ];
+  }
   late final List<AppNotification> _notifications = _seedNotifications();
 
   Future<void> _network() => latency == Duration.zero ? Future.value() : Future.delayed(latency);
@@ -52,6 +81,9 @@ class MockClaroPulseApi implements ClaroPulseApi {
     final since = _pendingSince;
     if (pending == null || since == null) return;
     if (DateTime.now().toUtc().difference(since) >= confirmDelay) {
+      final now = DateTime.now().toUtc();
+      // Stopping a running pump completes the current run.
+      if (_pumpRunning && !pending) _completedRuns.insert(0, _runBetween(_lastStateChange, now));
       _pumpRunning = pending;
       _lastStateChange = DateTime.now().toUtc();
       _pendingRunning = null;
@@ -357,6 +389,13 @@ class MockClaroPulseApi implements ClaroPulseApi {
     String ago(Duration d) => now.subtract(d).toIso8601String();
     return [
       AppNotification(
+        id: 'n5',
+        kind: NotificationKind.success,
+        title: "Yesterday's summary",
+        body: 'Your pump ran 6 h 25 min and moved 92,000 litres of water.',
+        createdAt: ago(const Duration(hours: 9)),
+      ),
+      AppNotification(
         id: 'n4',
         kind: NotificationKind.info,
         title: 'Complaint CP-1038 updated',
@@ -393,5 +432,76 @@ class MockClaroPulseApi implements ClaroPulseApi {
   Future<List<AppNotification>> listNotifications() async {
     await _network();
     return List.unmodifiable(_notifications);
+  }
+
+  // ── Runs ─────────────────────────────────────────────────────────────────
+
+  @override
+  Future<List<PumpRun>> listRecentRuns(String deviceId, {int limit = 5}) async {
+    await _network();
+    _settlePending();
+    if (deviceId != pumpId) {
+      throw const ApiException(code: 'NOT_SUPPORTED', message: "Run history isn't available for this device yet.");
+    }
+    return [
+      if (_pumpRunning) _runBetween(_lastStateChange, null),
+      ..._completedRuns,
+    ].take(limit).toList();
+  }
+
+  // ── Insights and reports ─────────────────────────────────────────────────
+
+  @override
+  Future<PumpInsights> getInsights(String deviceId) async {
+    await _network();
+    if (deviceId != pumpId) {
+      throw const ApiException(code: 'NOT_SUPPORTED', message: "Insights aren't available for this device yet.");
+    }
+    final now = DateTime.now().toUtc();
+    return PumpInsights(
+      todayCondition: WeatherCondition.sunny,
+      todayTempC: 33,
+      bestHours: '10 AM – 3 PM',
+      tomorrowCondition: WeatherCondition.partlyCloudy,
+      tomorrowTempC: 30,
+      tomorrowExpectedLiters: 68000,
+      savingsThisMonthRupees: 4850,
+      savingsTotalRupees: 38200,
+      dieselSavedLiters: 410,
+      panelsNeedCleaning: true,
+      lastCleanedOn: now.subtract(const Duration(days: 23)).toIso8601String().substring(0, 10),
+    );
+  }
+
+  @override
+  Future<MonthlyReport> getMonthlyReport(String deviceId) async {
+    await _network();
+    if (deviceId != pumpId) {
+      throw const ApiException(code: 'NOT_SUPPORTED', message: "Reports aren't available for this device yet.");
+    }
+    final now = DateTime.now().toUtc();
+    final days = now.day;
+    // Deterministic daily values, one per day so far, with one missed report.
+    final daily = <double?>[
+      for (var d = 1; d <= days; d++) d == 9 ? null : (60000 + ((d * 37) % 11) * 3200).toDouble(),
+    ];
+    final reported = daily.whereType<double>().toList();
+    final total = reported.fold<double>(0, (a, b) => a + b);
+    var bestIndex = 0;
+    for (var i = 0; i < daily.length; i++) {
+      if ((daily[i] ?? -1) > (daily[bestIndex] ?? -1)) bestIndex = i;
+    }
+    String isoDay(int day) => DateTime.utc(now.year, now.month, day).toIso8601String().substring(0, 10);
+    return MonthlyReport(
+      month: isoDay(1),
+      waterLiters: total,
+      runHours: double.parse((total / (_flowLpm * 60)).toStringAsFixed(1)),
+      energyKwh: double.parse((total / (_flowLpm * 60) * _kwhPerHour).toStringAsFixed(1)),
+      daysRun: reported.length,
+      bestDay: isoDay(bestIndex + 1),
+      bestDayLiters: daily[bestIndex] ?? 0,
+      savingsRupees: 4850,
+      dailyWaterLiters: daily,
+    );
   }
 }

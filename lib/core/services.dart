@@ -7,6 +7,7 @@ import 'api/mock_claro_pulse_api.dart';
 import 'auth/session_expiry.dart';
 import 'auth/token_store.dart';
 import 'config/api_config.dart';
+import 'settings/app_settings.dart';
 
 /// The app's shared services, ported from the Kotlin `ServiceLocator`.
 ///
@@ -18,7 +19,8 @@ class AppServices {
     required this.sessionExpiry,
     required this.api,
     required this.isMock,
-  });
+    AppSettings? settings,
+  }) : settings = settings ?? AppSettings();
 
   final TokenStore tokenStore;
   final SessionExpiry sessionExpiry;
@@ -27,11 +29,16 @@ class AppServices {
   /// True when [api] is the built-in fake backend (see [useMockApi]).
   final bool isMock;
 
+  /// App preferences such as light or dark theme.
+  final AppSettings settings;
+
   /// Builds everything once at start-up. Never blocks for long: storage reads
   /// have a timeout (see [TokenStore]).
   static Future<AppServices> create() async {
     final tokenStore = TokenStore();
     await tokenStore.load();
+    final settings = AppSettings();
+    await settings.load();
     final sessionExpiry = SessionExpiry();
 
     if (useMockApi) {
@@ -41,6 +48,7 @@ class AppServices {
         sessionExpiry: sessionExpiry,
         api: MockClaroPulseApi(),
         isMock: true,
+        settings: settings,
       );
     }
 
@@ -79,6 +87,7 @@ class AppServices {
       sessionExpiry: sessionExpiry,
       api: HttpClaroPulseApi(dio),
       isMock: false,
+      settings: settings,
     );
   }
 }

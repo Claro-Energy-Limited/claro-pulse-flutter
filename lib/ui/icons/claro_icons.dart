@@ -13,19 +13,15 @@ import '../../app/theme/claro_dimens.dart';
 typedef _IconPainterFn = void Function(Canvas canvas, Size size, Color color);
 
 class _CanvasIcon extends StatelessWidget {
-  const _CanvasIcon({required this.size, this.color, required this.draw});
+  const _CanvasIcon({required this.size, required this.color, required this.draw});
 
   final double size;
-  final Color? color;
+  final Color color;
   final _IconPainterFn draw;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = color ??
-        (Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFFFFFFFF)
-            : const Color(0xFF111110));
-    return CustomPaint(size: Size.square(size), painter: _FnPainter(draw, effectiveColor));
+    return CustomPaint(size: Size.square(size), painter: _FnPainter(draw, color));
   }
 }
 
@@ -72,9 +68,9 @@ double _rad(double degrees) => degrees * math.pi / 180;
 // ── Domain icons ────────────────────────────────────────────────────────────
 
 class SolarPanelIcon extends StatelessWidget {
-  const SolarPanelIcon({super.key, this.size = 24, this.color});
+  const SolarPanelIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -104,9 +100,9 @@ class SolarPanelIcon extends StatelessWidget {
 }
 
 class BatteryIcon extends StatelessWidget {
-  const BatteryIcon({super.key, this.size = 24, this.color});
+  const BatteryIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -139,9 +135,9 @@ class BatteryIcon extends StatelessWidget {
 }
 
 class LoadIcon extends StatelessWidget {
-  const LoadIcon({super.key, this.size = 24, this.color});
+  const LoadIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -165,9 +161,9 @@ class LoadIcon extends StatelessWidget {
 }
 
 class ClockIcon extends StatelessWidget {
-  const ClockIcon({super.key, this.size = 24, this.color});
+  const ClockIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -183,9 +179,9 @@ class ClockIcon extends StatelessWidget {
 }
 
 class WaterDropIcon extends StatelessWidget {
-  const WaterDropIcon({super.key, this.size = 24, this.color});
+  const WaterDropIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -202,9 +198,9 @@ class WaterDropIcon extends StatelessWidget {
 }
 
 class EvseIcon extends StatelessWidget {
-  const EvseIcon({super.key, this.size = 24, this.color});
+  const EvseIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -226,9 +222,9 @@ class EvseIcon extends StatelessWidget {
 }
 
 class GridTowerIcon extends StatelessWidget {
-  const GridTowerIcon({super.key, this.size = 24, this.color});
+  const GridTowerIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -255,9 +251,9 @@ class GridTowerIcon extends StatelessWidget {
 // ── Bottom navigation icons: same line language, simpler forms ────────────────
 
 class NavHomeIcon extends StatelessWidget {
-  const NavHomeIcon({super.key, this.size = 24, this.color});
+  const NavHomeIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -280,9 +276,9 @@ class NavHomeIcon extends StatelessWidget {
 }
 
 class NavAnalyticsIcon extends StatelessWidget {
-  const NavAnalyticsIcon({super.key, this.size = 24, this.color});
+  const NavAnalyticsIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -295,9 +291,9 @@ class NavAnalyticsIcon extends StatelessWidget {
 }
 
 class NavGridIcon extends StatelessWidget {
-  const NavGridIcon({super.key, this.size = 24, this.color});
+  const NavGridIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -322,9 +318,9 @@ class NavGridIcon extends StatelessWidget {
 }
 
 class NavWalletIcon extends StatelessWidget {
-  const NavWalletIcon({super.key, this.size = 24, this.color});
+  const NavWalletIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);
@@ -342,9 +338,9 @@ class NavWalletIcon extends StatelessWidget {
 }
 
 class NavProfileIcon extends StatelessWidget {
-  const NavProfileIcon({super.key, this.size = 24, this.color});
+  const NavProfileIcon({super.key, this.size = 24, this.color = _white});
   final double size;
-  final Color? color;
+  final Color color;
 
   @override
   Widget build(BuildContext context) => _CanvasIcon(size: size, color: color, draw: _draw);

@@ -1,6 +1,6 @@
 import 'package:flutter/painting.dart';
 
-import '../../app/theme/claro_colors.dart';
+import '../../app/theme/claro_palette.dart';
 import '../../core/api/models/device_models.dart';
 import '../../core/api/models/pump_models.dart';
 import '../devices/device_kind.dart';
@@ -22,11 +22,12 @@ enum PumpVisual {
   const PumpVisual(this.label);
   final String label;
 
-  Color get color => switch (this) {
-        PumpVisual.running => ClaroColors.mint,
-        PumpVisual.starting || PumpVisual.stopping => ClaroColors.warn,
-        PumpVisual.attention => ClaroColors.fault,
-        _ => ClaroColors.onInkMuted,
+  /// The status colour in the current theme (readable as text on that theme).
+  Color colorIn(ClaroPalette p) => switch (this) {
+        PumpVisual.running => p.accentText,
+        PumpVisual.starting || PumpVisual.stopping => p.warnText,
+        PumpVisual.attention => p.faultText,
+        _ => p.textMuted,
       };
 
   /// Only a pump that is actually running gets a moving indicator.

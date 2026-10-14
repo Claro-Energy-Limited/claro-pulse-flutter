@@ -20,9 +20,9 @@ class OnboardingBackButton extends StatelessWidget {
         child: Container(
           width: 36,
           height: 36,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: context.panel),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: ClaroColors.inkPanel),
           alignment: Alignment.center,
-          child: Icon(Icons.keyboard_arrow_left, color: context.textPrimary, size: 22),
+          child: const Icon(Icons.keyboard_arrow_left, color: ClaroColors.onInk, size: 22),
         ),
       ),
     );
@@ -73,7 +73,7 @@ class EnterManuallyLink extends StatelessWidget {
         padding: const EdgeInsets.all(ClaroSpacing.sm),
         child: Text(
           'Enter device ID manually instead',
-          style: ClaroType.label.copyWith(color: context.brandMint),
+          style: ClaroType.label.copyWith(color: ClaroColors.mint),
         ),
       ),
     );

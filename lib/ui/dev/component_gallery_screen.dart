@@ -156,6 +156,6 @@ class _ComponentGalleryScreenState extends State<ComponentGalleryScreen> {
 
   Widget _section(String title) => Padding(
         padding: const EdgeInsets.only(top: ClaroSpacing.xxl, bottom: ClaroSpacing.md),
-        child: Text(title, style: ClaroType.label.copyWith(color: context.textSecondary)),
+        child: Text(title, style: ClaroType.label.copyWith(color: ClaroColors.onInkMuted)),
       );
 }

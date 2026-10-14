@@ -78,7 +78,7 @@ void main() {
 
   test('notifications include unread alerts', () async {
     final alerts = await api.listNotifications();
-    expect(alerts.where((a) => !a.read), hasLength(2));
+    expect(alerts.where((a) => !a.read), hasLength(3));
   });
 
   test('activity ranges have the right number of points', () async {
@@ -91,5 +91,26 @@ void main() {
     final claim = await api.submitDeviceClaim(deviceIdentifier: ' CP-PUMP-0999 ', proofReference: 'QR scan');
     expect(claim.status, 'PENDING');
     expect((await api.listMyDeviceClaims()).items.first.id, claim.id);
+  });
+
+  test('runs: the ongoing run comes first; stopping completes it', () async {
+    final before = await api.listRecentRuns(MockClaroPulseApi.pumpId);
+    expect(before.first.isOngoing, isTrue);
+    expect(before.first.waterLiters, greaterThan(0));
+
+    await api.sendPumpCommand(MockClaroPulseApi.pumpId, PumpCommand.stop);
+    final after = await api.listRecentRuns(MockClaroPulseApi.pumpId);
+    expect(after.first.isOngoing, isFalse);
+    expect(after.first.endedAt, isNotNull);
+    expect(after.first.duration().inMinutes, greaterThan(0));
+  });
+
+  test('insights and the monthly report', () async {
+    final insights = await api.getInsights(MockClaroPulseApi.pumpId);
+    expect(insights.bestHours, isNotEmpty);
+    final report = await api.getMonthlyReport(MockClaroPulseApi.pumpId);
+    expect(report.dailyWaterLiters, hasLength(DateTime.now().toUtc().day));
+    expect(report.waterLiters, greaterThan(0));
+    await expectLater(api.getInsights(MockClaroPulseApi.inverterId), throwsA(isA<ApiException>()));
   });
 }

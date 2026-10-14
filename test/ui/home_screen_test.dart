@@ -10,6 +10,7 @@ import 'package:claropulse/core/api/models/device_models.dart';
 import 'package:claropulse/core/auth/session_expiry.dart';
 import 'package:claropulse/core/auth/token_store.dart';
 import 'package:claropulse/core/services.dart';
+import 'package:claropulse/core/settings/app_settings.dart';
 import 'package:claropulse/ui/home/home_screen.dart';
 import 'package:claropulse/ui/onboarding/camera_permission.dart';
 import 'package:claropulse/ui/onboarding/qr_scanner_screen.dart';
@@ -56,15 +57,26 @@ Future<void> _settle(WidgetTester tester, [int frames = 10]) async {
   }
 }
 
-Future<void> _pumpHome(WidgetTester tester, ClaroPulseApi api, {VoidCallback? onLogout}) async {
-  tester.view.physicalSize = const Size(430, 1600);
+Future<void> _pumpHome(
+  WidgetTester tester,
+  ClaroPulseApi api, {
+  VoidCallback? onLogout,
+  AppSettings? settings,
+}) async {
+  tester.view.physicalSize = const Size(430, 3200);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 
   final store = TokenStore();
   await store.load();
   await store.saveSession(accessToken: 'a', refreshToken: 'r', phone: '9876543210');
-  final services = AppServices(tokenStore: store, sessionExpiry: SessionExpiry(), api: api, isMock: true);
+  final services = AppServices(
+    tokenStore: store,
+    sessionExpiry: SessionExpiry(),
+    api: api,
+    isMock: true,
+    settings: settings,
+  );
   await tester.pumpWidget(MaterialApp(
     theme: ClaroTheme.dark,
     home: HomeScreen(
@@ -111,6 +123,8 @@ void main() {
     expect(find.text('Pump stopped'), findsOneWidget);
     expect(find.text('Start pump'), findsOneWidget);
     expect(find.text('Stopped'), findsOneWidget);
+    expect(find.text('Last run'), findsOneWidget);
+    expect(find.text('litres pumped'), findsOneWidget);
   });
 
   testWidgets('cancelling the sheet changes nothing', (tester) async {
@@ -168,15 +182,17 @@ void main() {
 
   testWidgets('alerts show a badge until opened', (tester) async {
     await _pumpHome(tester, _mock());
-    expect(find.text('2'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Alerts'));
     await _settle(tester);
     expect(find.text('Pump paused: low water'), findsOneWidget);
 
+    expect(find.text("Yesterday's summary"), findsOneWidget);
+
     await tester.tap(find.byTooltip('Back'));
     await _settle(tester);
-    expect(find.text('2'), findsNothing);
+    expect(find.text('3'), findsNothing);
   });
 
   testWidgets('bluetooth connects (simulated)', (tester) async {
@@ -269,5 +285,50 @@ void main() {
     await _pumpHome(tester, _ScriptedApi(failDevices: true));
     expect(find.text("Couldn't load your pumps"), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
+  });
+
+  testWidgets('home shows the running run and the "for you" cards', (tester) async {
+    await _pumpHome(tester, _mock());
+
+    expect(find.text('Running now'), findsOneWidget);
+    expect(find.text('litres so far'), findsOneWidget);
+    expect(find.text('Best time to run: 10 AM – 3 PM'), findsOneWidget);
+    expect(find.text('Saved this month'), findsOneWidget);
+    expect(find.text('Time to clean your solar panels'), findsOneWidget);
+  });
+
+  testWidgets('"All runs" opens Usage with recent runs and the monthly report', (tester) async {
+    await _pumpHome(tester, _mock());
+
+    await tester.tap(find.text('All runs'));
+    await _settle(tester);
+    expect(find.text('Water usage'), findsOneWidget);
+    expect(find.text('Recent runs'), findsOneWidget);
+
+    await tester.tap(find.text('Monthly report'));
+    await _settle(tester);
+    expect(find.text('Best day'), findsOneWidget);
+    expect(find.text('Share report'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Back'));
+    await _settle(tester);
+    expect(find.text('Water usage'), findsOneWidget);
+  });
+
+  testWidgets('appearance can be set to light, dark or system', (tester) async {
+    final settings = AppSettings();
+    await _pumpHome(tester, _mock(), settings: settings);
+
+    await tester.tap(find.text('Profile'));
+    await _settle(tester);
+    expect(find.text('System default'), findsOneWidget);
+
+    await tester.tap(find.text('Appearance'));
+    await _settle(tester, 5);
+    await tester.tap(find.text('Light'));
+    await _settle(tester, 5);
+
+    expect(settings.themeMode.value, ThemeMode.light);
+    expect(find.text('Light'), findsOneWidget);
   });
 }

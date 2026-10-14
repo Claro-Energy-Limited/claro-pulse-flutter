@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/claro_colors.dart';
+import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_type.dart';
 import '../../core/api/models/pump_models.dart';
@@ -16,16 +16,17 @@ class NotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final items = notifications;
     return Scaffold(
-      backgroundColor: context.bg,
+      backgroundColor: p.bg,
       body: SafeArea(
         child: Column(
           children: [
             BackHeader(title: 'Alerts', onBack: onBack),
             Expanded(
               child: items == null
-                  ? Center(child: CircularProgressIndicator(color: context.brandMint))
+                  ? Center(child: CircularProgressIndicator(color: p.accentText))
                   : items.isEmpty
                       ? const Center(
                           child: MessageState(
@@ -60,11 +61,12 @@ class _AlertTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final (IconData icon, Color color) = switch (item.kind) {
-      NotificationKind.fault => (Icons.warning_amber_rounded, ClaroColors.fault),
-      NotificationKind.offline => (Icons.wifi_off_rounded, ClaroColors.warn),
-      NotificationKind.success => (Icons.water_drop_rounded, context.brandMint),
-      NotificationKind.info => (Icons.support_agent_rounded, context.textPrimary),
+      NotificationKind.fault => (Icons.warning_amber_rounded, p.faultText),
+      NotificationKind.offline => (Icons.wifi_off_rounded, p.warnText),
+      NotificationKind.success => (Icons.water_drop_rounded, p.accentText),
+      NotificationKind.info => (Icons.support_agent_rounded, p.text),
     };
     return Panel(
       child: Row(
@@ -84,22 +86,22 @@ class _AlertTile extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(item.title, style: ClaroType.subtitle.copyWith(color: context.textPrimary)),
+                      child: Text(item.title, style: ClaroType.subtitle.copyWith(color: p.text)),
                     ),
                     if (!item.read)
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: context.brandMint),
+                        decoration: BoxDecoration(shape: BoxShape.circle, color: p.accentText),
                       ),
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(item.body, style: ClaroType.body.copyWith(color: context.textSecondary)),
+                Text(item.body, style: ClaroType.body.copyWith(color: p.textMuted)),
                 const SizedBox(height: ClaroSpacing.xs),
                 Text(
                   formatRelativeTime(item.createdAt),
-                  style: ClaroType.caption.copyWith(color: context.textSecondary),
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
                 ),
               ],
             ),

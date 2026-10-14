@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/claro_colors.dart';
+import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_type.dart';
 import '../../core/api/api_exception.dart';
@@ -8,7 +8,6 @@ import '../../core/api/claro_pulse_api.dart';
 import '../../core/api/models/device_models.dart';
 import '../../core/api/models/pump_models.dart';
 import '../common/ui_kit.dart';
-import '../components/claro_primary_button.dart';
 import '../home/home_dashboard.dart' show deviceTitle;
 
 /// Raise a complaint: pick the problem, describe it, submit. Kept to one short
@@ -75,9 +74,10 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final created = _created;
     return Scaffold(
-      backgroundColor: context.bg,
+      backgroundColor: p.bg,
       body: SafeArea(
         child: created != null ? _Success(complaint: created, onDone: widget.onSubmitted) : _form(),
       ),
@@ -85,6 +85,7 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
   }
 
   Widget _form() {
+    final p = context.palette;
     return Column(
       children: [
         BackHeader(title: 'Raise a complaint', onBack: widget.onBack),
@@ -96,19 +97,19 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
                 padding: const EdgeInsets.all(ClaroSpacing.md),
                 child: Row(
                   children: [
-                    Icon(Icons.water_drop_outlined, color: context.brandMint, size: 20),
+                    Icon(Icons.water_drop_outlined, color: p.accentText, size: 20),
                     const SizedBox(width: ClaroSpacing.sm),
                     Expanded(
                       child: Text(
                         '${deviceTitle(widget.device)} · ${widget.device.deviceUid}',
-                        style: ClaroType.body.copyWith(color: context.textPrimary),
+                        style: ClaroType.body.copyWith(color: p.text),
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: ClaroSpacing.xl),
-              Text("What's the problem?", style: ClaroType.subtitle.copyWith(color: context.textPrimary)),
+              Text("What's the problem?", style: ClaroType.subtitle.copyWith(color: p.text)),
               const SizedBox(height: ClaroSpacing.md),
               Wrap(
                 spacing: ClaroSpacing.sm,
@@ -123,35 +124,35 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
                 ],
               ),
               const SizedBox(height: ClaroSpacing.xl),
-              Text('Tell us more', style: ClaroType.subtitle.copyWith(color: context.textPrimary)),
+              Text('Tell us more', style: ClaroType.subtitle.copyWith(color: p.text)),
               const SizedBox(height: ClaroSpacing.md),
               Container(
                 padding: const EdgeInsets.all(ClaroSpacing.md),
                 decoration: BoxDecoration(
-                  color: context.panelHigh,
+                  color: p.panelHigh,
                   borderRadius: ClaroRadius.md,
-                  border: Border.all(color: context.border),
+                  border: Border.all(color: p.border),
                 ),
                 child: TextField(
                   controller: _description,
                   minLines: 4,
                   maxLines: 6,
                   maxLength: 500,
-                  style: ClaroType.body.copyWith(color: context.textPrimary),
-                  cursorColor: context.brandMint,
+                  style: ClaroType.body.copyWith(color: p.text),
+                  cursorColor: p.accentText,
                   decoration: InputDecoration.collapsed(
                     hintText: 'For example: the pump starts but no water comes out.',
-                    hintStyle: ClaroType.body.copyWith(color: context.textSecondary),
+                    hintStyle: ClaroType.body.copyWith(color: p.textMuted),
                   ),
                   onChanged: (_) => setState(() => _error = null),
                 ),
               ),
               if (_error != null) ...[
                 const SizedBox(height: ClaroSpacing.sm),
-                Text(_error!, style: ClaroType.caption.copyWith(color: ClaroColors.fault)),
+                Text(_error!, style: ClaroType.caption.copyWith(color: p.faultText)),
               ],
               const SizedBox(height: ClaroSpacing.xl),
-              ClaroPrimaryButton(
+              AccentButton(
                 text: 'Submit complaint',
                 onPressed: _submit,
                 enabled: _canSubmit,
@@ -174,6 +175,7 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -181,17 +183,13 @@ class _CategoryChip extends StatelessWidget {
         duration: ClaroMotion.fast,
         padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.md, vertical: ClaroSpacing.sm),
         decoration: BoxDecoration(
-          color: selected ? context.brandMint : context.panel,
+          color: selected ? p.accent : p.panel,
           borderRadius: ClaroRadius.pill,
-          border: Border.all(color: selected ? context.brandMint : context.border),
+          border: Border.all(color: selected ? p.accent : p.border),
         ),
         child: Text(
           label,
-          style: ClaroType.label.copyWith(
-            color: selected
-                ? (context.isDark ? ClaroColors.ink : ClaroColors.card)
-                : context.textPrimary,
-          ),
+          style: ClaroType.label.copyWith(color: selected ? p.onAccent : p.text),
         ),
       ),
     );
@@ -206,6 +204,7 @@ class _Success extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(ClaroSpacing.xl),
@@ -215,24 +214,24 @@ class _Success extends StatelessWidget {
             Container(
               width: 80,
               height: 80,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: context.brandMint.withValues(alpha: 0.14)),
-              child: Icon(Icons.check_rounded, color: context.brandMint, size: 40),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: p.accentText.withValues(alpha: 0.14)),
+              child: Icon(Icons.check_rounded, color: p.accentText, size: 40),
             ),
             const SizedBox(height: ClaroSpacing.lg),
-            Text('Complaint raised', style: ClaroType.title.copyWith(color: context.textPrimary)),
+            Text('Complaint raised', style: ClaroType.title.copyWith(color: p.text)),
             const SizedBox(height: ClaroSpacing.xs),
             Text(
               'Ticket ${complaint.ticketNo}',
-              style: ClaroType.readout.copyWith(color: context.brandMint),
+              style: ClaroType.readout.copyWith(color: p.accentText),
             ),
             const SizedBox(height: ClaroSpacing.sm),
             Text(
               "Our service team will look into it. You'll see updates in Complaints and in your alerts.",
               textAlign: TextAlign.center,
-              style: ClaroType.body.copyWith(color: context.textSecondary),
+              style: ClaroType.body.copyWith(color: p.textMuted),
             ),
             const SizedBox(height: ClaroSpacing.xl),
-            ClaroPrimaryButton(text: 'Done', onPressed: onDone),
+            AccentButton(text: 'Done', onPressed: onDone),
           ],
         ),
       ),

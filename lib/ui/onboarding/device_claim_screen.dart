@@ -73,7 +73,7 @@ class _DeviceClaimScreenState extends State<DeviceClaimScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.bg,
+      backgroundColor: ClaroColors.ink,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(ClaroSpacing.xl),
@@ -90,27 +90,27 @@ class _DeviceClaimScreenState extends State<DeviceClaimScreen> {
         children: [
           OnboardingBackButton(onPressed: widget.onBack),
           const SizedBox(height: ClaroSpacing.xxl),
-          Text('Add this device?', style: ClaroType.displayLg.copyWith(color: context.textPrimary)),
+          Text('Add this device?', style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk)),
           const SizedBox(height: ClaroSpacing.sm),
           Text(
             "We'll send this to your utility's team for a quick review before it shows up on your dashboard.",
-            style: ClaroType.body.copyWith(color: context.textSecondary),
+            style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
           ),
           const SizedBox(height: ClaroSpacing.xl),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(ClaroSpacing.lg),
             decoration: BoxDecoration(
-              color: context.panel,
+              color: ClaroColors.inkPanel,
               borderRadius: ClaroRadius.md,
-              border: Border.all(color: context.border),
+              border: Border.all(color: ClaroColors.borderDark),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Device ID', style: ClaroType.caption.copyWith(color: context.textSecondary)),
+                Text('Device ID', style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
                 const SizedBox(height: 4),
-                Text(widget.scannedValue, style: ClaroType.readout.copyWith(color: context.textPrimary)),
+                Text(widget.scannedValue, style: ClaroType.readout.copyWith(color: ClaroColors.onInk)),
               ],
             ),
           ),
@@ -143,17 +143,17 @@ class _SubmittedState extends StatelessWidget {
               height: 72,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: context.brandMint.withValues(alpha: 0.25),
+                color: ClaroColors.mintDeep.withValues(alpha: 0.25),
               ),
-              child: Icon(Icons.check, color: context.brandMint, size: 36),
+              child: const Icon(Icons.check, color: ClaroColors.mint, size: 36),
             ),
             const SizedBox(height: ClaroSpacing.lg),
-            Text('Submitted for review', style: ClaroType.title.copyWith(color: context.textPrimary)),
+            Text('Submitted for review', style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
             const SizedBox(height: ClaroSpacing.xs),
             Text(
               "We'll let you know once it's approved and showing live data.",
               textAlign: TextAlign.center,
-              style: ClaroType.body.copyWith(color: context.textSecondary),
+              style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
             ),
             const SizedBox(height: ClaroSpacing.xl),
             Padding(

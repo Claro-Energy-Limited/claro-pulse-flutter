@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
+import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_type.dart';
 import '../../core/api/models/device_models.dart';
 import '../../core/api/models/pump_models.dart';
-import '../components/claro_primary_button.dart';
+import '../common/ui_kit.dart';
 import 'pump_state.dart';
 
 /// The big Start / Stop button on Home.
 ///
-/// It never flips state on its own: after a tap it shows "Starting…" or
-/// "Stopping…" until the pump's own status confirms the change.
+/// It never flips state on its own: after a tap it shows "Starting pump…" or
+/// "Stopping pump…" until the pump's own status confirms the change.
 class PumpControlButton extends StatelessWidget {
   const PumpControlButton({super.key, required this.visual, required this.onStart, required this.onStop});
 
@@ -21,6 +21,7 @@ class PumpControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final pending = visual == PumpVisual.starting || visual == PumpVisual.stopping;
     final running = visual == PumpVisual.running;
 
@@ -28,17 +29,17 @@ class PumpControlButton extends StatelessWidget {
     final Color foreground;
     final Color border;
     if (pending) {
-      background = ClaroColors.warn.withValues(alpha: 0.12);
-      foreground = ClaroColors.warn;
-      border = ClaroColors.warn.withValues(alpha: 0.4);
+      background = p.warn.withValues(alpha: 0.12);
+      foreground = p.warnText;
+      border = p.warn.withValues(alpha: 0.45);
     } else if (running) {
-      background = ClaroColors.fault.withValues(alpha: 0.12);
-      foreground = ClaroColors.fault;
-      border = ClaroColors.fault.withValues(alpha: 0.45);
+      background = p.fault.withValues(alpha: 0.10);
+      foreground = p.faultText;
+      border = p.fault.withValues(alpha: 0.45);
     } else {
-      background = ClaroColors.mint;
-      foreground = ClaroColors.ink;
-      border = ClaroColors.mint;
+      background = p.accent;
+      foreground = p.onAccent;
+      border = p.accent;
     }
 
     final label = switch (visual) {
@@ -100,7 +101,7 @@ Future<bool> confirmPumpCommand(
 }) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
-    backgroundColor: context.panel,
+    backgroundColor: context.palette.panel,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.sheet),
     builder: (context) => _PumpCommandSheet(
@@ -128,6 +129,7 @@ class _PumpCommandSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final starting = command == PumpCommand.start;
     final s = status;
     final checks = starting
@@ -138,7 +140,7 @@ class _PumpCommandSheet extends StatelessWidget {
           ]
         : const <(String, bool)>[];
     final blocked = starting ? startBlockedReason(s) : null;
-    final tint = starting ? ClaroColors.mint : ClaroColors.fault;
+    final tint = starting ? p.accentText : p.faultText;
 
     return SafeArea(
       top: false,
@@ -148,7 +150,7 @@ class _PumpCommandSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _SheetHandle(),
+            const SheetHandle(),
             const SizedBox(height: ClaroSpacing.lg),
             Row(
               children: [
@@ -165,9 +167,9 @@ class _PumpCommandSheet extends StatelessWidget {
                     children: [
                       Text(
                         starting ? 'Start the pump?' : 'Stop the pump?',
-                        style: ClaroType.title.copyWith(color: context.textPrimary),
+                        style: ClaroType.title.copyWith(color: p.text),
                       ),
-                      Text(deviceName, style: ClaroType.caption.copyWith(color: context.textSecondary)),
+                      Text(deviceName, style: ClaroType.caption.copyWith(color: p.textMuted)),
                     ],
                   ),
                 ),
@@ -183,33 +185,30 @@ class _PumpCommandSheet extends StatelessWidget {
                       Icon(
                         ok ? Icons.check_circle_rounded : Icons.cancel_rounded,
                         size: 20,
-                        color: ok ? context.brandMint : ClaroColors.fault,
+                        color: ok ? p.accentText : p.faultText,
                       ),
                       const SizedBox(width: ClaroSpacing.sm),
-                      Expanded(child: Text(label, style: ClaroType.body.copyWith(color: context.textPrimary))),
+                      Expanded(child: Text(label, style: ClaroType.body.copyWith(color: p.text))),
                     ],
                   ),
                 ),
               const SizedBox(height: ClaroSpacing.sm),
               Text(
                 blocked ?? 'Make sure no one is working on or near the pump.',
-                style: ClaroType.caption.copyWith(color: blocked == null ? context.textSecondary : ClaroColors.fault),
+                style: ClaroType.caption.copyWith(color: blocked == null ? p.textMuted : p.faultText),
               ),
             ] else
               Text(
                 'Water will stop flowing until you start the pump again.',
-                style: ClaroType.body.copyWith(color: context.textSecondary),
+                style: ClaroType.body.copyWith(color: p.textMuted),
               ),
             if (isDemo) ...[
               const SizedBox(height: ClaroSpacing.md),
-              Text(
-                'Demo mode: no real pump is controlled.',
-                style: ClaroType.caption.copyWith(color: ClaroColors.warn),
-              ),
+              Text('Demo mode: no real pump is controlled.', style: ClaroType.caption.copyWith(color: p.warnText)),
             ],
             const SizedBox(height: ClaroSpacing.xl),
             if (starting)
-              ClaroPrimaryButton(
+              AccentButton(
                 text: 'Start pump',
                 enabled: blocked == null,
                 onPressed: () => Navigator.of(context).pop(true),
@@ -219,7 +218,7 @@ class _PumpCommandSheet extends StatelessWidget {
             const SizedBox(height: ClaroSpacing.sm),
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel', style: ClaroType.subtitle.copyWith(color: context.textSecondary)),
+              child: Text('Cancel', style: ClaroType.subtitle.copyWith(color: p.textMuted)),
             ),
           ],
         ),
@@ -236,31 +235,22 @@ class _DangerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Material(
-      color: ClaroColors.fault,
+      color: p.fault,
       borderRadius: ClaroRadius.md,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onPressed,
         child: SizedBox(
           height: 56,
-          child: Center(child: Text(text, style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk))),
+          child: Center(
+            child: Text(
+              text,
+              style: ClaroType.subtitle.copyWith(color: const Color(0xFFFFFFFF), fontWeight: FontWeight.w600),
+            ),
+          ),
         ),
-      ),
-    );
-  }
-}
-
-class _SheetHandle extends StatelessWidget {
-  const _SheetHandle();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 40,
-        height: 4,
-        decoration: const BoxDecoration(color: ClaroColors.borderDark, borderRadius: ClaroRadius.pill),
       ),
     );
   }
@@ -282,100 +272,99 @@ Future<void> showBluetoothSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
-    backgroundColor: context.panel,
+    backgroundColor: context.palette.panel,
     shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.sheet),
-    builder: (context) => SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.md, ClaroSpacing.xl, ClaroSpacing.xl),
-        child: ValueListenableBuilder<BluetoothLink>(
-          valueListenable: link,
-          builder: (context, state, _) => Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const _SheetHandle(),
-              const SizedBox(height: ClaroSpacing.lg),
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: context.brandMint.withValues(alpha: 0.14),
+    builder: (context) {
+      final p = context.palette;
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.md, ClaroSpacing.xl, ClaroSpacing.xl),
+          child: ValueListenableBuilder<BluetoothLink>(
+            valueListenable: link,
+            builder: (context, state, _) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SheetHandle(),
+                const SizedBox(height: ClaroSpacing.lg),
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(shape: BoxShape.circle, color: p.accentText.withValues(alpha: 0.14)),
+                      child: Icon(
+                        state == BluetoothLink.connected ? Icons.bluetooth_connected_rounded : Icons.bluetooth_rounded,
+                        color: p.accentText,
+                      ),
                     ),
-                    child: Icon(
-                      state == BluetoothLink.connected ? Icons.bluetooth_connected_rounded : Icons.bluetooth_rounded,
-                      color: context.brandMint,
-                    ),
-                  ),
-                  const SizedBox(width: ClaroSpacing.md),
-                  Expanded(
-                    child: Text('Bluetooth control', style: ClaroType.title.copyWith(color: context.textPrimary)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: ClaroSpacing.md),
-              Text(
-                "Control your pump when you're standing next to it, even without mobile internet.",
-                style: ClaroType.body.copyWith(color: context.textSecondary),
-              ),
-              const SizedBox(height: ClaroSpacing.xl),
-              switch (state) {
-                BluetoothLink.off => ClaroPrimaryButton(text: 'Connect to $deviceName', onPressed: onConnect),
-                BluetoothLink.searching => Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: context.brandMint),
-                      ),
-                      const SizedBox(width: ClaroSpacing.md),
-                      Flexible(
-                        child: Text(
-                          'Looking for your pump nearby…',
-                          style: ClaroType.body.copyWith(color: context.textPrimary),
-                        ),
-                      ),
-                    ],
-                  ),
-                BluetoothLink.connected => Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.check_circle_rounded, color: context.brandMint, size: 20),
-                          const SizedBox(width: ClaroSpacing.sm),
-                          Flexible(
-                            child: Text(
-                              'Connected to $deviceName',
-                              style: ClaroType.body.copyWith(color: context.textPrimary),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: ClaroSpacing.md),
-                      TextButton(
-                        onPressed: onDisconnect,
-                        child: Text('Disconnect', style: ClaroType.subtitle.copyWith(color: ClaroColors.fault)),
-                      ),
-                    ],
-                  ),
-              },
-              if (isDemo) ...[
+                    const SizedBox(width: ClaroSpacing.md),
+                    Expanded(child: Text('Bluetooth control', style: ClaroType.title.copyWith(color: p.text))),
+                  ],
+                ),
                 const SizedBox(height: ClaroSpacing.md),
                 Text(
-                  'Demo mode: Bluetooth is simulated.',
-                  textAlign: TextAlign.center,
-                  style: ClaroType.caption.copyWith(color: ClaroColors.warn),
+                  "Control your pump when you're standing next to it, even without mobile internet.",
+                  style: ClaroType.body.copyWith(color: p.textMuted),
                 ),
+                const SizedBox(height: ClaroSpacing.xl),
+                switch (state) {
+                  BluetoothLink.off => AccentButton(
+                      text: 'Connect to $deviceName',
+                      icon: Icons.bluetooth_rounded,
+                      onPressed: onConnect,
+                    ),
+                  BluetoothLink.searching => Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: p.accentText),
+                        ),
+                        const SizedBox(width: ClaroSpacing.md),
+                        Flexible(
+                          child: Text(
+                            'Looking for your pump nearby…',
+                            style: ClaroType.body.copyWith(color: p.text),
+                          ),
+                        ),
+                      ],
+                    ),
+                  BluetoothLink.connected => Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_circle_rounded, color: p.accentText, size: 20),
+                            const SizedBox(width: ClaroSpacing.sm),
+                            Flexible(
+                              child: Text('Connected to $deviceName', style: ClaroType.body.copyWith(color: p.text)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: ClaroSpacing.md),
+                        TextButton(
+                          onPressed: onDisconnect,
+                          child: Text('Disconnect', style: ClaroType.subtitle.copyWith(color: p.faultText)),
+                        ),
+                      ],
+                    ),
+                },
+                if (isDemo) ...[
+                  const SizedBox(height: ClaroSpacing.md),
+                  Text(
+                    'Demo mode: Bluetooth is simulated.',
+                    textAlign: TextAlign.center,
+                    style: ClaroType.caption.copyWith(color: p.warnText),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }

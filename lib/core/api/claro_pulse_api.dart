@@ -45,6 +45,16 @@ abstract interface class ClaroPulseApi {
 
   Future<List<AppNotification>> listNotifications();
 
+  /// The pump's most recent runs, newest first. If the pump is running now,
+  /// the first item is the ongoing run (no end time, totals so far).
+  Future<List<PumpRun>> listRecentRuns(String deviceId, {int limit = 5});
+
+  /// Weather, expected water, savings and panel care for the Home screen.
+  Future<PumpInsights> getInsights(String deviceId);
+
+  /// This month's summary so far.
+  Future<MonthlyReport> getMonthlyReport(String deviceId);
+
   /// Asks the pump to start or stop. Completing only means the request was
   /// accepted; the pump is running only once its own status says RUNNING.
   Future<void> sendPumpCommand(String deviceId, PumpCommand command);
@@ -138,4 +148,13 @@ class HttpClaroPulseApi implements ClaroPulseApi {
 
   @override
   Future<void> sendPumpCommand(String deviceId, PumpCommand command) async => throw _notAvailable;
+
+  @override
+  Future<List<PumpRun>> listRecentRuns(String deviceId, {int limit = 5}) async => throw _notAvailable;
+
+  @override
+  Future<PumpInsights> getInsights(String deviceId) async => throw _notAvailable;
+
+  @override
+  Future<MonthlyReport> getMonthlyReport(String deviceId) async => throw _notAvailable;
 }

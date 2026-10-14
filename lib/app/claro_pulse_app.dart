@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/api/mock_claro_pulse_api.dart';
 import '../core/services.dart';
@@ -38,11 +39,6 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
   bool _splashDone = false;
   bool _signedIn = false;
   Timer? _splashTimer;
-  ThemeMode _themeMode = ThemeMode.light;
-
-  void _setThemeMode(ThemeMode mode) {
-    setState(() => _themeMode = mode);
-  }
 
   @override
   void initState() {
@@ -85,45 +81,73 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Claro Pulse',
-      debugShowCheckedModeBanner: false,
-      themeMode: _themeMode,
-      theme: ClaroTheme.light,
-      darkTheme: ClaroTheme.dark,
-      home: AnimatedSwitcher(
-        duration: ClaroMotion.slow,
-        child: _buildHome(),
+    final settings = _services?.settings;
+    // Follows the phone until the farmer picks Light or Dark in Profile.
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: settings?.themeMode ?? _systemMode,
+      builder: (context, mode, _) => MaterialApp(
+        title: 'Claro Pulse',
+        debugShowCheckedModeBanner: false,
+        theme: ClaroTheme.light,
+        darkTheme: ClaroTheme.dark,
+        themeMode: mode,
+        // Status bar icons: light on the dark theme, dark on the light theme.
+        builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+          value: Theme.of(context).brightness == Brightness.dark
+              ? SystemUiOverlayStyle.light.copyWith(statusBarColor: const Color(0x00000000))
+              : SystemUiOverlayStyle.dark.copyWith(statusBarColor: const Color(0x00000000)),
+          child: child ?? const SizedBox.shrink(),
+        ),
+        home: AnimatedSwitcher(
+          duration: ClaroMotion.slow,
+          child: _buildHome(),
+        ),
       ),
     );
   }
 
+  static final ValueNotifier<ThemeMode> _systemMode = ValueNotifier(ThemeMode.system);
+
+  /// The splash and sign-in screens are designed dark (photo, white logo), so
+  /// they stay dark in both themes.
+  Widget _dark(Widget child) => Theme(
+        data: ClaroTheme.dark,
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle.light.copyWith(statusBarColor: const Color(0x00000000)),
+          child: child,
+        ),
+      );
+
   Widget _buildHome() {
     final services = _services;
-    if (services == null || !_splashDone) return const SplashScreen(key: ValueKey('splash'));
+    if (services == null || !_splashDone) {
+      return KeyedSubtree(key: const ValueKey('splash'), child: _dark(const SplashScreen()));
+    }
 
     if (_signedIn) {
       return HomeScreen(
         key: const ValueKey('home'),
         services: services,
-        themeMode: _themeMode,
-        onThemeModeChanged: _setThemeMode,
         onLogout: _signOut,
       );
     }
-    return AuthScreen(
+    return KeyedSubtree(
       key: const ValueKey('auth'),
-      onSendOtp: services.api.requestOtp,
-      onVerifyOtp: (phone, code) async {
-        final tokens = await services.api.verifyOtp(phone, code);
-        await services.tokenStore.saveSession(
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-          phone: phone,
-        );
-      },
-      onAuthenticated: () => setState(() => _signedIn = true),
-      otpHint: services.isMock ? 'Mock mode: use code ${MockClaroPulseApi.otpCode}' : null,
+      child: _dark(
+        AuthScreen(
+          onSendOtp: services.api.requestOtp,
+          onVerifyOtp: (phone, code) async {
+            final tokens = await services.api.verifyOtp(phone, code);
+            await services.tokenStore.saveSession(
+              accessToken: tokens.accessToken,
+              refreshToken: tokens.refreshToken,
+              phone: phone,
+            );
+          },
+          onAuthenticated: () => setState(() => _signedIn = true),
+          otpHint: services.isMock ? 'Mock mode: use code ${MockClaroPulseApi.otpCode}' : null,
+        ),
+      ),
     );
   }
 }

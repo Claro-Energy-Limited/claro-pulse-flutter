@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../app/theme/claro_colors.dart';
+import '../../app/theme/claro_palette.dart';
+import '../../app/theme/claro_theme.dart';
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_type.dart';
 import '../../core/api/api_exception.dart';
@@ -19,6 +20,7 @@ import '../onboarding/device_claim_screen.dart';
 import '../onboarding/manual_device_entry_screen.dart';
 import '../onboarding/qr_scanner_screen.dart';
 import '../profile/profile_tab.dart';
+import '../usage/monthly_report_screen.dart';
 import '../usage/usage_tab.dart';
 import 'home_dashboard.dart';
 import 'pump_control.dart';
@@ -60,6 +62,12 @@ class AlertsRoute extends HomeRoute {
   const AlertsRoute();
 }
 
+class MonthlyReportRoute extends HomeRoute {
+  const MonthlyReportRoute(this.device);
+
+  final MyDevice device;
+}
+
 class NewComplaintRoute extends HomeRoute {
   const NewComplaintRoute(this.device);
 
@@ -78,8 +86,6 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.services,
     required this.onLogout,
-    this.themeMode = ThemeMode.light,
-    this.onThemeModeChanged,
     this.refreshInterval = const Duration(seconds: 30),
     this.confirmPollInterval = const Duration(seconds: 2),
     this.confirmTimeout = const Duration(seconds: 30),
@@ -87,8 +93,6 @@ class HomeScreen extends StatefulWidget {
 
   final AppServices services;
   final VoidCallback onLogout;
-  final ThemeMode themeMode;
-  final ValueChanged<ThemeMode>? onThemeModeChanged;
 
   /// How often Home refreshes the pump's status in the background.
   final Duration refreshInterval;
@@ -114,6 +118,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<String, DeviceStatus> _statusById = {};
   final Map<String, String> _statusErrorById = {};
   final Map<String, PumpCommand> _pendingById = {};
+  final Map<String, List<PumpRun>> _runsById = {};
+  final Map<String, PumpInsights> _insightsById = {};
 
   List<AppNotification>? _alerts;
   int _unreadAlerts = 0;
@@ -144,7 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _refreshTimer = Timer.periodic(widget.refreshInterval, (_) {
       final device = _device;
       if (!mounted || device == null || _pendingById.containsKey(device.deviceId)) return;
-      if (_route is TabsRoute && _tab == HomeNavTab.home) _loadStatusFor(device.deviceId, quiet: true);
+      if (_route is TabsRoute && _tab == HomeNavTab.home) {
+        _loadStatusFor(device.deviceId, quiet: true);
+        _loadRunsFor(device.deviceId);
+      }
     });
   }
 
@@ -176,6 +185,31 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Runs and insights are extras: if they can't load, their cards simply
+  /// don't show. They never turn Home into an error.
+  Future<void> _loadRunsFor(String deviceId) async {
+    try {
+      final runs = await _api.listRecentRuns(deviceId);
+      if (mounted) setState(() => _runsById[deviceId] = runs);
+    } on ApiException {
+      if (mounted) setState(() => _runsById.remove(deviceId));
+    }
+  }
+
+  Future<void> _loadInsightsFor(String deviceId) async {
+    try {
+      final insights = await _api.getInsights(deviceId);
+      if (mounted) setState(() => _insightsById[deviceId] = insights);
+    } on ApiException {
+      if (mounted) setState(() => _insightsById.remove(deviceId));
+    }
+  }
+
+  void _loadExtrasFor(String deviceId) {
+    _loadRunsFor(deviceId);
+    _loadInsightsFor(deviceId);
+  }
+
   Future<void> _loadDevices() async {
     setState(() => _devicesError = null);
     try {
@@ -187,6 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       final device = _device;
       if (device != null) {
+        _loadExtrasFor(device.deviceId);
         await _loadStatusFor(device.deviceId);
       } else {
         try {
@@ -230,6 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (device == null) {
       await _loadDevices();
     } else {
+      _loadExtrasFor(device.deviceId);
       await _loadStatusFor(device.deviceId);
     }
   }
@@ -240,7 +276,10 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _selected = index);
     _bluetooth.value = BluetoothLink.off;
     final id = devices[index].deviceId;
-    if (!_statusById.containsKey(id)) _loadStatusFor(id);
+    if (!_statusById.containsKey(id)) {
+      _loadStatusFor(id);
+      _loadExtrasFor(id);
+    }
   }
 
   // ── Pump control ─────────────────────────────────────────────────────────
@@ -295,6 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (status.runStatus == expected) {
           timer.cancel();
           setState(() => _pendingById.remove(deviceId));
+          _loadRunsFor(deviceId);
           _snack(command == PumpCommand.start ? 'Pump started' : 'Pump stopped');
           return;
         }
@@ -363,9 +403,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openDeviceSwitcher() {
     final devices = _devices ?? const <MyDevice>[];
+    final p = context.palette;
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: context.panel,
+      backgroundColor: p.panel,
       shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.sheet),
       builder: (sheetContext) => SafeArea(
         top: false,
@@ -377,7 +418,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm),
-                child: Text('Your devices', style: ClaroType.title.copyWith(color: sheetContext.textPrimary)),
+                child: Text('Your devices', style: ClaroType.title.copyWith(color: p.text)),
               ),
               const SizedBox(height: ClaroSpacing.md),
               for (var i = 0; i < devices.length; i++)
@@ -387,24 +428,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     DeviceKind.from(devices[i].kind) == DeviceKind.inverter
                         ? Icons.solar_power_rounded
                         : Icons.water_drop_rounded,
-                    color: sheetContext.brandMint,
+                    color: p.accentText,
                   ),
-                  title: Text(deviceTitle(devices[i]), style: ClaroType.subtitle.copyWith(color: sheetContext.textPrimary)),
+                  title: Text(deviceTitle(devices[i]), style: ClaroType.subtitle.copyWith(color: p.text)),
                   subtitle: Text(
                     devices[i].deviceUid,
-                    style: ClaroType.caption.copyWith(color: sheetContext.textSecondary),
+                    style: ClaroType.caption.copyWith(color: p.textMuted),
                   ),
-                  trailing: i == _selected ? Icon(Icons.check_circle_rounded, color: sheetContext.brandMint) : null,
+                  trailing: i == _selected ? Icon(Icons.check_circle_rounded, color: p.accentText) : null,
                   onTap: () {
                     Navigator.of(sheetContext).pop();
                     _selectDevice(i);
                   },
                 ),
-              Divider(color: sheetContext.border),
+              Divider(color: p.border),
               ListTile(
                 shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.md),
-                leading: Icon(Icons.add_circle_outline_rounded, color: sheetContext.brandMint),
-                title: Text('Add a device', style: ClaroType.subtitle.copyWith(color: sheetContext.brandMint)),
+                leading: Icon(Icons.add_circle_outline_rounded, color: p.accentText),
+                title: Text('Add a device', style: ClaroType.subtitle.copyWith(color: p.accentText)),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   _setRoute(const QrScanRoute());
@@ -422,6 +463,8 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (_route) {
       case ManualEntryRoute():
         _setRoute(const QrScanRoute());
+      case MonthlyReportRoute():
+        _goToTab(HomeNavTab.usage);
       case TabsRoute():
         if (_tab != HomeNavTab.home) _goToTab(HomeNavTab.home);
       default:
@@ -439,16 +482,18 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!didPop) _back();
       },
       child: switch (_route) {
-        QrScanRoute() => QrScannerScreen(
+        // Adding a device is a camera-first flow, designed dark: it stays
+        // dark in both themes.
+        QrScanRoute() => _dark(QrScannerScreen(
             onScanned: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: false)),
             onEnterManually: () => _setRoute(const ManualEntryRoute()),
             onClose: () => _setRoute(const TabsRoute()),
-          ),
-        ManualEntryRoute() => ManualDeviceEntryScreen(
+          )),
+        ManualEntryRoute() => _dark(ManualDeviceEntryScreen(
             onSubmit: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: true)),
             onBack: () => _setRoute(const QrScanRoute()),
-          ),
-        ClaimConfirmRoute(:final scannedValue, :final enteredManually) => DeviceClaimScreen(
+          )),
+        ClaimConfirmRoute(:final scannedValue, :final enteredManually) => _dark(DeviceClaimScreen(
             scannedValue: scannedValue,
             enteredManually: enteredManually,
             api: _api,
@@ -457,6 +502,11 @@ class _HomeScreenState extends State<HomeScreen> {
               _loadDevices();
             },
             onBack: () => _setRoute(const TabsRoute()),
+          )),
+        MonthlyReportRoute(:final device) => MonthlyReportScreen(
+            device: device,
+            api: _api,
+            onBack: () => _goToTab(HomeNavTab.usage),
           ),
         PumpDetailsRoute(:final device) => PumpDetailsScreen(
             device: device,
@@ -481,9 +531,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _dark(Widget child) => Theme(data: ClaroTheme.dark, child: child);
+
   Widget _tabs() {
     return Scaffold(
-      backgroundColor: context.bg,
+      backgroundColor: context.palette.bg,
       body: _tabBody(),
       bottomNavigationBar: _BottomNav(selected: _tab, onSelect: (tab) => setState(() => _tab = tab)),
     );
@@ -505,6 +557,9 @@ class _HomeScreenState extends State<HomeScreen> {
           visual: device == null
               ? PumpVisual.checking
               : pumpVisualFor(kind: DeviceKind.from(device.kind), status: status, pending: pending),
+          runs: device == null ? null : _runsById[device.deviceId],
+          insights: device == null ? null : _insightsById[device.deviceId],
+          onSeeAllRuns: () => _goToTab(HomeNavTab.usage),
           unreadAlerts: _unreadAlerts,
           bluetooth: _bluetooth,
           onRefresh: _refreshHome,
@@ -528,6 +583,9 @@ class _HomeScreenState extends State<HomeScreen> {
           device: device,
           api: _api,
           onAddDevice: () => _setRoute(const QrScanRoute()),
+          onOpenReport: () {
+            if (device != null) _setRoute(MonthlyReportRoute(device));
+          },
         );
       case HomeNavTab.complaints:
         return ComplaintsTab(
@@ -542,8 +600,7 @@ class _HomeScreenState extends State<HomeScreen> {
           phone: widget.services.tokenStore.phone,
           deviceCount: _devices?.length ?? 0,
           isDemo: widget.services.isMock,
-          themeMode: widget.themeMode,
-          onThemeModeChanged: widget.onThemeModeChanged,
+          settings: widget.services.settings,
           onOpenDevices: () {
             _goToTab(HomeNavTab.home);
             if ((_devices ?? const []).isNotEmpty) _openDeviceSwitcher();
@@ -570,10 +627,11 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: context.panel,
-        border: Border(top: BorderSide(color: context.border)),
+        color: p.panel,
+        border: Border(top: BorderSide(color: p.border)),
       ),
       child: SafeArea(
         top: false,
@@ -597,22 +655,16 @@ class _BottomNav extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: 4),
                             decoration: BoxDecoration(
                               color: tab == selected
-                                  ? context.brandMint.withValues(alpha: 0.16)
+                                  ? p.accent.withValues(alpha: p.isDark ? 0.16 : 0.30)
                                   : const Color(0x00000000),
                               borderRadius: ClaroRadius.pill,
                             ),
-                            child: Icon(
-                              icon,
-                              size: 22,
-                              color: tab == selected ? context.brandMint : context.textSecondary,
-                            ),
+                            child: Icon(icon, size: 22, color: tab == selected ? p.accentText : p.textMuted),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             label,
-                            style: ClaroType.caption.copyWith(
-                              color: tab == selected ? context.brandMint : context.textSecondary,
-                            ),
+                            style: ClaroType.caption.copyWith(color: tab == selected ? p.accentText : p.textMuted),
                           ),
                         ],
                       ),

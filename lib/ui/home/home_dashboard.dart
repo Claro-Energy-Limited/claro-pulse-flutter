@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
+import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_type.dart';
 import '../../core/api/models/device_models.dart';
+import '../../core/api/models/pump_models.dart';
 import '../../core/util/relative_time.dart';
 import '../common/ui_kit.dart';
 import '../devices/device_kind.dart';
+import 'home_cards.dart';
 import 'pump_control.dart';
 import 'pump_state.dart';
 
@@ -15,8 +17,9 @@ String deviceTitle(MyDevice device) =>
     DeviceKind.from(device.kind) == DeviceKind.inverter ? 'Solar Inverter' : 'Solar Pump';
 
 /// The Home tab: the farmer's pump front and centre, like a vehicle app shows
-/// the vehicle. Everything here answers "is my pump working, and how much water
-/// did I get today?" Technical readings live one tap away in Pump details.
+/// the vehicle. It answers, in this order: is my pump working, how much water
+/// did I get today and in the last run, and what should I know (weather,
+/// savings, panel care)? Technical facts live one tap away in Pump details.
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({
     super.key,
@@ -27,6 +30,8 @@ class HomeDashboard extends StatelessWidget {
     required this.status,
     required this.statusError,
     required this.visual,
+    required this.runs,
+    required this.insights,
     required this.unreadAlerts,
     required this.bluetooth,
     required this.onRefresh,
@@ -37,6 +42,7 @@ class HomeDashboard extends StatelessWidget {
     required this.onOpenDetails,
     required this.onOpenAlerts,
     required this.onOpenBluetooth,
+    required this.onSeeAllRuns,
     required this.onStart,
     required this.onStop,
   });
@@ -48,6 +54,12 @@ class HomeDashboard extends StatelessWidget {
   final DeviceStatus? status;
   final String? statusError;
   final PumpVisual visual;
+
+  /// Newest first; null or empty hides the run card.
+  final List<PumpRun>? runs;
+
+  /// Null hides the weather, savings and panel cards.
+  final PumpInsights? insights;
   final int unreadAlerts;
   final ValueNotifier<BluetoothLink> bluetooth;
   final Future<void> Function() onRefresh;
@@ -58,16 +70,18 @@ class HomeDashboard extends StatelessWidget {
   final VoidCallback onOpenDetails;
   final VoidCallback onOpenAlerts;
   final VoidCallback onOpenBluetooth;
+  final VoidCallback onSeeAllRuns;
   final VoidCallback onStart;
   final VoidCallback onStop;
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return SafeArea(
       bottom: false,
       child: RefreshIndicator(
-        color: ClaroColors.mint,
-        backgroundColor: ClaroColors.inkPanel,
+        color: p.accentText,
+        backgroundColor: p.panel,
         onRefresh: onRefresh,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, ClaroSpacing.xxl),
@@ -89,10 +103,11 @@ class HomeDashboard extends StatelessWidget {
   }
 
   List<Widget> _body(BuildContext context) {
+    final p = context.palette;
     final devices = this.devices;
     if (devices == null && devicesError == null) {
-      return const [
-        SizedBox(height: 320, child: Center(child: CircularProgressIndicator(color: ClaroColors.mint))),
+      return [
+        SizedBox(height: 320, child: Center(child: CircularProgressIndicator(color: p.accentText))),
       ];
     }
     if (devices == null) {
@@ -112,17 +127,16 @@ class HomeDashboard extends StatelessWidget {
       final pending = claims?.where((c) => c.status == 'PENDING').firstOrNull;
       return [
         if (pending != null) ...[
-          Panel(
-            color: ClaroColors.warn.withValues(alpha: 0.10),
-            borderColor: ClaroColors.warn.withValues(alpha: 0.4),
+          TintedPanel(
+            tint: p.warn,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Pending review', style: ClaroType.subtitle.copyWith(color: ClaroColors.warn)),
+                Text('Pending review', style: ClaroType.subtitle.copyWith(color: p.warnText)),
                 const SizedBox(height: ClaroSpacing.xs),
                 Text(
                   "Device ${pending.deviceIdentifier} is waiting for approval. You'll see it here once it's approved.",
-                  style: ClaroType.body.copyWith(color: ClaroColors.onInk),
+                  style: ClaroType.body.copyWith(color: p.text),
                 ),
               ],
             ),
@@ -143,21 +157,13 @@ class HomeDashboard extends StatelessWidget {
     return [
       _Hero(kind: kind, visual: visual),
       const SizedBox(height: ClaroSpacing.xl),
-      if (kind == DeviceKind.inverter)
-        ..._inverterBody()
-      else
-        ..._pumpBody(context),
+      if (kind == DeviceKind.inverter) ..._inverterBody(context) else ..._pumpBody(context),
       const SizedBox(height: ClaroSpacing.lg),
       Panel(
         onTap: onOpenDetails,
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(color: context.panelHigh, borderRadius: ClaroRadius.md),
-              child: Icon(Icons.info_outline_rounded, color: context.brandMint, size: 20),
-            ),
+            const IconTile(icon: Icons.info_outline_rounded),
             const SizedBox(width: ClaroSpacing.md),
             Expanded(
               child: Column(
@@ -165,40 +171,44 @@ class HomeDashboard extends StatelessWidget {
                 children: [
                   Text(
                     kind == DeviceKind.inverter ? 'Inverter details' : 'Pump details',
-                    style: ClaroType.subtitle.copyWith(color: context.textPrimary),
+                    style: ClaroType.subtitle.copyWith(color: p.text),
                   ),
                   Text(
                     'Model, IMEI, installation and warranty',
-                    style: ClaroType.caption.copyWith(color: context.textSecondary),
+                    style: ClaroType.caption.copyWith(color: p.textMuted),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded, color: context.textSecondary),
+            Icon(Icons.chevron_right_rounded, color: p.textMuted),
           ],
         ),
       ),
     ];
   }
 
-  List<Widget> _inverterBody() => [
-        Panel(
-          child: Row(
-            children: [
-              const Icon(Icons.hourglass_top_rounded, color: ClaroColors.onInkMuted),
-              const SizedBox(width: ClaroSpacing.md),
-              Expanded(
-                child: Text(
-                  'Live readings for inverters are coming soon. Your inverter is connected and reporting.',
-                  style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
-                ),
+  List<Widget> _inverterBody(BuildContext context) {
+    final p = context.palette;
+    return [
+      Panel(
+        child: Row(
+          children: [
+            Icon(Icons.hourglass_top_rounded, color: p.textMuted),
+            const SizedBox(width: ClaroSpacing.md),
+            Expanded(
+              child: Text(
+                'Live readings for inverters are coming soon. Your inverter is connected and reporting.',
+                style: ClaroType.body.copyWith(color: p.textMuted),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ];
+      ),
+    ];
+  }
 
   List<Widget> _pumpBody(BuildContext context) {
+    final p = context.palette;
     final status = this.status;
     if (status == null && statusError != null) {
       return [
@@ -219,7 +229,6 @@ class HomeDashboard extends StatelessWidget {
       case PumpVisual.running:
         detail = flow != null && flow > 0 ? 'Flowing at ${formatWhole(flow)} litres a minute' : 'Pump is running';
       case PumpVisual.starting:
-        detail = 'Waiting for the pump to confirm…';
       case PumpVisual.stopping:
         detail = 'Waiting for the pump to confirm…';
       case PumpVisual.stopped:
@@ -232,9 +241,11 @@ class HomeDashboard extends StatelessWidget {
         detail = visual.label;
     }
     final updated = status?.lastReportedAt;
+    final lastRun = (runs == null || runs!.isEmpty) ? null : runs!.first;
+    final insights = this.insights;
 
     return [
-      Text('Water pumped today', style: ClaroType.label.copyWith(color: context.textSecondary)),
+      Text('Water pumped today', style: ClaroType.label.copyWith(color: p.textMuted)),
       const SizedBox(height: ClaroSpacing.xs),
       Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -244,32 +255,33 @@ class HomeDashboard extends StatelessWidget {
             child: Text(
               formatWhole(status?.today.waterLiters),
               overflow: TextOverflow.ellipsis,
-              style: ClaroType.readoutXl.copyWith(color: context.textPrimary),
+              style: ClaroType.readoutXl.copyWith(color: p.text),
             ),
           ),
           const SizedBox(width: ClaroSpacing.sm),
-          Text('litres', style: ClaroType.subtitle.copyWith(color: context.textSecondary)),
+          Text('litres', style: ClaroType.subtitle.copyWith(color: p.textMuted)),
         ],
       ),
       const SizedBox(height: ClaroSpacing.xs),
       Text(
         detail,
-        style: ClaroType.body.copyWith(
-          color: visual == PumpVisual.running ? context.brandMint : context.textSecondary,
-        ),
+        style: ClaroType.body.copyWith(color: visual == PumpVisual.running ? p.accentText : p.textMuted),
       ),
       if (updated != null)
-        Text(
-          'Updated ${formatRelativeTime(updated)}',
-          style: ClaroType.caption.copyWith(color: context.textSecondary),
-        ),
+        Text('Updated ${formatRelativeTime(updated)}', style: ClaroType.caption.copyWith(color: p.textMuted)),
       const SizedBox(height: ClaroSpacing.lg),
       PumpControlButton(visual: visual, onStart: onStart, onStop: onStop),
       if (status != null && needsAttention(status)) ...[
         const SizedBox(height: ClaroSpacing.lg),
         _AttentionCard(status: status),
       ],
+      if (lastRun != null) ...[
+        const SizedBox(height: ClaroSpacing.lg),
+        LastRunCard(run: lastRun, onSeeAll: onSeeAllRuns),
+      ],
       const SizedBox(height: ClaroSpacing.xl),
+      const SectionHeader(title: 'Today'),
+      const SizedBox(height: ClaroSpacing.md),
       Row(
         children: [
           Expanded(
@@ -313,6 +325,16 @@ class HomeDashboard extends StatelessWidget {
           ),
         ],
       ),
+      if (insights != null) ...[
+        const SizedBox(height: ClaroSpacing.xl),
+        const SectionHeader(title: 'For you'),
+        const SizedBox(height: ClaroSpacing.md),
+        WeatherCard(insights: insights),
+        const SizedBox(height: ClaroSpacing.md),
+        SavingsCard(insights: insights),
+        const SizedBox(height: ClaroSpacing.md),
+        PanelCareCard(insights: insights),
+      ],
     ];
   }
 }
@@ -336,6 +358,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final device = this.device;
     return Row(
       children: [
@@ -346,7 +369,7 @@ class _Header extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(greeting(), style: ClaroType.caption.copyWith(color: context.textSecondary)),
+                Text(greeting(), style: ClaroType.caption.copyWith(color: p.textMuted)),
                 const SizedBox(height: 2),
                 Row(
                   children: [
@@ -354,15 +377,14 @@ class _Header extends StatelessWidget {
                       child: Text(
                         device == null ? 'Claro Pulse' : deviceTitle(device),
                         overflow: TextOverflow.ellipsis,
-                        style: ClaroType.title.copyWith(color: context.textPrimary),
+                        style: ClaroType.title.copyWith(color: p.text),
                       ),
                     ),
-                    if (device != null)
-                      Icon(Icons.expand_more_rounded, color: context.textSecondary, size: 22),
+                    if (device != null) Icon(Icons.expand_more_rounded, color: p.textMuted, size: 22),
                   ],
                 ),
                 if (device != null)
-                  Text(device.deviceUid, style: ClaroType.caption.copyWith(color: context.brandMint)),
+                  Text(device.deviceUid, style: ClaroType.caption.copyWith(color: p.accentText)),
               ],
             ),
           ),
@@ -390,7 +412,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// The device photo, with a soft mint glow behind it while the pump runs.
+/// The device photo, with a soft green glow behind it while the pump runs.
 class _Hero extends StatelessWidget {
   const _Hero({required this.kind, required this.visual});
 
@@ -399,24 +421,34 @@ class _Hero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final glowing = visual.isLive;
     final isInverter = kind == DeviceKind.inverter;
+    final quiet = p.isDark ? const Color(0x14FFFFFF) : const Color(0x0F111110);
     return ClipRRect(
       borderRadius: ClaroRadius.lg,
-      child: AnimatedContainer(
-        duration: ClaroMotion.slow,
+      child: Container(
         height: 260,
         decoration: BoxDecoration(
-          gradient: RadialGradient(
-            radius: 0.8,
-            colors: glowing
-                ? [ClaroColors.mint.withValues(alpha: 0.26), ClaroColors.mint.withValues(alpha: 0)]
-                : [const Color(0x14FFFFFF), const Color(0x00FFFFFF)],
-          ),
+          color: p.panel,
+          border: Border.all(color: p.border),
+          borderRadius: ClaroRadius.lg,
         ),
         child: Stack(
           fit: StackFit.expand,
           children: [
+            // The glow fades in and out as the pump starts and stops.
+            AnimatedContainer(
+              duration: ClaroMotion.slow,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  radius: 0.8,
+                  colors: glowing
+                      ? [p.accent.withValues(alpha: p.isDark ? 0.26 : 0.38), p.accent.withValues(alpha: 0)]
+                      : [quiet, quiet.withValues(alpha: 0)],
+                ),
+              ),
+            ),
             if (isInverter)
               Image.asset('assets/images/device_hero_inverter.png', fit: BoxFit.cover)
             else
@@ -427,7 +459,7 @@ class _Hero extends StatelessWidget {
             Positioned(
               top: ClaroSpacing.md,
               left: ClaroSpacing.md,
-              child: StatusChip(label: visual.label, color: visual.color, pulse: visual.isLive),
+              child: StatusChip(label: visual.label, color: visual.colorIn(p), pulse: visual.isLive),
             ),
           ],
         ),
@@ -443,20 +475,20 @@ class _AttentionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = status.protections;
+    final p = context.palette;
+    final pr = status.protections;
     final message = status.faultText ??
-        (p.dryRun
+        (pr.dryRun
             ? 'Pump paused to protect itself: the well may be running dry.'
             : 'Water level is low. The pump will restart when it recovers.');
-    return Panel(
-      color: ClaroColors.fault.withValues(alpha: 0.10),
-      borderColor: ClaroColors.fault.withValues(alpha: 0.4),
+    return TintedPanel(
+      tint: p.fault,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_amber_rounded, color: ClaroColors.fault),
+          Icon(Icons.warning_amber_rounded, color: p.faultText),
           const SizedBox(width: ClaroSpacing.md),
-          Expanded(child: Text(message, style: ClaroType.body.copyWith(color: ClaroColors.onInk))),
+          Expanded(child: Text(message, style: ClaroType.body.copyWith(color: p.text))),
         ],
       ),
     );

@@ -118,3 +118,112 @@ class AppNotification {
 }
 
 enum PumpCommand { start, stop }
+
+/// One pump run: from when it started until it stopped. [endedAt] is null
+/// while the pump is still running, and the totals are "so far".
+class PumpRun {
+  const PumpRun({
+    required this.startedAt,
+    required this.endedAt,
+    required this.waterLiters,
+    required this.energyKwh,
+    required this.avgFlowLpm,
+  });
+
+  /// ISO timestamps.
+  final String startedAt;
+  final String? endedAt;
+  final double waterLiters;
+  final double energyKwh;
+  final double avgFlowLpm;
+
+  bool get isOngoing => endedAt == null;
+
+  /// Length of the run; for an ongoing run, up to [now].
+  Duration duration([DateTime? now]) {
+    final start = DateTime.tryParse(startedAt);
+    if (start == null) return Duration.zero;
+    final end = endedAt == null ? (now ?? DateTime.now()) : DateTime.tryParse(endedAt!) ?? start;
+    final d = end.toUtc().difference(start.toUtc());
+    return d.isNegative ? Duration.zero : d;
+  }
+}
+
+enum WeatherCondition {
+  sunny('Sunny'),
+  partlyCloudy('Partly cloudy'),
+  cloudy('Cloudy'),
+  rain('Rain');
+
+  const WeatherCondition(this.label);
+  final String label;
+}
+
+/// Helpful extras for the Home screen, computed from the pump's data and the
+/// weather at the site.
+class PumpInsights {
+  const PumpInsights({
+    required this.todayCondition,
+    required this.todayTempC,
+    required this.bestHours,
+    required this.tomorrowCondition,
+    required this.tomorrowTempC,
+    required this.tomorrowExpectedLiters,
+    required this.savingsThisMonthRupees,
+    required this.savingsTotalRupees,
+    required this.dieselSavedLiters,
+    required this.panelsNeedCleaning,
+    required this.lastCleanedOn,
+  });
+
+  final WeatherCondition todayCondition;
+  final int todayTempC;
+
+  /// The strongest-sun window today, e.g. "10 AM – 3 PM".
+  final String bestHours;
+  final WeatherCondition tomorrowCondition;
+  final int tomorrowTempC;
+  final double tomorrowExpectedLiters;
+
+  /// Compared with running a diesel pump for the same water.
+  final double savingsThisMonthRupees;
+  final double savingsTotalRupees;
+  final double dieselSavedLiters;
+
+  /// True when output is lower than expected for the sunshine, which usually
+  /// means dusty panels.
+  final bool panelsNeedCleaning;
+
+  /// ISO date.
+  final String lastCleanedOn;
+}
+
+/// One month's summary, for the monthly report screen.
+class MonthlyReport {
+  const MonthlyReport({
+    required this.month,
+    required this.waterLiters,
+    required this.runHours,
+    required this.energyKwh,
+    required this.daysRun,
+    required this.bestDay,
+    required this.bestDayLiters,
+    required this.savingsRupees,
+    required this.dailyWaterLiters,
+  });
+
+  /// First day of the month, ISO date.
+  final String month;
+  final double waterLiters;
+  final double runHours;
+  final double energyKwh;
+  final int daysRun;
+
+  /// ISO date of the day with the most water.
+  final String bestDay;
+  final double bestDayLiters;
+  final double savingsRupees;
+
+  /// One value per day of the month so far; null = no report that day.
+  final List<double?> dailyWaterLiters;
+}

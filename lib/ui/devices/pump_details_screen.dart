@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../app/theme/claro_colors.dart';
+import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_type.dart';
 import '../../core/api/api_exception.dart';
@@ -52,11 +52,12 @@ class _PumpDetailsScreenState extends State<PumpDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final device = widget.device;
     final isInverter = DeviceKind.from(device.kind) == DeviceKind.inverter;
     final details = _details;
     return Scaffold(
-      backgroundColor: context.bg,
+      backgroundColor: p.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -68,7 +69,7 @@ class _PumpDetailsScreenState extends State<PumpDetailsScreen> {
                   _Summary(device: device, details: details, isInverter: isInverter),
                   const SizedBox(height: ClaroSpacing.xl),
                   if (details == null && _error == null)
-                    SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: context.brandMint)))
+                    SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: p.accentText)))
                   else if (details == null)
                     MessageState(
                       icon: Icons.info_outline_rounded,
@@ -114,6 +115,7 @@ class _Summary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final details = this.details;
     return Panel(
       padding: const EdgeInsets.all(ClaroSpacing.lg),
@@ -124,7 +126,7 @@ class _Summary extends StatelessWidget {
             child: Container(
               width: 96,
               height: 96,
-              color: context.panelHigh,
+              color: p.panelHigh,
               padding: isInverter ? EdgeInsets.zero : const EdgeInsets.all(ClaroSpacing.sm),
               child: Image.asset(
                 isInverter ? 'assets/images/device_hero_inverter.png' : 'assets/images/device_hero_pump.png',
@@ -139,20 +141,20 @@ class _Summary extends StatelessWidget {
               children: [
                 Text(
                   details?.model ?? deviceTitle(device),
-                  style: ClaroType.subtitle.copyWith(color: context.textPrimary, fontWeight: FontWeight.w600),
+                  style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: ClaroSpacing.xs),
                 if (details != null)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: 2),
                     decoration: BoxDecoration(
-                      color: context.brandMint.withValues(alpha: 0.14),
+                      color: p.accentText.withValues(alpha: 0.14),
                       borderRadius: ClaroRadius.pill,
                     ),
-                    child: Text(details.capacity, style: ClaroType.caption.copyWith(color: context.brandMint)),
+                    child: Text(details.capacity, style: ClaroType.caption.copyWith(color: p.accentText)),
                   ),
                 const SizedBox(height: ClaroSpacing.xs),
-                Text(device.deviceUid, style: ClaroType.caption.copyWith(color: context.textSecondary)),
+                Text(device.deviceUid, style: ClaroType.caption.copyWith(color: p.textMuted)),
               ],
             ),
           ),
@@ -179,6 +181,7 @@ class _Group extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -189,7 +192,7 @@ class _Group extends StatelessWidget {
           child: Column(
             children: [
               for (var i = 0; i < rows.length; i++) ...[
-                if (i > 0) Divider(height: 1, color: context.border),
+                if (i > 0) Divider(height: 1, color: p.border),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.md),
                   child: Row(
@@ -197,14 +200,14 @@ class _Group extends StatelessWidget {
                     children: [
                       SizedBox(
                         width: 110,
-                        child: Text(rows[i].label, style: ClaroType.body.copyWith(color: context.textSecondary)),
+                        child: Text(rows[i].label, style: ClaroType.body.copyWith(color: p.textMuted)),
                       ),
                       Expanded(
                         child: Text(
                           rows[i].value,
                           textAlign: TextAlign.end,
                           style: (rows[i].mono ? ClaroType.readoutSm : ClaroType.body)
-                              .copyWith(color: context.textPrimary),
+                              .copyWith(color: p.text),
                         ),
                       ),
                       if (rows[i].onCopy != null) ...[
@@ -213,7 +216,7 @@ class _Group extends StatelessWidget {
                           onTap: rows[i].onCopy,
                           child: Tooltip(
                             message: 'Copy ${rows[i].label}',
-                            child: Icon(Icons.copy_rounded, size: 16, color: context.brandMint),
+                            child: Icon(Icons.copy_rounded, size: 16, color: p.accentText),
                           ),
                         ),
                       ],
@@ -236,9 +239,10 @@ class _Warranty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final end = DateTime.tryParse(until);
     final active = end != null && end.isAfter(DateTime.now());
-    final color = active ? context.brandMint : ClaroColors.fault;
+    final color = active ? p.accentText : p.faultText;
     return Panel(
       child: Row(
         children: [
@@ -250,11 +254,11 @@ class _Warranty extends StatelessWidget {
               children: [
                 Text(
                   active ? 'Under warranty' : 'Warranty ended',
-                  style: ClaroType.subtitle.copyWith(color: context.textPrimary),
+                  style: ClaroType.subtitle.copyWith(color: p.text),
                 ),
                 Text(
                   '${active ? 'Valid until' : 'Ended on'} ${formatDate(until)}',
-                  style: ClaroType.caption.copyWith(color: context.textSecondary),
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
                 ),
               ],
             ),

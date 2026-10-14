@@ -110,20 +110,20 @@ class _ClaroOtpRowState extends State<ClaroOtpRow> {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         // Lifted off the panel behind, so empty boxes read as inputs, not outlines.
-        color: context.panelHigh,
+        color: ClaroColors.inkPanelHigh,
         borderRadius: ClaroRadius.sm,
         border: Border.all(
           width: filled || isNext ? 2 : 1,
           color: filled
-              ? context.textPrimary
+              ? ClaroColors.onInk
               : isNext
-                  ? context.brandMint
-                  : context.border,
+                  ? ClaroColors.mint
+                  : ClaroColors.borderDark,
         ),
       ),
       child: Text(
         filled ? value[i] : '',
-        style: ClaroType.readoutLg.copyWith(color: context.textPrimary),
+        style: ClaroType.readoutLg.copyWith(color: ClaroColors.onInk),
       ),
     );
   }

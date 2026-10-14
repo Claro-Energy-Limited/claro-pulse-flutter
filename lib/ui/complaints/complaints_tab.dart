@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/claro_colors.dart';
+import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_type.dart';
 import '../../core/api/models/pump_models.dart';
@@ -27,26 +27,27 @@ class ComplaintsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final complaints = this.complaints;
     return SafeArea(
       bottom: false,
       child: RefreshIndicator(
-        color: context.brandMint,
-        backgroundColor: context.panel,
+        color: p.accentText,
+        backgroundColor: p.panel,
         onRefresh: onRefresh,
         child: ListView(
           padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, ClaroSpacing.xxl),
           children: [
-            Text('Complaints', style: ClaroType.displayLg.copyWith(color: context.textPrimary, fontSize: 28)),
+            Text('Complaints', style: ClaroType.displayLg.copyWith(color: p.text, fontSize: 28)),
             Text(
               "Tell us what's wrong and track the fix.",
-              style: ClaroType.caption.copyWith(color: context.textSecondary),
+              style: ClaroType.caption.copyWith(color: p.textMuted),
             ),
             const SizedBox(height: ClaroSpacing.xl),
             _RaiseCard(onTap: onRaise),
             const SizedBox(height: ClaroSpacing.xl),
             if (complaints == null && error == null)
-              SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: context.brandMint)))
+              SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: p.accentText)))
             else if (complaints == null)
               MessageState(
                 icon: Icons.sync_problem_rounded,
@@ -84,43 +85,44 @@ class _RaiseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Panel(
       onTap: onTap,
-      color: context.brandMint.withValues(alpha: 0.10),
-      borderColor: context.brandMint.withValues(alpha: 0.35),
+      color: p.accentText.withValues(alpha: 0.10),
+      borderColor: p.accentText.withValues(alpha: 0.35),
       padding: const EdgeInsets.all(ClaroSpacing.lg),
       child: Row(
         children: [
           Container(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: context.brandMint),
-            child: Icon(Icons.add_rounded, color: context.isDark ? ClaroColors.ink : ClaroColors.card),
+            decoration: BoxDecoration(shape: BoxShape.circle, color: p.accent),
+            child: Icon(Icons.add_rounded, color: p.onAccent),
           ),
           const SizedBox(width: ClaroSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Raise a complaint', style: ClaroType.subtitle.copyWith(color: context.textPrimary)),
+                Text('Raise a complaint', style: ClaroType.subtitle.copyWith(color: p.text)),
                 Text(
                   'Pump, water flow, solar panels or anything else',
-                  style: ClaroType.caption.copyWith(color: context.textSecondary),
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
                 ),
               ],
             ),
           ),
-          Icon(Icons.chevron_right_rounded, color: context.brandMint),
+          Icon(Icons.chevron_right_rounded, color: p.accentText),
         ],
       ),
     );
   }
 }
 
-Color complaintStatusColor(BuildContext context, ComplaintStatus status) => switch (status) {
-      ComplaintStatus.open => ClaroColors.warn,
-      ComplaintStatus.inProgress => context.brandMint,
-      ComplaintStatus.resolved => context.textSecondary,
+Color complaintStatusColor(ComplaintStatus status, ClaroPalette p) => switch (status) {
+      ComplaintStatus.open => p.warnText,
+      ComplaintStatus.inProgress => p.accentText,
+      ComplaintStatus.resolved => p.textMuted,
     };
 
 class ComplaintCard extends StatelessWidget {
@@ -130,15 +132,16 @@ class ComplaintCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final c = complaint;
-    final color = complaintStatusColor(context, c.status);
+    final color = complaintStatusColor(c.status, p);
     return Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(c.ticketNo, style: ClaroType.readoutSm.copyWith(color: context.textSecondary)),
+              Text(c.ticketNo, style: ClaroType.readoutSm.copyWith(color: p.textMuted)),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: 2),
@@ -148,27 +151,27 @@ class ComplaintCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: ClaroSpacing.sm),
-          Text(c.category.label, style: ClaroType.subtitle.copyWith(color: context.textPrimary)),
+          Text(c.category.label, style: ClaroType.subtitle.copyWith(color: p.text)),
           const SizedBox(height: 2),
           Text(
             c.description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: ClaroType.body.copyWith(color: context.textSecondary),
+            style: ClaroType.body.copyWith(color: p.textMuted),
           ),
           if (c.latestUpdate != null) ...[
             const SizedBox(height: ClaroSpacing.md),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(ClaroSpacing.md),
-              decoration: BoxDecoration(color: context.panelHigh, borderRadius: ClaroRadius.md),
+              decoration: BoxDecoration(color: p.panelHigh, borderRadius: ClaroRadius.md),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.support_agent_rounded, size: 18, color: context.brandMint),
+                  Icon(Icons.support_agent_rounded, size: 18, color: p.accentText),
                   const SizedBox(width: ClaroSpacing.sm),
                   Expanded(
-                    child: Text(c.latestUpdate!, style: ClaroType.caption.copyWith(color: context.textPrimary)),
+                    child: Text(c.latestUpdate!, style: ClaroType.caption.copyWith(color: p.text)),
                   ),
                 ],
               ),
@@ -177,7 +180,7 @@ class ComplaintCard extends StatelessWidget {
           const SizedBox(height: ClaroSpacing.md),
           Text(
             'Raised ${formatRelativeTime(c.createdAt)} · Updated ${formatRelativeTime(c.updatedAt)}',
-            style: ClaroType.caption.copyWith(color: context.textSecondary),
+            style: ClaroType.caption.copyWith(color: p.textMuted),
           ),
         ],
       ),

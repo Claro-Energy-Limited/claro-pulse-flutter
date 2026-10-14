@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
+import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_type.dart';
 
-// Small shared pieces for the redesigned screens. Everything uses the design
-// tokens; nothing here hardcodes a colour or size the tokens already define.
+// Small shared pieces for the main screens. Colours come from `context.palette`,
+// so everything works in both the light and the dark theme.
 
-/// A rounded dark card. Tappable when [onTap] is given.
+/// A rounded card. Tappable when [onTap] is given.
 class Panel extends StatelessWidget {
   const Panel({
     super.key,
@@ -28,19 +28,20 @@ class Panel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Material(
-      color: color ?? context.panel,
+      color: color ?? p.panel,
       borderRadius: radius,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        splashColor: context.brandMint.withValues(alpha: 0.08),
-        highlightColor: context.brandMint.withValues(alpha: 0.04),
+        splashColor: p.accent.withValues(alpha: 0.10),
+        highlightColor: p.accent.withValues(alpha: 0.05),
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: radius,
-            border: Border.all(color: borderColor ?? context.border),
+            border: Border.all(color: borderColor ?? p.border),
           ),
           child: child,
         ),
@@ -49,7 +50,26 @@ class Panel extends StatelessWidget {
   }
 }
 
-/// A screen or section title, with an optional action on the right.
+/// A tinted card for warnings, faults and highlights.
+class TintedPanel extends StatelessWidget {
+  const TintedPanel({super.key, required this.tint, required this.child, this.onTap});
+
+  final Color tint;
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Panel(
+      onTap: onTap,
+      color: tint.withValues(alpha: context.palette.isDark ? 0.10 : 0.12),
+      borderColor: tint.withValues(alpha: 0.4),
+      child: child,
+    );
+  }
+}
+
+/// A section title, with an optional action on the right.
 class SectionHeader extends StatelessWidget {
   const SectionHeader({super.key, required this.title, this.actionLabel, this.onAction});
 
@@ -59,16 +79,17 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Row(
       children: [
-        Expanded(child: Text(title, style: ClaroType.subtitle.copyWith(color: context.textPrimary))),
+        Expanded(child: Text(title, style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.w600))),
         if (actionLabel != null)
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onAction,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.xs),
-              child: Text(actionLabel!, style: ClaroType.label.copyWith(color: context.brandMint)),
+              child: Text(actionLabel!, style: ClaroType.label.copyWith(color: p.accentText)),
             ),
           ),
       ],
@@ -93,12 +114,13 @@ class CircleIconButton extends StatelessWidget {
   final VoidCallback onPressed;
   final int badgeCount;
 
-  /// Mint icon and ring, e.g. Bluetooth connected.
+  /// Green icon and ring, e.g. Bluetooth connected.
   final bool active;
   final double size;
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Tooltip(
       message: tooltip,
       child: GestureDetector(
@@ -112,13 +134,11 @@ class CircleIconButton extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: context.panel,
-                  border: Border.all(
-                    color: active ? context.brandMint.withValues(alpha: 0.6) : context.border,
-                  ),
+                  color: p.panel,
+                  border: Border.all(color: active ? p.accentText.withValues(alpha: 0.6) : p.border),
                 ),
                 alignment: Alignment.center,
-                child: Icon(icon, size: size * 0.45, color: active ? context.brandMint : context.textPrimary),
+                child: Icon(icon, size: size * 0.45, color: active ? p.accentText : p.text),
               ),
               if (badgeCount > 0)
                 Positioned(
@@ -129,14 +149,14 @@ class CircleIconButton extends StatelessWidget {
                     height: 18,
                     padding: const EdgeInsets.symmetric(horizontal: 5),
                     decoration: BoxDecoration(
-                      color: ClaroColors.fault,
+                      color: p.fault,
                       borderRadius: ClaroRadius.pill,
-                      border: Border.all(color: ClaroColors.ink, width: 2),
+                      border: Border.all(color: p.bg, width: 2),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       badgeCount > 9 ? '9+' : '$badgeCount',
-                      style: ClaroType.caption.copyWith(color: ClaroColors.onInk, fontSize: 10, height: 1),
+                      style: ClaroType.caption.copyWith(color: const Color(0xFFFFFFFF), fontSize: 10, height: 1),
                     ),
                   ),
                 ),
@@ -197,12 +217,14 @@ class _StatusChipState extends State<StatusChip> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.md, vertical: 6),
       decoration: BoxDecoration(
-        color: widget.color.withValues(alpha: 0.14),
+        // A solid backing so the label stays readable over the photo.
+        color: Color.alphaBlend(widget.color.withValues(alpha: 0.16), p.panel),
         borderRadius: ClaroRadius.pill,
-        border: Border.all(color: widget.color.withValues(alpha: 0.35)),
+        border: Border.all(color: widget.color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -226,6 +248,31 @@ class _StatusChipState extends State<StatusChip> with SingleTickerProviderStateM
   }
 }
 
+/// A small icon tile used at the start of cards and rows.
+class IconTile extends StatelessWidget {
+  const IconTile({super.key, required this.icon, this.color, this.size = 40});
+
+  final IconData icon;
+  final Color? color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final c = color ?? p.accentText;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.12),
+        borderRadius: ClaroRadius.md,
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: size * 0.5, color: c),
+    );
+  }
+}
+
 /// One small metric card: icon, label, and a number with its unit.
 class StatTile extends StatelessWidget {
   const StatTile({
@@ -243,22 +290,14 @@ class StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasValue = value != '—';
+    final p = context.palette;
+    final hasValue = value != dash;
     return Panel(
       padding: const EdgeInsets.all(ClaroSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: context.brandMint.withValues(alpha: 0.12),
-              borderRadius: ClaroRadius.sm,
-            ),
-            alignment: Alignment.center,
-            child: Icon(icon, size: 18, color: context.brandMint),
-          ),
+          IconTile(icon: icon, size: 32),
           const SizedBox(height: ClaroSpacing.md),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -268,25 +307,43 @@ class StatTile extends StatelessWidget {
                 child: Text(
                   value,
                   overflow: TextOverflow.ellipsis,
-                  style: ClaroType.readoutLg.copyWith(
-                    color: hasValue ? context.textPrimary : context.textSecondary,
-                    fontSize: 22,
-                  ),
+                  style: ClaroType.readoutLg.copyWith(color: hasValue ? p.text : p.textMuted, fontSize: 22),
                 ),
               ),
               const SizedBox(width: 4),
-              Text(unit, style: ClaroType.caption.copyWith(color: context.textSecondary)),
+              Flexible(child: Text(unit, style: ClaroType.caption.copyWith(color: p.textMuted))),
             ],
           ),
           const SizedBox(height: 2),
-          Text(label, style: ClaroType.caption.copyWith(color: context.textSecondary)),
+          Text(label, style: ClaroType.caption.copyWith(color: p.textMuted)),
         ],
       ),
     );
   }
 }
 
-/// A screen title bar with a round back button, for full-screen pages.
+/// A small label + value pair, used inside cards.
+class MiniStat extends StatelessWidget {
+  const MiniStat({super.key, required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: ClaroType.caption.copyWith(color: p.textMuted)),
+        const SizedBox(height: 2),
+        Text(value, style: ClaroType.readout.copyWith(color: p.text)),
+      ],
+    );
+  }
+}
+
+/// A page title bar with a round back button, for full-screen pages.
 class BackHeader extends StatelessWidget {
   const BackHeader({super.key, required this.title, required this.onBack, this.trailing});
 
@@ -302,10 +359,32 @@ class BackHeader extends StatelessWidget {
         children: [
           CircleIconButton(icon: Icons.arrow_back_rounded, tooltip: 'Back', onPressed: onBack, size: 40),
           const SizedBox(width: ClaroSpacing.md),
-          Expanded(child: Text(title, style: ClaroType.title.copyWith(color: context.textPrimary))),
+          Expanded(
+            child: Text(title, style: ClaroType.title.copyWith(color: context.palette.text)),
+          ),
           ?trailing,
         ],
       ),
+    );
+  }
+}
+
+/// A big page title with an optional subtitle, used at the top of each tab.
+class PageTitle extends StatelessWidget {
+  const PageTitle({super.key, required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: ClaroType.displayLg.copyWith(color: p.text, fontSize: 28)),
+        if (subtitle != null) Text(subtitle!, style: ClaroType.caption.copyWith(color: p.textMuted)),
+      ],
     );
   }
 }
@@ -331,7 +410,8 @@ class MessageState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = isError ? ClaroColors.fault : context.brandMint;
+    final p = context.palette;
+    final tint = isError ? p.faultText : p.accentText;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.xxl),
       child: Column(
@@ -344,21 +424,100 @@ class MessageState extends StatelessWidget {
             child: Icon(icon, color: tint, size: 28),
           ),
           const SizedBox(height: ClaroSpacing.lg),
-          Text(title, textAlign: TextAlign.center, style: ClaroType.title.copyWith(color: context.textPrimary)),
+          Text(title, textAlign: TextAlign.center, style: ClaroType.title.copyWith(color: p.text)),
           const SizedBox(height: ClaroSpacing.xs),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: ClaroType.body.copyWith(color: context.textSecondary),
-          ),
+          Text(message, textAlign: TextAlign.center, style: ClaroType.body.copyWith(color: p.textMuted)),
           if (actionLabel != null) ...[
             const SizedBox(height: ClaroSpacing.lg),
             TextButton(
               onPressed: onAction,
-              child: Text(actionLabel!, style: ClaroType.subtitle.copyWith(color: context.brandMint)),
+              child: Text(actionLabel!, style: ClaroType.subtitle.copyWith(color: p.accentText)),
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// The primary action button for the main screens: a mint fill with dark text
+/// in both themes. Disabled = a faint fill with muted text.
+class AccentButton extends StatelessWidget {
+  const AccentButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+    this.enabled = true,
+    this.loading = false,
+    this.icon,
+  });
+
+  final String text;
+  final VoidCallback onPressed;
+  final bool enabled;
+  final bool loading;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final active = enabled && !loading;
+    return Semantics(
+      button: true,
+      enabled: active,
+      child: Material(
+        color: active ? p.accent : p.panelHigh,
+        borderRadius: ClaroRadius.md,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: active ? onPressed : null,
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: Center(
+              child: loading
+                  ? SizedBox.square(
+                      dimension: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: p.onAccent),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (icon != null) ...[
+                          Icon(icon, size: 20, color: active ? p.onAccent : p.textMuted),
+                          const SizedBox(width: ClaroSpacing.sm),
+                        ],
+                        Flexible(
+                          child: Text(
+                            text,
+                            overflow: TextOverflow.ellipsis,
+                            style: ClaroType.subtitle.copyWith(
+                              color: active ? p.onAccent : p.textMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The small grey handle at the top of bottom sheets.
+class SheetHandle extends StatelessWidget {
+  const SheetHandle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 40,
+        height: 4,
+        decoration: BoxDecoration(color: context.palette.border, borderRadius: ClaroRadius.pill),
       ),
     );
   }
@@ -410,4 +569,33 @@ String greeting([DateTime? now]) {
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
+}
+
+/// "9:42 AM", in local time.
+String formatClock(DateTime t) {
+  final local = t.isUtc ? t.toLocal() : t;
+  final h = local.hour % 12 == 0 ? 12 : local.hour % 12;
+  final m = local.minute.toString().padLeft(2, '0');
+  return '$h:$m ${local.hour < 12 ? 'AM' : 'PM'}';
+}
+
+/// "Today", "Yesterday", or "14 Oct", in local time.
+String formatDayName(DateTime t, [DateTime? now]) {
+  final local = t.isUtc ? t.toLocal() : t;
+  final today = now ?? DateTime.now();
+  final day = DateTime(local.year, local.month, local.day);
+  final todayDate = DateTime(today.year, today.month, today.day);
+  final diff = todayDate.difference(day).inDays;
+  if (diff == 0) return 'Today';
+  if (diff == 1) return 'Yesterday';
+  return formatDayMonth(local);
+}
+
+/// "3 h 12 min", "45 min", "6 h".
+String formatDuration(Duration d) {
+  final hours = d.inHours;
+  final minutes = d.inMinutes % 60;
+  if (hours == 0) return '$minutes min';
+  if (minutes == 0) return '$hours h';
+  return '$hours h $minutes min';
 }

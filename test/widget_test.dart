@@ -104,4 +104,20 @@ void main() {
     await _frames(tester, 5);
     expect(find.text('Sign in'), findsOneWidget);
   });
+
+  testWidgets("follows the phone's light or dark setting by default", (tester) async {
+    _tallScreen(tester);
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r'});
+
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices, minSplash: Duration.zero));
+    await _frames(tester);
+    Brightness current() => Theme.of(tester.element(find.text('Water pumped today'))).brightness;
+    expect(current(), Brightness.light);
+
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    await _frames(tester, 3);
+    expect(current(), Brightness.dark);
+  });
 }
