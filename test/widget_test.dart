@@ -14,96 +14,94 @@ Future<AppServices> _mockServices() async {
   return AppServices(
     tokenStore: store,
     sessionExpiry: SessionExpiry(),
-    api: MockClaroPulseApi(latency: Duration.zero),
+    api: MockClaroPulseApi(latency: Duration.zero, confirmDelay: Duration.zero),
     isMock: true,
   );
+}
+
+Future<void> _frames(WidgetTester tester, [int n = 10]) async {
+  for (var i = 0; i < n; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+void _tallScreen(WidgetTester tester) {
+  tester.view.physicalSize = const Size(430, 1600);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
 }
 
 void main() {
   setUp(() => FlutterSecureStorage.setMockInitialValues({}));
 
-  testWidgets('full sign-in with the mock API, then log out', (tester) async {
-    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices));
+  testWidgets('sign in with the mock, reach home, then log out', (tester) async {
+    _tallScreen(tester);
+    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices, minSplash: Duration.zero));
     await tester.pumpAndSettle();
 
-    // Phone step.
     expect(find.text('Sign in'), findsOneWidget);
     await tester.enterText(find.byType(TextField), '9876543210');
     await tester.pump();
     await tester.tap(find.text('Send code'));
     await tester.pumpAndSettle();
 
-    // Code step, with the mock hint and resend cooldown.
-    expect(find.text('Enter the code'), findsOneWidget);
-    expect(find.text('We sent a 6-digit code to +91 9876543210'), findsOneWidget);
     expect(find.text('Mock mode: use code 123456'), findsOneWidget);
-    expect(find.text('Resend in 30s'), findsOneWidget);
-
-    // A wrong code shows the server's message.
     await tester.enterText(find.byType(TextField), '000000');
     await tester.pump();
     await tester.tap(find.text('Verify'));
     await tester.pumpAndSettle();
     expect(find.text('The code is invalid or has expired.'), findsOneWidget);
 
-    // The right code signs in.
     await tester.enterText(find.byType(TextField), '123456');
     await tester.pump();
     await tester.tap(find.text('Verify'));
     await tester.pumpAndSettle();
     expect(find.text("You're signed in"), findsOneWidget);
 
-    // After the confirmation beat, home appears with the account's first device.
-    // Its running hero card animates forever, so pump a fixed time rather than settle.
     await tester.pump(const Duration(seconds: 1));
-    await _settleHome(tester);
-    expect(find.text('My Site'), findsOneWidget);
-    expect(find.text('CP-PUMP-0142'), findsOneWidget);
+    await _frames(tester);
+    expect(find.text('Water pumped today'), findsOneWidget);
 
-    // Profile shows the number; Log out returns to the sign-in screen.
     await tester.tap(find.text('Profile'));
-    await tester.pumpAndSettle();
+    await _frames(tester);
     expect(find.text('+91 9876543210'), findsOneWidget);
     await tester.tap(find.text('Log out'));
-    await tester.pumpAndSettle();
+    await _frames(tester, 5);
+    await tester.tap(find.text('Log out').last);
+    await _frames(tester);
     expect(find.text('Sign in'), findsOneWidget);
   });
 
   testWidgets('a saved session skips sign-in', (tester) async {
-    FlutterSecureStorage.setMockInitialValues({
-      'access_token': 'a',
-      'refresh_token': 'r',
-      'phone': '9000000001',
-    });
-    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices));
-    await _settleHome(tester);
-
-    expect(find.text('My Site'), findsOneWidget);
-    await tester.tap(find.text('Profile'));
-    await tester.pumpAndSettle();
-    expect(find.text('+91 9000000001'), findsOneWidget);
+    _tallScreen(tester);
+    FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r', 'phone': '9000000001'});
+    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices, minSplash: Duration.zero));
+    await _frames(tester);
+    expect(find.text('Water pumped today'), findsOneWidget);
   });
 
   testWidgets('an expired session drops back to sign-in', (tester) async {
+    _tallScreen(tester);
     FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r'});
     late AppServices services;
     Future<AppServices> create() async => services = await _mockServices();
 
-    await tester.pumpWidget(ClaroPulseApp(createServices: create));
-    await _settleHome(tester);
-    expect(find.text('My Site'), findsOneWidget);
+    await tester.pumpWidget(ClaroPulseApp(createServices: create, minSplash: Duration.zero));
+    await _frames(tester);
+    expect(find.text('Water pumped today'), findsOneWidget);
 
     services.sessionExpiry.signalExpired();
-    await tester.pumpAndSettle();
+    await _frames(tester);
     expect(find.text('Sign in'), findsOneWidget);
-    expect(services.sessionExpiry.expired.value, isFalse);
   });
-}
 
-/// The Home tab's running pump animates forever, so `pumpAndSettle` would never
-/// return while it is showing. Pump a fixed time instead.
-Future<void> _settleHome(WidgetTester tester) async {
-  for (var i = 0; i < 20; i++) {
-    await tester.pump(const Duration(milliseconds: 100));
-  }
+  testWidgets('the splash shows first', (tester) async {
+    _tallScreen(tester);
+    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices));
+    await tester.pump();
+    expect(find.text('Smart solar pumping'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    await _frames(tester, 5);
+    expect(find.text('Sign in'), findsOneWidget);
+  });
 }

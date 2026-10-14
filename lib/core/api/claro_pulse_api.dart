@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'api_exception.dart';
 import 'models/auth_models.dart';
 import 'models/device_models.dart';
+import 'models/pump_models.dart';
 
 /// Everything the app asks the backend, ported from the Kotlin
 /// `ClaroPulseApiService`. Two implementations: [HttpClaroPulseApi] talks to the
@@ -29,6 +30,24 @@ abstract interface class ClaroPulseApi {
   Future<DeviceStatus> getDeviceStatus(String deviceId);
 
   Future<DeviceActivity> getDeviceActivity(String deviceId, ActivityRange range);
+
+  // ── Not on the server yet: only the mock implements these for now. ──────────
+
+  Future<PumpDetails> getPumpDetails(String deviceId);
+
+  Future<List<Complaint>> listComplaints();
+
+  Future<Complaint> createComplaint({
+    required String deviceId,
+    required ComplaintCategory category,
+    required String description,
+  });
+
+  Future<List<AppNotification>> listNotifications();
+
+  /// Asks the pump to start or stop. Completing only means the request was
+  /// accepted; the pump is running only once its own status says RUNNING.
+  Future<void> sendPumpCommand(String deviceId, PumpCommand command);
 }
 
 /// The real backend. The client's base URL already ends in `/app/v1/`, so every
@@ -94,4 +113,29 @@ class HttpClaroPulseApi implements ClaroPulseApi {
         );
         return DeviceActivity.fromJson(res.data!);
       });
+
+  // The server has no endpoints for these yet. Screens show this message
+  // instead of failing silently.
+  static const _notAvailable =
+      ApiException(code: 'NOT_AVAILABLE', message: "This feature isn't available yet.");
+
+  @override
+  Future<PumpDetails> getPumpDetails(String deviceId) async => throw _notAvailable;
+
+  @override
+  Future<List<Complaint>> listComplaints() async => throw _notAvailable;
+
+  @override
+  Future<Complaint> createComplaint({
+    required String deviceId,
+    required ComplaintCategory category,
+    required String description,
+  }) async =>
+      throw _notAvailable;
+
+  @override
+  Future<List<AppNotification>> listNotifications() async => throw _notAvailable;
+
+  @override
+  Future<void> sendPumpCommand(String deviceId, PumpCommand command) async => throw _notAvailable;
 }

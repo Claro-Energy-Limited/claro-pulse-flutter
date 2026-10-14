@@ -1,25 +1,32 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import '../onboarding/device_claim_screen.dart';
-import '../onboarding/manual_device_entry_screen.dart';
-import '../onboarding/qr_scanner_screen.dart';
+
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_type.dart';
 import '../../core/api/api_exception.dart';
+import '../../core/api/claro_pulse_api.dart';
 import '../../core/api/models/device_models.dart';
+import '../../core/api/models/pump_models.dart';
 import '../../core/services.dart';
 import '../complaints/complaints_tab.dart';
-import '../devices/device_detail_screen.dart';
-import '../devices/devices_tab.dart';
-import '../icons/claro_icons.dart';
+import '../complaints/new_complaint_screen.dart';
+import '../devices/device_kind.dart';
+import '../devices/pump_details_screen.dart';
+import '../notifications/notifications_screen.dart';
+import '../onboarding/device_claim_screen.dart';
+import '../onboarding/manual_device_entry_screen.dart';
+import '../onboarding/qr_scanner_screen.dart';
 import '../profile/profile_tab.dart';
-import 'home_tab.dart';
+import '../usage/usage_tab.dart';
+import 'home_dashboard.dart';
+import 'pump_control.dart';
+import 'pump_state.dart';
 
+enum HomeNavTab { home, usage, complaints, profile }
 
-enum HomeNavTab { home, devices, complaints, profile }
-
-/// Full-screen overlays that replace the tabs entirely. Each has exactly one
-/// way out, so a plain value is enough; no navigation library needed.
+/// Full-screen pages that replace the tabs. Each has one way back.
 sealed class HomeRoute {
   const HomeRoute();
 }
@@ -43,26 +50,49 @@ class ClaimConfirmRoute extends HomeRoute {
   final bool enteredManually;
 }
 
-class DeviceDetailRoute extends HomeRoute {
-  const DeviceDetailRoute(this.device);
+class PumpDetailsRoute extends HomeRoute {
+  const PumpDetailsRoute(this.device);
 
   final MyDevice device;
 }
 
-/// The signed-in shell, ported from the Kotlin `HomeScreen`: a site header, a
-/// four-tab bar (Home, Devices, Complaints, Profile), and full-screen overlays
-/// for QR scan, manual entry, claim confirmation and device detail.
+class AlertsRoute extends HomeRoute {
+  const AlertsRoute();
+}
+
+class NewComplaintRoute extends HomeRoute {
+  const NewComplaintRoute(this.device);
+
+  final MyDevice device;
+}
+
+/// The signed-in app: four tabs (Home, Usage, Complaints, Profile) and the
+/// full-screen pages they open.
 ///
-/// This screen owns every network call the tabs need (the device list, pending
-/// claims, and each device's live status, fetched the first time it is swiped
-/// to), so the tab widgets just render the state they are given. Loading and
-/// errors are explicit at every step: a slow or failed request must never look
-/// the same as an account with no devices.
+/// This screen owns the shared data (devices, their live status, alerts,
+/// complaints) and the pump commands, so tabs only display what they're given.
+/// Loading, errors and empty states are always distinct: a slow network must
+/// never look like "no pumps".
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.services, required this.onLogout});
+  const HomeScreen({
+    super.key,
+    required this.services,
+    required this.onLogout,
+    this.refreshInterval = const Duration(seconds: 30),
+    this.confirmPollInterval = const Duration(seconds: 2),
+    this.confirmTimeout = const Duration(seconds: 30),
+  });
 
   final AppServices services;
   final VoidCallback onLogout;
+
+  /// How often Home refreshes the pump's status in the background.
+  final Duration refreshInterval;
+
+  /// After a start/stop, how often to check whether the pump has confirmed it,
+  /// and how long to wait before giving up.
+  final Duration confirmPollInterval;
+  final Duration confirmTimeout;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -75,55 +105,91 @@ class _HomeScreenState extends State<HomeScreen> {
   List<MyDevice>? _devices;
   String? _devicesError;
   List<DeviceClaim>? _claims;
+  int _selected = 0;
 
-  /// Per device: each one's status is fetched the first time it is shown, then
-  /// cached for the life of this screen.
   final Map<String, DeviceStatus> _statusById = {};
   final Map<String, String> _statusErrorById = {};
+  final Map<String, PumpCommand> _pendingById = {};
 
-  /// Devices whose status request is in flight. Not in the Kotlin app: the
-  /// pager reports page 0 on first show while the first device's status is
-  /// already loading, and this stops that becoming a second identical request.
-  final Set<String> _statusLoading = {};
+  List<AppNotification>? _alerts;
+  int _unreadAlerts = 0;
+
+  List<Complaint>? _complaints;
+  String? _complaintsError;
+
+  final ValueNotifier<BluetoothLink> _bluetooth = ValueNotifier(BluetoothLink.off);
+
+  Timer? _refreshTimer;
+  Timer? _confirmTimer;
+  bool _confirmPolling = false;
+
+  ClaroPulseApi get _api => widget.services.api;
+
+  MyDevice? get _device {
+    final devices = _devices;
+    if (devices == null || devices.isEmpty) return null;
+    return devices[_selected.clamp(0, devices.length - 1)];
+  }
 
   @override
   void initState() {
     super.initState();
     _loadDevices();
+    _loadAlerts();
+    _loadComplaints();
+    _refreshTimer = Timer.periodic(widget.refreshInterval, (_) {
+      final device = _device;
+      if (!mounted || device == null || _pendingById.containsKey(device.deviceId)) return;
+      if (_route is TabsRoute && _tab == HomeNavTab.home) _loadStatusFor(device.deviceId, quiet: true);
+    });
   }
 
-  Future<void> _loadStatusFor(String deviceId) async {
-    if (!_statusLoading.add(deviceId)) return;
-    setState(() => _statusErrorById.remove(deviceId));
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _confirmTimer?.cancel();
+    _bluetooth.dispose();
+    super.dispose();
+  }
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+
+  /// [quiet] background refreshes don't replace good data with an error.
+  Future<void> _loadStatusFor(String deviceId, {bool quiet = false}) async {
+    if (!quiet) setState(() => _statusErrorById.remove(deviceId));
     try {
-      final status = await widget.services.api.getDeviceStatus(deviceId);
+      final status = await _api.getDeviceStatus(deviceId);
       if (!mounted) return;
-      setState(() => _statusById[deviceId] = status);
+      setState(() {
+        _statusById[deviceId] = status;
+        _statusErrorById.remove(deviceId);
+      });
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() => _statusErrorById[deviceId] = e.message);
-    } finally {
-      _statusLoading.remove(deviceId);
+      if (!quiet || !_statusById.containsKey(deviceId)) {
+        setState(() => _statusErrorById[deviceId] = e.message);
+      }
     }
   }
 
   Future<void> _loadDevices() async {
     setState(() => _devicesError = null);
     try {
-      final devices = await widget.services.api.listMyDevices();
+      final devices = await _api.listMyDevices();
       if (!mounted) return;
-      setState(() => _devices = devices);
-      if (devices.isNotEmpty) {
-        await _loadStatusFor(devices.first.deviceId);
+      setState(() {
+        _devices = devices;
+        _selected = devices.isEmpty ? 0 : _selected.clamp(0, devices.length - 1);
+      });
+      final device = _device;
+      if (device != null) {
+        await _loadStatusFor(device.deviceId);
       } else {
-        // Only worth knowing WHY it's empty (a pending claim, or never tried)
-        // when it actually is empty. A failure here just hides the
-        // pending-claim banner; the plain empty state is still correct.
         try {
-          final page = await widget.services.api.listMyDeviceClaims();
+          final page = await _api.listMyDeviceClaims();
           if (mounted) setState(() => _claims = page.items);
         } on ApiException {
-          // Deliberately ignored, see above.
+          // Only hides the "pending review" card; the empty state is still right.
         }
       }
     } on ApiException catch (e) {
@@ -132,268 +198,421 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Called when a device's page settles under the farmer's thumb. A device
-  /// already loaded (or already failed) is not fetched again here.
-  void _onDevicePageSettled(int index) {
-    final devices = _devices;
-    if (devices == null || index < 0 || index >= devices.length) return;
-    final id = devices[index].deviceId;
-    if (_statusById.containsKey(id) || _statusErrorById.containsKey(id)) return;
-    _loadStatusFor(id);
+  Future<void> _loadAlerts() async {
+    try {
+      final alerts = await _api.listNotifications();
+      if (!mounted) return;
+      setState(() {
+        _alerts = alerts;
+        _unreadAlerts = alerts.where((a) => !a.read).length;
+      });
+    } on ApiException {
+      if (mounted) setState(() => _alerts = const []);
+    }
   }
 
-  void _retryStatus(String deviceId) => _loadStatusFor(deviceId);
+  Future<void> _loadComplaints() async {
+    setState(() => _complaintsError = null);
+    try {
+      final complaints = await _api.listComplaints();
+      if (mounted) setState(() => _complaints = complaints);
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _complaintsError = e.message);
+    }
+  }
+
+  Future<void> _refreshHome() async {
+    final device = _device;
+    if (device == null) {
+      await _loadDevices();
+    } else {
+      await _loadStatusFor(device.deviceId);
+    }
+  }
+
+  void _selectDevice(int index) {
+    final devices = _devices;
+    if (devices == null || index < 0 || index >= devices.length) return;
+    setState(() => _selected = index);
+    _bluetooth.value = BluetoothLink.off;
+    final id = devices[index].deviceId;
+    if (!_statusById.containsKey(id)) _loadStatusFor(id);
+  }
+
+  // ── Pump control ─────────────────────────────────────────────────────────
+
+  void _snack(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _requestCommand(PumpCommand command) async {
+    final device = _device;
+    if (device == null) return;
+    final confirmed = await confirmPumpCommand(
+      context,
+      command: command,
+      deviceName: device.deviceUid,
+      status: _statusById[device.deviceId],
+      isDemo: widget.services.isMock,
+    );
+    if (!confirmed || !mounted) return;
+    await _sendCommand(device.deviceId, command);
+  }
+
+  Future<void> _sendCommand(String deviceId, PumpCommand command) async {
+    setState(() => _pendingById[deviceId] = command);
+    try {
+      await _api.sendPumpCommand(deviceId, command);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _pendingById.remove(deviceId));
+      _snack(e.message);
+      return;
+    }
+    if (!mounted) return;
+
+    // The pump is only "running" once it says so itself. Check until it
+    // confirms, or give up and say so plainly.
+    final expected = command == PumpCommand.start ? 'RUNNING' : 'STOPPED';
+    final startedAt = DateTime.now();
+    _confirmTimer?.cancel();
+    _confirmTimer = Timer.periodic(widget.confirmPollInterval, (timer) async {
+      if (_confirmPolling) return;
+      _confirmPolling = true;
+      try {
+        final status = await _api.getDeviceStatus(deviceId);
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+        setState(() => _statusById[deviceId] = status);
+        if (status.runStatus == expected) {
+          timer.cancel();
+          setState(() => _pendingById.remove(deviceId));
+          _snack(command == PumpCommand.start ? 'Pump started' : 'Pump stopped');
+          return;
+        }
+      } on ApiException {
+        // Keep trying until the timeout.
+      } finally {
+        _confirmPolling = false;
+      }
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (DateTime.now().difference(startedAt) >= widget.confirmTimeout) {
+        timer.cancel();
+        setState(() => _pendingById.remove(deviceId));
+        _snack("The pump didn't confirm. Check it has power, then try again.");
+      }
+    });
+  }
+
+  // ── Bluetooth (simulated) ────────────────────────────────────────────────
+
+  Future<void> _connectBluetooth() async {
+    _bluetooth.value = BluetoothLink.searching;
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    if (mounted && _bluetooth.value == BluetoothLink.searching) {
+      _bluetooth.value = BluetoothLink.connected;
+    }
+  }
+
+  void _openBluetooth() {
+    final device = _device;
+    if (device == null) return;
+    showBluetoothSheet(
+      context,
+      link: _bluetooth,
+      deviceName: device.deviceUid,
+      onConnect: _connectBluetooth,
+      onDisconnect: () => _bluetooth.value = BluetoothLink.off,
+      isDemo: widget.services.isMock,
+    );
+  }
+
+  // ── Navigation ───────────────────────────────────────────────────────────
 
   void _setRoute(HomeRoute route) => setState(() => _route = route);
 
-  /// Android's back button: closes an overlay instead of leaving the app.
+  void _goToTab(HomeNavTab tab) => setState(() {
+        _route = const TabsRoute();
+        _tab = tab;
+      });
+
+  void _openAlerts() {
+    _setRoute(const AlertsRoute());
+    setState(() => _unreadAlerts = 0);
+  }
+
+  void _openNewComplaint() {
+    final device = _device;
+    if (device == null) {
+      _snack('Add a pump first, then you can raise a complaint about it.');
+      return;
+    }
+    _setRoute(NewComplaintRoute(device));
+  }
+
+  void _openDeviceSwitcher() {
+    final devices = _devices ?? const <MyDevice>[];
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: ClaroColors.inkPanel,
+      shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.sheet),
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(ClaroSpacing.lg, ClaroSpacing.lg, ClaroSpacing.lg, ClaroSpacing.md),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm),
+                child: Text('Your devices', style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
+              ),
+              const SizedBox(height: ClaroSpacing.md),
+              for (var i = 0; i < devices.length; i++)
+                ListTile(
+                  shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.md),
+                  leading: Icon(
+                    DeviceKind.from(devices[i].kind) == DeviceKind.inverter
+                        ? Icons.solar_power_rounded
+                        : Icons.water_drop_rounded,
+                    color: ClaroColors.mint,
+                  ),
+                  title: Text(deviceTitle(devices[i]), style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk)),
+                  subtitle: Text(
+                    devices[i].deviceUid,
+                    style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
+                  ),
+                  trailing: i == _selected ? const Icon(Icons.check_circle_rounded, color: ClaroColors.mint) : null,
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    _selectDevice(i);
+                  },
+                ),
+              const Divider(color: ClaroColors.borderDark),
+              ListTile(
+                shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.md),
+                leading: const Icon(Icons.add_circle_outline_rounded, color: ClaroColors.mint),
+                title: Text('Add a device', style: ClaroType.subtitle.copyWith(color: ClaroColors.mint)),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _setRoute(const QrScanRoute());
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Android's back button closes a page instead of leaving the app.
   void _back() {
     switch (_route) {
       case ManualEntryRoute():
         _setRoute(const QrScanRoute());
       case TabsRoute():
-        break;
+        if (_tab != HomeNavTab.home) _goToTab(HomeNavTab.home);
       default:
         _setRoute(const TabsRoute());
     }
   }
 
+  // ── Build ────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _route is TabsRoute,
+      canPop: _route is TabsRoute && _tab == HomeNavTab.home,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _back();
       },
       child: switch (_route) {
         QrScanRoute() => QrScannerScreen(
-          onScanned: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: false)),
-          onEnterManually: () => _setRoute(const ManualEntryRoute()),
-          onClose: () => _setRoute(const TabsRoute()),
-        ),
+            onScanned: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: false)),
+            onEnterManually: () => _setRoute(const ManualEntryRoute()),
+            onClose: () => _setRoute(const TabsRoute()),
+          ),
         ManualEntryRoute() => ManualDeviceEntryScreen(
-          onSubmit: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: true)),
-          onBack: () => _setRoute(const QrScanRoute()),
-        ),
+            onSubmit: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: true)),
+            onBack: () => _setRoute(const QrScanRoute()),
+          ),
         ClaimConfirmRoute(:final scannedValue, :final enteredManually) => DeviceClaimScreen(
-          scannedValue: scannedValue,
-          enteredManually: enteredManually,
-          api: widget.services.api,
-          onSubmitted: () {
-            // As in Kotlin: back to Home, and reload so a pending claim shows.
-            setState(() {
-              _route = const TabsRoute();
-              _tab = HomeNavTab.home;
-            });
-            _loadDevices();
-          },
-          onBack: () => _setRoute(const TabsRoute()),
-        ),
-        DeviceDetailRoute(:final device) => DeviceDetailScreen(
-            device: device,
-            api: widget.services.api,
+            scannedValue: scannedValue,
+            enteredManually: enteredManually,
+            api: _api,
+            onSubmitted: () {
+              _goToTab(HomeNavTab.home);
+              _loadDevices();
+            },
             onBack: () => _setRoute(const TabsRoute()),
           ),
-        TabsRoute() => _tabsScaffold(),
+        PumpDetailsRoute(:final device) => PumpDetailsScreen(
+            device: device,
+            api: _api,
+            onBack: () => _setRoute(const TabsRoute()),
+          ),
+        AlertsRoute() => NotificationsScreen(
+            notifications: _alerts,
+            onBack: () => _setRoute(const TabsRoute()),
+          ),
+        NewComplaintRoute(:final device) => NewComplaintScreen(
+            device: device,
+            api: _api,
+            onSubmitted: () {
+              _goToTab(HomeNavTab.complaints);
+              _loadComplaints();
+            },
+            onBack: () => _setRoute(const TabsRoute()),
+          ),
+        TabsRoute() => _tabs(),
       },
     );
   }
 
-  Widget _tabsScaffold() {
+  Widget _tabs() {
     return Scaffold(
       backgroundColor: ClaroColors.ink,
-      body: Column(
-        children: [
-          if (_tab == HomeNavTab.home)
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, 0),
-                child: _HomeHeader(isMock: widget.services.isMock),
-              ),
-            ),
-          Expanded(child: _tabBody()),
-          _BottomNavBar(selected: _tab, onSelect: (tab) => setState(() => _tab = tab)),
-        ],
-      ),
+      body: _tabBody(),
+      bottomNavigationBar: _BottomNav(selected: _tab, onSelect: (tab) => setState(() => _tab = tab)),
     );
   }
 
   Widget _tabBody() {
+    final device = _device;
     switch (_tab) {
       case HomeNavTab.home:
-        return SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: ClaroSpacing.lg),
-              HomeTab(
-                devices: _devices,
-                devicesError: _devicesError,
-                claims: _claims,
-                statusById: _statusById,
-                statusErrorById: _statusErrorById,
-                onRetryDevices: _loadDevices,
-                onPageSettled: _onDevicePageSettled,
-                onRetryStatus: _retryStatus,
-                onAddDevice: () => _setRoute(const QrScanRoute()),
-              ),
-              const SizedBox(height: ClaroSpacing.xl),
-            ],
-          ),
+        final status = device == null ? null : _statusById[device.deviceId];
+        final pending = device == null ? null : _pendingById[device.deviceId];
+        return HomeDashboard(
+          devices: _devices,
+          devicesError: _devicesError,
+          claims: _claims,
+          device: device,
+          status: status,
+          statusError: device == null ? null : _statusErrorById[device.deviceId],
+          visual: device == null
+              ? PumpVisual.checking
+              : pumpVisualFor(kind: DeviceKind.from(device.kind), status: status, pending: pending),
+          unreadAlerts: _unreadAlerts,
+          bluetooth: _bluetooth,
+          onRefresh: _refreshHome,
+          onRetryDevices: _loadDevices,
+          onRetryStatus: () {
+            if (device != null) _loadStatusFor(device.deviceId);
+          },
+          onAddDevice: () => _setRoute(const QrScanRoute()),
+          onSwitchDevice: _openDeviceSwitcher,
+          onOpenDetails: () {
+            if (device != null) _setRoute(PumpDetailsRoute(device));
+          },
+          onOpenAlerts: _openAlerts,
+          onOpenBluetooth: _openBluetooth,
+          onStart: () => _requestCommand(PumpCommand.start),
+          onStop: () => _requestCommand(PumpCommand.stop),
         );
-      case HomeNavTab.devices:
-        return SafeArea(
-          bottom: false,
-          child: DevicesTab(
-            devices: _devices,
-            isLoading: _devices == null && _devicesError == null,
-            error: _devicesError,
-            onRetry: _loadDevices,
-            onDeviceTap: (device) => _setRoute(DeviceDetailRoute(device)),
-            onAddDevice: () => _setRoute(const QrScanRoute()),
-          ),
+      case HomeNavTab.usage:
+        return UsageTab(
+          key: ValueKey(device?.deviceId),
+          device: device,
+          api: _api,
+          onAddDevice: () => _setRoute(const QrScanRoute()),
         );
       case HomeNavTab.complaints:
-        return const SafeArea(bottom: false, child: ComplaintsTab());
+        return ComplaintsTab(
+          complaints: _complaints,
+          error: _complaintsError,
+          onRetry: _loadComplaints,
+          onRaise: _openNewComplaint,
+          onRefresh: _loadComplaints,
+        );
       case HomeNavTab.profile:
-        return SafeArea(
-          bottom: false,
-          child: ProfileTab(phone: widget.services.tokenStore.phone, onLogout: widget.onLogout),
+        return ProfileTab(
+          phone: widget.services.tokenStore.phone,
+          deviceCount: _devices?.length ?? 0,
+          isDemo: widget.services.isMock,
+          onOpenDevices: () {
+            _goToTab(HomeNavTab.home);
+            if ((_devices ?? const []).isNotEmpty) _openDeviceSwitcher();
+          },
+          onOpenComplaints: () => _goToTab(HomeNavTab.complaints),
+          onLogout: widget.onLogout,
         );
     }
   }
 }
 
-class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.isMock});
-
-  final bool isMock;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text('My Site', style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
-                  // Not in the Kotlin app: a reminder that mock data is showing.
-                  if (isMock) ...[
-                    const SizedBox(width: ClaroSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: ClaroColors.warn.withValues(alpha: 0.15),
-                        borderRadius: ClaroRadius.pill,
-                      ),
-                      child: Text('MOCK', style: ClaroType.caption.copyWith(color: ClaroColors.warn)),
-                    ),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text('Claro Pulse', style: ClaroType.subtitle.copyWith(color: ClaroColors.mint)),
-            ],
-          ),
-        ),
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: ClaroColors.inkPanel,
-            border: Border.all(color: ClaroColors.borderDark),
-          ),
-          alignment: Alignment.center,
-          child: const NavProfileIcon(size: 20, color: ClaroColors.onInkMuted),
-        ),
-      ],
-    );
-  }
-}
-
-class _BottomNavBar extends StatelessWidget {
-  const _BottomNavBar({required this.selected, required this.onSelect});
+class _BottomNav extends StatelessWidget {
+  const _BottomNav({required this.selected, required this.onSelect});
 
   final HomeNavTab selected;
   final ValueChanged<HomeNavTab> onSelect;
+
+  static const _items = [
+    (HomeNavTab.home, Icons.home_rounded, 'Home'),
+    (HomeNavTab.usage, Icons.insights_rounded, 'Usage'),
+    (HomeNavTab.complaints, Icons.support_agent_rounded, 'Complaints'),
+    (HomeNavTab.profile, Icons.person_rounded, 'Profile'),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: ClaroColors.inkPanel,
-        border: Border.all(color: ClaroColors.borderDark),
+        border: const Border(top: BorderSide(color: ClaroColors.borderDark)),
       ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.md, vertical: ClaroSpacing.sm),
+          padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: ClaroSpacing.sm),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavItem(
-                label: 'Home',
-                selected: selected == HomeNavTab.home,
-                onTap: () => onSelect(HomeNavTab.home),
-                icon: (c) => NavHomeIcon(size: 22, color: c),
-              ),
-              _NavItem(
-                label: 'Devices',
-                selected: selected == HomeNavTab.devices,
-                onTap: () => onSelect(HomeNavTab.devices),
-                icon: (c) => NavGridIcon(size: 22, color: c),
-              ),
-              _NavItem(
-                label: 'Complaints',
-                selected: selected == HomeNavTab.complaints,
-                onTap: () => onSelect(HomeNavTab.complaints),
-                icon: (c) => Icon(Icons.warning, color: c, size: 22),
-              ),
-              _NavItem(
-                label: 'Profile',
-                selected: selected == HomeNavTab.profile,
-                onTap: () => onSelect(HomeNavTab.profile),
-                icon: (c) => NavProfileIcon(size: 22, color: c),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({required this.label, required this.selected, required this.onTap, required this.icon});
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final Widget Function(Color color) icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? ClaroColors.mint : ClaroColors.onInkMuted;
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.xs, horizontal: ClaroSpacing.sm),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              icon(color),
-              const SizedBox(height: 4),
-              Text(label, style: ClaroType.caption.copyWith(color: color)),
+              for (final (tab, icon, label) in _items)
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    selected: tab == selected,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onSelect(tab),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedContainer(
+                            duration: ClaroMotion.fast,
+                            padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: tab == selected
+                                  ? ClaroColors.mint.withValues(alpha: 0.16)
+                                  : const Color(0x00000000),
+                              borderRadius: ClaroRadius.pill,
+                            ),
+                            child: Icon(
+                              icon,
+                              size: 22,
+                              color: tab == selected ? ClaroColors.mint : ClaroColors.onInkMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            label,
+                            style: ClaroType.caption.copyWith(
+                              color: tab == selected ? ClaroColors.mint : ClaroColors.onInkMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

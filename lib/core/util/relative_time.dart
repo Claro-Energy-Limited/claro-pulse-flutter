@@ -2,7 +2,6 @@
 ///
 /// Every server timestamp is ISO-8601 UTC, with or without milliseconds;
 /// `DateTime.tryParse` handles both.
-
 library;
 
 const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

@@ -9,10 +9,11 @@ const int otpLength = 6;
 
 /// Six OTP digit boxes, ported from the Kotlin `ClaroPulseOtpRow`.
 ///
-/// One invisible real text field sits over the six boxes and handles focus, the
-/// keyboard, paste and SMS autofill; the boxes are only a painted view of its
-/// value. Six separate fields would need manual focus-jumping, backspace and
-/// paste handling per box. Digits render in JetBrains Mono, like every number.
+/// One real text field sits over the six boxes and handles focus, the keyboard,
+/// paste and SMS autofill; the boxes are only a painted view of its value. Like
+/// the Kotlin version, the field stays fully present with TRANSPARENT text and
+/// cursor (not hidden), so it keeps receiving taps and keyboard input. Tapping
+/// anywhere on the row focuses it and opens the keyboard.
 class ClaroOtpRow extends StatefulWidget {
   const ClaroOtpRow({super.key, required this.value, required this.onChanged, this.focusNode});
 
@@ -26,6 +27,9 @@ class ClaroOtpRow extends StatefulWidget {
 
 class _ClaroOtpRowState extends State<ClaroOtpRow> {
   late final TextEditingController _controller = TextEditingController(text: widget.value);
+  FocusNode? _ownFocusNode;
+
+  FocusNode get _focusNode => widget.focusNode ?? (_ownFocusNode ??= FocusNode());
 
   @override
   void didUpdateWidget(ClaroOtpRow old) {
@@ -41,31 +45,38 @@ class _ClaroOtpRowState extends State<ClaroOtpRow> {
   @override
   void dispose() {
     _controller.dispose();
+    _ownFocusNode?.dispose();
     super.dispose();
+  }
+
+  void _focus() {
+    _focusNode.requestFocus();
+    SystemChannels.textInput.invokeMethod<void>('TextInput.show');
   }
 
   @override
   Widget build(BuildContext context) {
     final value = widget.value;
-    return SizedBox(
-      height: 56,
-      child: Stack(
-        children: [
-          Row(
-            children: [
-              for (var i = 0; i < otpLength; i++) ...[
-                if (i > 0) const SizedBox(width: 8),
-                Expanded(child: _box(i, value)),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _focus,
+      child: SizedBox(
+        height: 56,
+        child: Stack(
+          children: [
+            Row(
+              children: [
+                for (var i = 0; i < otpLength; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(child: _box(i, value)),
+                ],
               ],
-            ],
-          ),
-          // The real field: invisible, covering the whole row, so a tap anywhere focuses it.
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0,
+            ),
+            // The real field: present and tappable, but its text and cursor are transparent.
+            Positioned.fill(
               child: TextField(
                 controller: _controller,
-                focusNode: widget.focusNode,
+                focusNode: _focusNode,
                 keyboardType: TextInputType.number,
                 textInputAction: TextInputAction.done,
                 autofillHints: const [AutofillHints.oneTimeCode],
@@ -73,14 +84,21 @@ class _ClaroOtpRowState extends State<ClaroOtpRow> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(otpLength),
                 ],
+                style: const TextStyle(color: Colors.transparent, fontSize: 1),
+                cursorColor: Colors.transparent,
                 showCursor: false,
                 enableInteractiveSelection: false,
-                decoration: const InputDecoration(border: InputBorder.none, counterText: ''),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  counterText: '',
+                  filled: false,
+                  isCollapsed: true,
+                ),
                 onChanged: widget.onChanged,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
