@@ -45,7 +45,7 @@ class ClaroLineChart extends StatelessWidget {
                   Center(
                     child: Text(
                       'No data yet for this range',
-                      style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
+                      style: ClaroType.caption.copyWith(color: context.textSecondary),
                     ),
                   ),
               ],
@@ -63,7 +63,7 @@ class ClaroLineChart extends StatelessWidget {
                           : i == xLabels.length - 1
                               ? TextAlign.end
                               : TextAlign.center,
-                      style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
+                      style: ClaroType.caption.copyWith(color: context.textSecondary),
                     ),
                   ),
               ],

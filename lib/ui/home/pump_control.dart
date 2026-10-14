@@ -100,7 +100,7 @@ Future<bool> confirmPumpCommand(
 }) async {
   final result = await showModalBottomSheet<bool>(
     context: context,
-    backgroundColor: ClaroColors.inkPanel,
+    backgroundColor: context.panel,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.sheet),
     builder: (context) => _PumpCommandSheet(
@@ -165,9 +165,9 @@ class _PumpCommandSheet extends StatelessWidget {
                     children: [
                       Text(
                         starting ? 'Start the pump?' : 'Stop the pump?',
-                        style: ClaroType.title.copyWith(color: ClaroColors.onInk),
+                        style: ClaroType.title.copyWith(color: context.textPrimary),
                       ),
-                      Text(deviceName, style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
+                      Text(deviceName, style: ClaroType.caption.copyWith(color: context.textSecondary)),
                     ],
                   ),
                 ),
@@ -183,22 +183,22 @@ class _PumpCommandSheet extends StatelessWidget {
                       Icon(
                         ok ? Icons.check_circle_rounded : Icons.cancel_rounded,
                         size: 20,
-                        color: ok ? ClaroColors.mint : ClaroColors.fault,
+                        color: ok ? context.brandMint : ClaroColors.fault,
                       ),
                       const SizedBox(width: ClaroSpacing.sm),
-                      Expanded(child: Text(label, style: ClaroType.body.copyWith(color: ClaroColors.onInk))),
+                      Expanded(child: Text(label, style: ClaroType.body.copyWith(color: context.textPrimary))),
                     ],
                   ),
                 ),
               const SizedBox(height: ClaroSpacing.sm),
               Text(
                 blocked ?? 'Make sure no one is working on or near the pump.',
-                style: ClaroType.caption.copyWith(color: blocked == null ? ClaroColors.onInkMuted : ClaroColors.fault),
+                style: ClaroType.caption.copyWith(color: blocked == null ? context.textSecondary : ClaroColors.fault),
               ),
             ] else
               Text(
                 'Water will stop flowing until you start the pump again.',
-                style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
+                style: ClaroType.body.copyWith(color: context.textSecondary),
               ),
             if (isDemo) ...[
               const SizedBox(height: ClaroSpacing.md),
@@ -219,7 +219,7 @@ class _PumpCommandSheet extends StatelessWidget {
             const SizedBox(height: ClaroSpacing.sm),
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel', style: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted)),
+              child: Text('Cancel', style: ClaroType.subtitle.copyWith(color: context.textSecondary)),
             ),
           ],
         ),
@@ -282,7 +282,7 @@ Future<void> showBluetoothSheet(
 }) {
   return showModalBottomSheet<void>(
     context: context,
-    backgroundColor: ClaroColors.inkPanel,
+    backgroundColor: context.panel,
     shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.sheet),
     builder: (context) => SafeArea(
       top: false,
@@ -303,23 +303,23 @@ Future<void> showBluetoothSheet(
                     height: 48,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: ClaroColors.mint.withValues(alpha: 0.14),
+                      color: context.brandMint.withValues(alpha: 0.14),
                     ),
                     child: Icon(
                       state == BluetoothLink.connected ? Icons.bluetooth_connected_rounded : Icons.bluetooth_rounded,
-                      color: ClaroColors.mint,
+                      color: context.brandMint,
                     ),
                   ),
                   const SizedBox(width: ClaroSpacing.md),
                   Expanded(
-                    child: Text('Bluetooth control', style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
+                    child: Text('Bluetooth control', style: ClaroType.title.copyWith(color: context.textPrimary)),
                   ),
                 ],
               ),
               const SizedBox(height: ClaroSpacing.md),
               Text(
                 "Control your pump when you're standing next to it, even without mobile internet.",
-                style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
+                style: ClaroType.body.copyWith(color: context.textSecondary),
               ),
               const SizedBox(height: ClaroSpacing.xl),
               switch (state) {
@@ -327,15 +327,15 @@ Future<void> showBluetoothSheet(
                 BluetoothLink.searching => Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox.square(
+                      SizedBox.square(
                         dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: ClaroColors.mint),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: context.brandMint),
                       ),
                       const SizedBox(width: ClaroSpacing.md),
                       Flexible(
                         child: Text(
                           'Looking for your pump nearby…',
-                          style: ClaroType.body.copyWith(color: ClaroColors.onInk),
+                          style: ClaroType.body.copyWith(color: context.textPrimary),
                         ),
                       ),
                     ],
@@ -346,12 +346,12 @@ Future<void> showBluetoothSheet(
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.check_circle_rounded, color: ClaroColors.mint, size: 20),
+                          Icon(Icons.check_circle_rounded, color: context.brandMint, size: 20),
                           const SizedBox(width: ClaroSpacing.sm),
                           Flexible(
                             child: Text(
                               'Connected to $deviceName',
-                              style: ClaroType.body.copyWith(color: ClaroColors.onInk),
+                              style: ClaroType.body.copyWith(color: context.textPrimary),
                             ),
                           ),
                         ],

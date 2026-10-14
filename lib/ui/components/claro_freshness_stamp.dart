@@ -23,11 +23,11 @@ class ClaroFreshnessStamp extends StatelessWidget {
           height: 6,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isLive ? ClaroColors.mint : ClaroColors.muted,
+            color: isLive ? context.brandMint : ClaroColors.muted,
           ),
         ),
         const SizedBox(width: 6),
-        Text(text, style: ClaroType.caption.copyWith(color: const Color(0x8CFFFFFF))),
+        Text(text, style: ClaroType.caption.copyWith(color: context.textSecondary)),
       ],
     );
   }

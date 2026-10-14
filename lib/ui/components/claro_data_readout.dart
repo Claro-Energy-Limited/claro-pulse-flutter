@@ -14,8 +14,8 @@ class ClaroDataReadout extends StatelessWidget {
     required this.value,
     required this.unit,
     this.icon,
-    this.labelColor = ClaroColors.onInkMuted,
-    this.valueColor = ClaroColors.onInk,
+    this.labelColor,
+    this.valueColor,
     this.valueStyle,
   });
 
@@ -23,27 +23,30 @@ class ClaroDataReadout extends StatelessWidget {
   final String value;
   final String unit;
   final Widget? icon;
-  final Color labelColor;
-  final Color valueColor;
+  final Color? labelColor;
+  final Color? valueColor;
 
   /// Defaults to [ClaroType.readoutLg].
   final TextStyle? valueStyle;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveLabelColor = labelColor ?? context.textSecondary;
+    final effectiveValueColor = valueColor ?? context.textPrimary;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: ClaroType.caption.copyWith(color: labelColor)),
+        Text(label, style: ClaroType.caption.copyWith(color: effectiveLabelColor)),
         const SizedBox(height: 6),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[icon!, const SizedBox(width: 6)],
-            Text(value, style: (valueStyle ?? ClaroType.readoutLg).copyWith(color: valueColor)),
+            Text(value, style: (valueStyle ?? ClaroType.readoutLg).copyWith(color: effectiveValueColor)),
             const SizedBox(width: 4),
-            Text(unit, style: ClaroType.body.copyWith(color: labelColor)),
+            Text(unit, style: ClaroType.body.copyWith(color: effectiveLabelColor)),
           ],
         ),
       ],

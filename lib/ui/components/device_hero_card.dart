@@ -218,7 +218,7 @@ class _CalloutColumn extends StatelessWidget {
     // not: blown up to 28 next to a 14 unit it reads as a broken sliver. At unit
     // size it reads as a calm "— kW": clearly "nothing here".
     final hasValue = callout.value != noData;
-    final valueColor = muted || !hasValue ? ClaroColors.onInkMuted : ClaroColors.onInk;
+    final valueColor = muted || !hasValue ? context.textSecondary : context.textPrimary;
     return Column(
       crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: [
@@ -232,10 +232,10 @@ class _CalloutColumn extends StatelessWidget {
               style: (hasValue ? ClaroType.readoutLg : ClaroType.body).copyWith(color: valueColor),
             ),
             const SizedBox(width: 4),
-            Text(callout.unit, style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted)),
+            Text(callout.unit, style: ClaroType.body.copyWith(color: context.textSecondary)),
           ],
         ),
-        Text(callout.label.toUpperCase(), style: ClaroType.label.copyWith(color: ClaroColors.onInkMuted)),
+        Text(callout.label.toUpperCase(), style: ClaroType.label.copyWith(color: context.textSecondary)),
       ],
     );
   }
@@ -251,11 +251,11 @@ class _TodaySummaryTile extends StatelessWidget {
     final hasValue = metric.value != noData;
     return Container(
       padding: const EdgeInsets.all(ClaroSpacing.md),
-      decoration: BoxDecoration(color: ClaroColors.inkPanel, borderRadius: ClaroRadius.md),
+      decoration: BoxDecoration(color: context.panel, borderRadius: ClaroRadius.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(metric.label, style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
+          Text(metric.label, style: ClaroType.caption.copyWith(color: context.textSecondary)),
           const SizedBox(height: ClaroSpacing.xs),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -266,12 +266,12 @@ class _TodaySummaryTile extends StatelessWidget {
                   metric.value,
                   overflow: TextOverflow.ellipsis,
                   style: ClaroType.readout.copyWith(
-                    color: hasValue ? ClaroColors.onInk : ClaroColors.onInkMuted,
+                    color: hasValue ? context.textPrimary : context.textSecondary,
                   ),
                 ),
               ),
               const SizedBox(width: 4),
-              Text(metric.unit, style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
+              Text(metric.unit, style: ClaroType.caption.copyWith(color: context.textSecondary)),
             ],
           ),
         ],

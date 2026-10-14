@@ -148,50 +148,18 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ClaroColors.ink,
+      backgroundColor: context.bg,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final height = constraints.maxHeight;
-          return Stack(
+          return Column(
             children: [
-              // Background photo, fading into the ink background.
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: height * 0.6,
-                child: Image.asset('assets/images/auth_background.jpg', fit: BoxFit.cover),
-              ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: height * 0.6,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        ClaroColors.ink.withValues(alpha: 0.4),
-                        ClaroColors.ink.withValues(alpha: 0.8),
-                        ClaroColors.ink,
-                      ],
-                      stops: const [0, 0.7, 1],
-                    ),
-                  ),
-                ),
-              ),
-              Column(
-                children: [
-                  const Expanded(child: _BrandBand()),
-                  // Capped so a tall step can't push the brand band off screen;
-                  // past the cap the sheet scrolls inside.
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: height * 0.86),
-                    child: _sheet(),
-                  ),
-                ],
+              const Expanded(child: _BrandBand()),
+              // Capped so a tall step can't push the brand band off screen;
+              // past the cap the sheet scrolls inside.
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: height * 0.86),
+                child: _sheet(),
               ),
             ],
           );
@@ -202,13 +170,17 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Widget _sheet() {
     return DecoratedBox(
-      // A thin gradient rim, mint fading to grey, around the top of the sheet.
-      decoration: const BoxDecoration(
+      // A thin gradient rim around the top of the sheet.
+      decoration: BoxDecoration(
         borderRadius: ClaroRadius.sheet,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0x8078FC90), Color(0x1A78FC90), Color(0x33FFFFFF)],
+          colors: [
+            context.brandMint.withValues(alpha: 0.5),
+            context.brandMint.withValues(alpha: 0.1),
+            context.border,
+          ],
         ),
       ),
       child: Padding(
@@ -216,7 +188,7 @@ class _AuthScreenState extends State<AuthScreen> {
         child: ClipRRect(
           borderRadius: ClaroRadius.sheet,
           child: ColoredBox(
-            color: ClaroColors.inkPanel,
+            color: context.panel,
             child: SafeArea(
               top: false,
               child: AnimatedSize(
@@ -242,7 +214,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         child: KeyedSubtree(key: ValueKey(_step), child: _stepContent()),
                       ),
                       const SizedBox(height: ClaroSpacing.xl),
-                      const ClaroPoweredBy(captionColor: ClaroColors.onInkMuted),
+                      ClaroPoweredBy(captionColor: context.textSecondary),
                     ],
                   ),
                 ),
@@ -319,12 +291,12 @@ class _BrandBand extends StatelessWidget {
               children: [
                 Text(
                   'Claro Pulse',
-                  style: ClaroType.displayLg.copyWith(letterSpacing: 0.5, color: ClaroColors.onInk),
+                  style: ClaroType.displayLg.copyWith(letterSpacing: 0.5, color: context.textPrimary),
                 ),
                 const SizedBox(height: ClaroSpacing.xs),
                 Text(
                   'Your system, at a glance.',
-                  style: ClaroType.body.copyWith(color: ClaroColors.mint.withValues(alpha: 0.8)),
+                  style: ClaroType.body.copyWith(color: context.brandMint),
                 ),
               ],
             ),
@@ -354,7 +326,7 @@ class _StepDots extends StatelessWidget {
             width: i == activeIndex ? 24 : 12,
             decoration: BoxDecoration(
               borderRadius: ClaroRadius.pill,
-              color: i <= activeIndex ? ClaroColors.mint : ClaroColors.borderDark,
+              color: i <= activeIndex ? context.brandMint : context.border,
             ),
           ),
         ],
@@ -383,11 +355,11 @@ class _PhoneStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Sign in', style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk)),
+        Text('Sign in', style: ClaroType.displayLg.copyWith(color: context.textPrimary)),
         const SizedBox(height: ClaroSpacing.sm),
         Text(
           "Enter your mobile number. We'll send a code to verify it's you.",
-          style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
+          style: ClaroType.body.copyWith(color: context.textSecondary),
         ),
         const SizedBox(height: ClaroSpacing.xl),
         _PhoneField(controller: controller, onChanged: onChanged, onSubmit: onSubmit),
@@ -443,21 +415,19 @@ class _PhoneFieldState extends State<_PhoneField> {
       duration: ClaroMotion.fast,
       height: 56,
       decoration: BoxDecoration(
-        // Lifted above the sheet: an equal-tone field on a dark panel is only
-        // findable by its border.
-        color: ClaroColors.inkPanelHigh,
+        color: context.panelHigh,
         borderRadius: ClaroRadius.sm,
         border: Border.all(
-          color: focused ? ClaroColors.mint.withValues(alpha: 0.8) : ClaroColors.borderDark,
+          color: focused ? context.brandMint : context.border,
         ),
       ),
       child: Row(
         children: [
           Padding(
             padding: const EdgeInsets.only(left: ClaroSpacing.lg, right: ClaroSpacing.sm),
-            child: Text('+91', style: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted)),
+            child: Text('+91', style: ClaroType.subtitle.copyWith(color: context.textSecondary)),
           ),
-          Container(width: 1, height: 24, color: ClaroColors.borderDark),
+          Container(width: 1, height: 24, color: context.border),
           const SizedBox(width: ClaroSpacing.sm),
           Expanded(
             child: TextField(
@@ -470,11 +440,11 @@ class _PhoneFieldState extends State<_PhoneField> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(_phoneLength),
               ],
-              style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk),
-              cursorColor: ClaroColors.mint,
+              style: ClaroType.subtitle.copyWith(color: context.textPrimary),
+              cursorColor: context.brandMint,
               decoration: InputDecoration.collapsed(
                 hintText: '98765 43210',
-                hintStyle: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted),
+                hintStyle: ClaroType.subtitle.copyWith(color: context.textSecondary),
               ),
               onChanged: widget.onChanged,
               onSubmitted: (_) => widget.onSubmit(),
@@ -518,11 +488,11 @@ class _OtpStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Enter the code', style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk)),
+        Text('Enter the code', style: ClaroType.displayLg.copyWith(color: context.textPrimary)),
         const SizedBox(height: ClaroSpacing.sm),
         Text(
           'We sent a 6-digit code to +91 $phone',
-          style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
+          style: ClaroType.body.copyWith(color: context.textSecondary),
         ),
         const SizedBox(height: ClaroSpacing.xl),
         ClaroOtpRow(value: otp, onChanged: onOtpChanged),
@@ -547,12 +517,12 @@ class _OtpStep extends StatelessWidget {
           children: [
             _TextAction(
               text: 'Change number',
-              color: ClaroColors.onInkMuted,
+              color: context.textSecondary,
               onTap: loading ? null : onChangeNumber,
             ),
             _TextAction(
               text: cooldownSeconds > 0 ? 'Resend in ${cooldownSeconds}s' : 'Resend code',
-              color: cooldownSeconds > 0 ? ClaroColors.onInkMuted : ClaroColors.mint,
+              color: cooldownSeconds > 0 ? context.textSecondary : context.brandMint,
               onTap: canResend ? onResend : null,
             ),
           ],
@@ -596,14 +566,14 @@ class _SignedInStep extends StatelessWidget {
           height: 64,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: ClaroColors.mintDeep.withValues(alpha: 0.25),
+            color: context.brandMint.withValues(alpha: 0.25),
           ),
-          child: const Icon(Icons.check, color: ClaroColors.mint, size: 32),
+          child: Icon(Icons.check, color: context.brandMint, size: 32),
         ),
         const SizedBox(height: ClaroSpacing.lg),
-        Text("You're signed in", style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
+        Text("You're signed in", style: ClaroType.title.copyWith(color: context.textPrimary)),
         const SizedBox(height: ClaroSpacing.xs),
-        Text('+91 $phone', style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted)),
+        Text('+91 $phone', style: ClaroType.body.copyWith(color: context.textSecondary)),
       ],
     );
   }

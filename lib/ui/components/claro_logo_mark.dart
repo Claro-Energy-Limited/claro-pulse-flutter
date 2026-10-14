@@ -15,7 +15,11 @@ class ClaroLogoMark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.md, vertical: ClaroSpacing.sm),
-      decoration: const BoxDecoration(color: ClaroColors.ink, borderRadius: ClaroRadius.md),
+      decoration: BoxDecoration(
+        color: context.panel,
+        borderRadius: ClaroRadius.md,
+        border: Border.all(color: context.border),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,14 +29,15 @@ class ClaroLogoMark extends StatelessWidget {
             width: 24,
             height: 24,
             semanticsLabel: 'Claro Energy',
+            colorFilter: ColorFilter.mode(context.textPrimary, BlendMode.srcIn),
           ),
           const SizedBox(width: ClaroSpacing.sm),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('CLARO', style: ClaroType.caption.copyWith(fontWeight: FontWeight.w600, color: ClaroColors.mint)),
-              Text('PULSE', style: ClaroType.subtitle.copyWith(fontWeight: FontWeight.w600, color: ClaroColors.onInk)),
+              Text('CLARO', style: ClaroType.caption.copyWith(fontWeight: FontWeight.w600, color: context.brandMint)),
+              Text('PULSE', style: ClaroType.subtitle.copyWith(fontWeight: FontWeight.w600, color: context.textPrimary)),
             ],
           ),
         ],

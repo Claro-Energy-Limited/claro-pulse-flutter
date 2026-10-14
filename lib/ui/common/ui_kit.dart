@@ -29,18 +29,18 @@ class Panel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color ?? ClaroColors.inkPanel,
+      color: color ?? context.panel,
       borderRadius: radius,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        splashColor: ClaroColors.mint.withValues(alpha: 0.08),
-        highlightColor: ClaroColors.mint.withValues(alpha: 0.04),
+        splashColor: context.brandMint.withValues(alpha: 0.08),
+        highlightColor: context.brandMint.withValues(alpha: 0.04),
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
             borderRadius: radius,
-            border: Border.all(color: borderColor ?? ClaroColors.borderDark),
+            border: Border.all(color: borderColor ?? context.border),
           ),
           child: child,
         ),
@@ -61,14 +61,14 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Text(title, style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk))),
+        Expanded(child: Text(title, style: ClaroType.subtitle.copyWith(color: context.textPrimary))),
         if (actionLabel != null)
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onAction,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.xs),
-              child: Text(actionLabel!, style: ClaroType.label.copyWith(color: ClaroColors.mint)),
+              child: Text(actionLabel!, style: ClaroType.label.copyWith(color: context.brandMint)),
             ),
           ),
       ],
@@ -112,13 +112,13 @@ class CircleIconButton extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: ClaroColors.inkPanel,
+                  color: context.panel,
                   border: Border.all(
-                    color: active ? ClaroColors.mint.withValues(alpha: 0.6) : ClaroColors.borderDark,
+                    color: active ? context.brandMint.withValues(alpha: 0.6) : context.border,
                   ),
                 ),
                 alignment: Alignment.center,
-                child: Icon(icon, size: size * 0.45, color: active ? ClaroColors.mint : ClaroColors.onInk),
+                child: Icon(icon, size: size * 0.45, color: active ? context.brandMint : context.textPrimary),
               ),
               if (badgeCount > 0)
                 Positioned(
@@ -253,11 +253,11 @@ class StatTile extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: ClaroColors.mint.withValues(alpha: 0.12),
+              color: context.brandMint.withValues(alpha: 0.12),
               borderRadius: ClaroRadius.sm,
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: 18, color: ClaroColors.mint),
+            child: Icon(icon, size: 18, color: context.brandMint),
           ),
           const SizedBox(height: ClaroSpacing.md),
           Row(
@@ -269,17 +269,17 @@ class StatTile extends StatelessWidget {
                   value,
                   overflow: TextOverflow.ellipsis,
                   style: ClaroType.readoutLg.copyWith(
-                    color: hasValue ? ClaroColors.onInk : ClaroColors.onInkMuted,
+                    color: hasValue ? context.textPrimary : context.textSecondary,
                     fontSize: 22,
                   ),
                 ),
               ),
               const SizedBox(width: 4),
-              Text(unit, style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
+              Text(unit, style: ClaroType.caption.copyWith(color: context.textSecondary)),
             ],
           ),
           const SizedBox(height: 2),
-          Text(label, style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
+          Text(label, style: ClaroType.caption.copyWith(color: context.textSecondary)),
         ],
       ),
     );
@@ -302,7 +302,7 @@ class BackHeader extends StatelessWidget {
         children: [
           CircleIconButton(icon: Icons.arrow_back_rounded, tooltip: 'Back', onPressed: onBack, size: 40),
           const SizedBox(width: ClaroSpacing.md),
-          Expanded(child: Text(title, style: ClaroType.title.copyWith(color: ClaroColors.onInk))),
+          Expanded(child: Text(title, style: ClaroType.title.copyWith(color: context.textPrimary))),
           ?trailing,
         ],
       ),
@@ -331,7 +331,7 @@ class MessageState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = isError ? ClaroColors.fault : ClaroColors.mint;
+    final tint = isError ? ClaroColors.fault : context.brandMint;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.xxl),
       child: Column(
@@ -344,18 +344,18 @@ class MessageState extends StatelessWidget {
             child: Icon(icon, color: tint, size: 28),
           ),
           const SizedBox(height: ClaroSpacing.lg),
-          Text(title, textAlign: TextAlign.center, style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
+          Text(title, textAlign: TextAlign.center, style: ClaroType.title.copyWith(color: context.textPrimary)),
           const SizedBox(height: ClaroSpacing.xs),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
+            style: ClaroType.body.copyWith(color: context.textSecondary),
           ),
           if (actionLabel != null) ...[
             const SizedBox(height: ClaroSpacing.lg),
             TextButton(
               onPressed: onAction,
-              child: Text(actionLabel!, style: ClaroType.subtitle.copyWith(color: ClaroColors.mint)),
+              child: Text(actionLabel!, style: ClaroType.subtitle.copyWith(color: context.brandMint)),
             ),
           ],
         ],

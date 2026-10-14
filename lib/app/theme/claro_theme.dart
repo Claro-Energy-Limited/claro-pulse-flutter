@@ -3,13 +3,46 @@ import 'package:flutter/material.dart';
 import 'claro_colors.dart';
 import 'claro_type.dart';
 
-/// One fixed dark theme built from our own tokens, ported from the Kotlin `Theme.kt`.
+/// Light and dark themes built from our design tokens.
 ///
-/// Material's dynamic colour stays rejected (design-system.md §8). The app runs
-/// dark (black / white / green) by product decision. Screens pass explicit colours
-/// anyway; this scheme backstops stock Material widgets so none of them draws a
-/// white surface on a black screen.
+/// Light mode is the app default, with dark mode and system default available
+/// from the profile tab.
 abstract final class ClaroTheme {
+  static ThemeData get light {
+    final scheme = ColorScheme.light(
+      primary: ClaroColors.mintDeep,
+      onPrimary: ClaroColors.card,
+      secondary: ClaroColors.mintDeep,
+      onSecondary: ClaroColors.card,
+      surface: ClaroColors.surface,
+      onSurface: ClaroColors.ink,
+      surfaceContainerHighest: ClaroColors.card,
+      onSurfaceVariant: ClaroColors.muted,
+      outline: ClaroColors.border,
+      error: ClaroColors.fault,
+      onError: ClaroColors.card,
+      errorContainer: ClaroColors.faultBg,
+      onErrorContainer: ClaroColors.fault,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: scheme,
+      scaffoldBackgroundColor: ClaroColors.surface,
+      fontFamily: 'PlusJakartaSans',
+      textTheme: TextTheme(
+        headlineMedium: ClaroType.displayXl.copyWith(color: ClaroColors.ink),
+        headlineSmall: ClaroType.displayLg.copyWith(color: ClaroColors.ink),
+        titleLarge: ClaroType.title.copyWith(color: ClaroColors.ink),
+        titleMedium: ClaroType.subtitle.copyWith(color: ClaroColors.ink),
+        bodyMedium: ClaroType.body.copyWith(color: ClaroColors.ink),
+        labelLarge: ClaroType.label.copyWith(color: ClaroColors.ink),
+        labelSmall: ClaroType.caption.copyWith(color: ClaroColors.ink),
+      ).apply(bodyColor: ClaroColors.ink, displayColor: ClaroColors.ink),
+    );
+  }
+
   static ThemeData get dark {
     final scheme = ColorScheme.dark(
       primary: ClaroColors.mint,

@@ -78,6 +78,8 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.services,
     required this.onLogout,
+    this.themeMode = ThemeMode.light,
+    this.onThemeModeChanged,
     this.refreshInterval = const Duration(seconds: 30),
     this.confirmPollInterval = const Duration(seconds: 2),
     this.confirmTimeout = const Duration(seconds: 30),
@@ -85,6 +87,8 @@ class HomeScreen extends StatefulWidget {
 
   final AppServices services;
   final VoidCallback onLogout;
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode>? onThemeModeChanged;
 
   /// How often Home refreshes the pump's status in the background.
   final Duration refreshInterval;
@@ -361,7 +365,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final devices = _devices ?? const <MyDevice>[];
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: ClaroColors.inkPanel,
+      backgroundColor: context.panel,
       shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.sheet),
       builder: (sheetContext) => SafeArea(
         top: false,
@@ -373,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm),
-                child: Text('Your devices', style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
+                child: Text('Your devices', style: ClaroType.title.copyWith(color: sheetContext.textPrimary)),
               ),
               const SizedBox(height: ClaroSpacing.md),
               for (var i = 0; i < devices.length; i++)
@@ -383,24 +387,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     DeviceKind.from(devices[i].kind) == DeviceKind.inverter
                         ? Icons.solar_power_rounded
                         : Icons.water_drop_rounded,
-                    color: ClaroColors.mint,
+                    color: sheetContext.brandMint,
                   ),
-                  title: Text(deviceTitle(devices[i]), style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk)),
+                  title: Text(deviceTitle(devices[i]), style: ClaroType.subtitle.copyWith(color: sheetContext.textPrimary)),
                   subtitle: Text(
                     devices[i].deviceUid,
-                    style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
+                    style: ClaroType.caption.copyWith(color: sheetContext.textSecondary),
                   ),
-                  trailing: i == _selected ? const Icon(Icons.check_circle_rounded, color: ClaroColors.mint) : null,
+                  trailing: i == _selected ? Icon(Icons.check_circle_rounded, color: sheetContext.brandMint) : null,
                   onTap: () {
                     Navigator.of(sheetContext).pop();
                     _selectDevice(i);
                   },
                 ),
-              const Divider(color: ClaroColors.borderDark),
+              Divider(color: sheetContext.border),
               ListTile(
                 shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.md),
-                leading: const Icon(Icons.add_circle_outline_rounded, color: ClaroColors.mint),
-                title: Text('Add a device', style: ClaroType.subtitle.copyWith(color: ClaroColors.mint)),
+                leading: Icon(Icons.add_circle_outline_rounded, color: sheetContext.brandMint),
+                title: Text('Add a device', style: ClaroType.subtitle.copyWith(color: sheetContext.brandMint)),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   _setRoute(const QrScanRoute());
@@ -479,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _tabs() {
     return Scaffold(
-      backgroundColor: ClaroColors.ink,
+      backgroundColor: context.bg,
       body: _tabBody(),
       bottomNavigationBar: _BottomNav(selected: _tab, onSelect: (tab) => setState(() => _tab = tab)),
     );
@@ -538,6 +542,8 @@ class _HomeScreenState extends State<HomeScreen> {
           phone: widget.services.tokenStore.phone,
           deviceCount: _devices?.length ?? 0,
           isDemo: widget.services.isMock,
+          themeMode: widget.themeMode,
+          onThemeModeChanged: widget.onThemeModeChanged,
           onOpenDevices: () {
             _goToTab(HomeNavTab.home);
             if ((_devices ?? const []).isNotEmpty) _openDeviceSwitcher();
@@ -566,8 +572,8 @@ class _BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: ClaroColors.inkPanel,
-        border: const Border(top: BorderSide(color: ClaroColors.borderDark)),
+        color: context.panel,
+        border: Border(top: BorderSide(color: context.border)),
       ),
       child: SafeArea(
         top: false,
@@ -591,21 +597,21 @@ class _BottomNav extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: 4),
                             decoration: BoxDecoration(
                               color: tab == selected
-                                  ? ClaroColors.mint.withValues(alpha: 0.16)
+                                  ? context.brandMint.withValues(alpha: 0.16)
                                   : const Color(0x00000000),
                               borderRadius: ClaroRadius.pill,
                             ),
                             child: Icon(
                               icon,
                               size: 22,
-                              color: tab == selected ? ClaroColors.mint : ClaroColors.onInkMuted,
+                              color: tab == selected ? context.brandMint : context.textSecondary,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             label,
                             style: ClaroType.caption.copyWith(
-                              color: tab == selected ? ClaroColors.mint : ClaroColors.onInkMuted,
+                              color: tab == selected ? context.brandMint : context.textSecondary,
                             ),
                           ),
                         ],

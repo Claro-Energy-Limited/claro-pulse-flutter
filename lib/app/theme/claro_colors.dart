@@ -1,4 +1,4 @@
-import 'package:flutter/painting.dart';
+import 'package:flutter/material.dart';
 
 /// Claro Pulse design tokens, ported 1:1 from the Kotlin app's `Color.kt`.
 ///
@@ -52,4 +52,30 @@ abstract final class ClaroColors {
 
   /// Secondary text on dark: the dark-mode counterpart of [muted].
   static const onInkMuted = Color(0x99FFFFFF); // white at 60%
+}
+
+/// Dynamic theme color resolution helpers for Light and Dark modes.
+extension ClaroThemeColors on BuildContext {
+  bool get isDark => Theme.of(this).brightness == Brightness.dark;
+
+  /// Screen background
+  Color get bg => isDark ? ClaroColors.ink : ClaroColors.surface;
+
+  /// Card or panel background
+  Color get panel => isDark ? ClaroColors.inkPanel : ClaroColors.card;
+
+  /// Input or nested card background
+  Color get panelHigh => isDark ? ClaroColors.inkPanelHigh : const Color(0xFFF2F2F0);
+
+  /// Primary body & title text
+  Color get textPrimary => isDark ? ClaroColors.onInk : ClaroColors.ink;
+
+  /// Muted / secondary caption text
+  Color get textSecondary => isDark ? ClaroColors.onInkMuted : ClaroColors.muted;
+
+  /// Card hairline border
+  Color get border => isDark ? ClaroColors.borderDark : ClaroColors.border;
+
+  /// Mint accent (brighter on dark, deeper for contrast on light)
+  Color get brandMint => isDark ? ClaroColors.mint : ClaroColors.mintDeep;
 }

@@ -81,14 +81,14 @@ class HomeDashboard extends StatelessWidget {
               onOpenBluetooth: onOpenBluetooth,
             ),
             const SizedBox(height: ClaroSpacing.xl),
-            ..._body(),
+            ..._body(context),
           ],
         ),
       ),
     );
   }
 
-  List<Widget> _body() {
+  List<Widget> _body(BuildContext context) {
     final devices = this.devices;
     if (devices == null && devicesError == null) {
       return const [
@@ -146,7 +146,7 @@ class HomeDashboard extends StatelessWidget {
       if (kind == DeviceKind.inverter)
         ..._inverterBody()
       else
-        ..._pumpBody(),
+        ..._pumpBody(context),
       const SizedBox(height: ClaroSpacing.lg),
       Panel(
         onTap: onOpenDetails,
@@ -155,8 +155,8 @@ class HomeDashboard extends StatelessWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(color: ClaroColors.inkPanelHigh, borderRadius: ClaroRadius.md),
-              child: const Icon(Icons.info_outline_rounded, color: ClaroColors.mint, size: 20),
+              decoration: BoxDecoration(color: context.panelHigh, borderRadius: ClaroRadius.md),
+              child: Icon(Icons.info_outline_rounded, color: context.brandMint, size: 20),
             ),
             const SizedBox(width: ClaroSpacing.md),
             Expanded(
@@ -165,16 +165,16 @@ class HomeDashboard extends StatelessWidget {
                 children: [
                   Text(
                     kind == DeviceKind.inverter ? 'Inverter details' : 'Pump details',
-                    style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk),
+                    style: ClaroType.subtitle.copyWith(color: context.textPrimary),
                   ),
                   Text(
                     'Model, IMEI, installation and warranty',
-                    style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
+                    style: ClaroType.caption.copyWith(color: context.textSecondary),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: ClaroColors.onInkMuted),
+            Icon(Icons.chevron_right_rounded, color: context.textSecondary),
           ],
         ),
       ),
@@ -198,7 +198,7 @@ class HomeDashboard extends StatelessWidget {
         ),
       ];
 
-  List<Widget> _pumpBody() {
+  List<Widget> _pumpBody(BuildContext context) {
     final status = this.status;
     if (status == null && statusError != null) {
       return [
@@ -234,7 +234,7 @@ class HomeDashboard extends StatelessWidget {
     final updated = status?.lastReportedAt;
 
     return [
-      Text('Water pumped today', style: ClaroType.label.copyWith(color: ClaroColors.onInkMuted)),
+      Text('Water pumped today', style: ClaroType.label.copyWith(color: context.textSecondary)),
       const SizedBox(height: ClaroSpacing.xs),
       Row(
         crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -244,24 +244,24 @@ class HomeDashboard extends StatelessWidget {
             child: Text(
               formatWhole(status?.today.waterLiters),
               overflow: TextOverflow.ellipsis,
-              style: ClaroType.readoutXl.copyWith(color: ClaroColors.onInk),
+              style: ClaroType.readoutXl.copyWith(color: context.textPrimary),
             ),
           ),
           const SizedBox(width: ClaroSpacing.sm),
-          Text('litres', style: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted)),
+          Text('litres', style: ClaroType.subtitle.copyWith(color: context.textSecondary)),
         ],
       ),
       const SizedBox(height: ClaroSpacing.xs),
       Text(
         detail,
         style: ClaroType.body.copyWith(
-          color: visual == PumpVisual.running ? ClaroColors.mint : ClaroColors.onInkMuted,
+          color: visual == PumpVisual.running ? context.brandMint : context.textSecondary,
         ),
       ),
       if (updated != null)
         Text(
           'Updated ${formatRelativeTime(updated)}',
-          style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
+          style: ClaroType.caption.copyWith(color: context.textSecondary),
         ),
       const SizedBox(height: ClaroSpacing.lg),
       PumpControlButton(visual: visual, onStart: onStart, onStop: onStop),
@@ -346,7 +346,7 @@ class _Header extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(greeting(), style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
+                Text(greeting(), style: ClaroType.caption.copyWith(color: context.textSecondary)),
                 const SizedBox(height: 2),
                 Row(
                   children: [
@@ -354,15 +354,15 @@ class _Header extends StatelessWidget {
                       child: Text(
                         device == null ? 'Claro Pulse' : deviceTitle(device),
                         overflow: TextOverflow.ellipsis,
-                        style: ClaroType.title.copyWith(color: ClaroColors.onInk),
+                        style: ClaroType.title.copyWith(color: context.textPrimary),
                       ),
                     ),
                     if (device != null)
-                      const Icon(Icons.expand_more_rounded, color: ClaroColors.onInkMuted, size: 22),
+                      Icon(Icons.expand_more_rounded, color: context.textSecondary, size: 22),
                   ],
                 ),
                 if (device != null)
-                  Text(device.deviceUid, style: ClaroType.caption.copyWith(color: ClaroColors.mint)),
+                  Text(device.deviceUid, style: ClaroType.caption.copyWith(color: context.brandMint)),
               ],
             ),
           ),

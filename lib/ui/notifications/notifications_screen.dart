@@ -18,14 +18,14 @@ class NotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = notifications;
     return Scaffold(
-      backgroundColor: ClaroColors.ink,
+      backgroundColor: context.bg,
       body: SafeArea(
         child: Column(
           children: [
             BackHeader(title: 'Alerts', onBack: onBack),
             Expanded(
               child: items == null
-                  ? const Center(child: CircularProgressIndicator(color: ClaroColors.mint))
+                  ? Center(child: CircularProgressIndicator(color: context.brandMint))
                   : items.isEmpty
                       ? const Center(
                           child: MessageState(
@@ -63,8 +63,8 @@ class _AlertTile extends StatelessWidget {
     final (IconData icon, Color color) = switch (item.kind) {
       NotificationKind.fault => (Icons.warning_amber_rounded, ClaroColors.fault),
       NotificationKind.offline => (Icons.wifi_off_rounded, ClaroColors.warn),
-      NotificationKind.success => (Icons.water_drop_rounded, ClaroColors.mint),
-      NotificationKind.info => (Icons.support_agent_rounded, ClaroColors.onInk),
+      NotificationKind.success => (Icons.water_drop_rounded, context.brandMint),
+      NotificationKind.info => (Icons.support_agent_rounded, context.textPrimary),
     };
     return Panel(
       child: Row(
@@ -84,22 +84,22 @@ class _AlertTile extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(item.title, style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk)),
+                      child: Text(item.title, style: ClaroType.subtitle.copyWith(color: context.textPrimary)),
                     ),
                     if (!item.read)
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(shape: BoxShape.circle, color: ClaroColors.mint),
+                        decoration: BoxDecoration(shape: BoxShape.circle, color: context.brandMint),
                       ),
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(item.body, style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted)),
+                Text(item.body, style: ClaroType.body.copyWith(color: context.textSecondary)),
                 const SizedBox(height: ClaroSpacing.xs),
                 Text(
                   formatRelativeTime(item.createdAt),
-                  style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
+                  style: ClaroType.caption.copyWith(color: context.textSecondary),
                 ),
               ],
             ),

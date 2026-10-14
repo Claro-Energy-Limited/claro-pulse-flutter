@@ -55,7 +55,7 @@ class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
   Widget build(BuildContext context) {
     final focused = _focus.hasFocus;
     return Scaffold(
-      backgroundColor: ClaroColors.ink,
+      backgroundColor: context.bg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(ClaroSpacing.xl),
@@ -64,11 +64,11 @@ class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
             children: [
               OnboardingBackButton(onPressed: widget.onBack),
               const SizedBox(height: ClaroSpacing.xxl),
-              Text('Enter device ID', style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk)),
+              Text('Enter device ID', style: ClaroType.displayLg.copyWith(color: context.textPrimary)),
               const SizedBox(height: ClaroSpacing.sm),
               Text(
                 'Type the IMEI number printed on your device or its box.',
-                style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
+                style: ClaroType.body.copyWith(color: context.textSecondary),
               ),
               const SizedBox(height: ClaroSpacing.xl),
               AnimatedContainer(
@@ -77,10 +77,10 @@ class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg),
                 alignment: Alignment.centerLeft,
                 decoration: BoxDecoration(
-                  color: ClaroColors.inkPanelHigh,
+                  color: context.panelHigh,
                   borderRadius: ClaroRadius.sm,
                   border: Border.all(
-                    color: focused ? ClaroColors.mint.withValues(alpha: 0.8) : ClaroColors.borderDark,
+                    color: focused ? context.brandMint : context.border,
                   ),
                 ),
                 child: TextField(
@@ -92,11 +92,11 @@ class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(_maxDigits),
                   ],
-                  style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk),
-                  cursorColor: ClaroColors.mint,
+                  style: ClaroType.subtitle.copyWith(color: context.textPrimary),
+                  cursorColor: context.brandMint,
                   decoration: InputDecoration.collapsed(
                     hintText: 'e.g. 861234050123456',
-                    hintStyle: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted),
+                    hintStyle: ClaroType.subtitle.copyWith(color: context.textSecondary),
                   ),
                   onChanged: (_) => setState(() {}),
                   onSubmitted: (_) => _submit(),

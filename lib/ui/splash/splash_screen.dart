@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_type.dart';
 import '../components/claro_powered_by.dart';
 
-/// Shown for a moment at start-up while the app gets ready: the logo with
-/// slow mint "pulse" rings (the app is called Pulse), and Claro Energy below.
+/// Shown for a moment at start-up while the app gets ready: the Claro Energy
+/// flash card with animated mint accents and app details, and Claro Powered By below.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -16,10 +15,10 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
-  late final AnimationController _rings = AnimationController(
+  late final AnimationController _pulse = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 2400),
-  )..repeat();
+    duration: const Duration(milliseconds: 2000),
+  )..repeat(reverse: true);
 
   late final AnimationController _intro = AnimationController(
     vsync: this,
@@ -28,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   @override
   void dispose() {
-    _rings.dispose();
+    _pulse.dispose();
     _intro.dispose();
     super.dispose();
   }
@@ -37,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   Widget build(BuildContext context) {
     final fade = CurvedAnimation(parent: _intro, curve: Curves.easeOut);
     return Scaffold(
-      backgroundColor: ClaroColors.ink,
+      backgroundColor: context.bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -46,53 +45,21 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 opacity: fade,
                 child: ScaleTransition(
                   scale: Tween<double>(begin: 0.92, end: 1).animate(fade),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox.square(
-                        dimension: 200,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            AnimatedBuilder(
-                              animation: _rings,
-                              builder: (context, _) => CustomPaint(
-                                size: const Size.square(200),
-                                painter: _PulseRings(_rings.value),
-                              ),
-                            ),
-                            Container(
-                              width: 96,
-                              height: 96,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: ClaroColors.inkPanel,
-                                border: Border.all(color: ClaroColors.mint.withValues(alpha: 0.5), width: 1.5),
-                              ),
-                              alignment: Alignment.center,
-                              child: SvgPicture.asset('assets/logos/claro_logomark_white.svg', width: 48, height: 48),
-                            ),
-                          ],
-                        ),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.xl),
+                      child: AnimatedBuilder(
+                        animation: _pulse,
+                        builder: (context, child) => _ClaroEnergyFlashCard(pulseValue: _pulse.value),
                       ),
-                      const SizedBox(height: ClaroSpacing.xl),
-                      Text(
-                        'Claro Pulse',
-                        style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk, letterSpacing: 0.5),
-                      ),
-                      const SizedBox(height: ClaroSpacing.xs),
-                      Text(
-                        'Smart solar pumping',
-                        style: ClaroType.body.copyWith(color: ClaroColors.mint.withValues(alpha: 0.85)),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(bottom: ClaroSpacing.xxl),
-              child: ClaroPoweredBy(captionColor: ClaroColors.onInkMuted),
+            Padding(
+              padding: const EdgeInsets.only(bottom: ClaroSpacing.xxl),
+              child: ClaroPoweredBy(captionColor: context.textSecondary),
             ),
           ],
         ),
@@ -101,27 +68,54 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   }
 }
 
-/// Three mint rings expanding outward and fading, one after another.
-class _PulseRings extends CustomPainter {
-  _PulseRings(this.t);
+class _ClaroEnergyFlashCard extends StatelessWidget {
+  const _ClaroEnergyFlashCard({required this.pulseValue});
 
-  final double t;
+  final double pulseValue;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final maxRadius = size.shortestSide / 2;
-    for (var i = 0; i < 3; i++) {
-      final phase = (t + i / 3) % 1.0;
-      final radius = 48 + (maxRadius - 48) * phase;
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = ClaroColors.mint.withValues(alpha: (1 - phase) * 0.45);
-      canvas.drawCircle(center, radius, paint);
-    }
+  Widget build(BuildContext context) {
+    final glowAlpha = 0.10 + (0.15 * pulseValue);
+    final borderAlpha = 0.35 + (0.25 * pulseValue);
+
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 320),
+      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.xl, vertical: ClaroSpacing.xxl),
+      decoration: BoxDecoration(
+        color: context.panel,
+        borderRadius: ClaroRadius.lg,
+        border: Border.all(
+          color: context.brandMint.withValues(alpha: borderAlpha),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: context.brandMint.withValues(alpha: glowAlpha),
+            blurRadius: 28,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Claro Pulse',
+            style: ClaroType.displayLg.copyWith(
+              color: context.textPrimary,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: ClaroSpacing.xs),
+          Text(
+            'Smart solar pumping',
+            style: ClaroType.body.copyWith(
+              color: context.brandMint,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(_PulseRings old) => old.t != t;
 }

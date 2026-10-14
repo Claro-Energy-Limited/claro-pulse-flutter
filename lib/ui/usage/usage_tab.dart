@@ -87,11 +87,11 @@ class _UsageTabState extends State<UsageTab> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, ClaroSpacing.xxl),
         children: [
-          Text('Water usage', style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk, fontSize: 28)),
+          Text('Water usage', style: ClaroType.displayLg.copyWith(color: context.textPrimary, fontSize: 28)),
           if (device != null)
             Text(
               '${deviceTitle(device)} · ${device.deviceUid}',
-              style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
+              style: ClaroType.caption.copyWith(color: context.textSecondary),
             ),
           const SizedBox(height: ClaroSpacing.xl),
           if (device == null)
@@ -154,7 +154,7 @@ class _UsageTabState extends State<UsageTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Total water', style: ClaroType.label.copyWith(color: ClaroColors.onInkMuted)),
+            Text('Total water', style: ClaroType.label.copyWith(color: context.textSecondary)),
             const SizedBox(height: ClaroSpacing.xs),
             Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -164,14 +164,14 @@ class _UsageTabState extends State<UsageTab> {
                   child: Text(
                     reported.isEmpty ? dash : formatWhole(total),
                     overflow: TextOverflow.ellipsis,
-                    style: ClaroType.readoutXl.copyWith(color: ClaroColors.onInk, fontSize: 38),
+                    style: ClaroType.readoutXl.copyWith(color: context.textPrimary, fontSize: 38),
                   ),
                 ),
                 const SizedBox(width: ClaroSpacing.sm),
-                Text('litres', style: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted)),
+                Text('litres', style: ClaroType.subtitle.copyWith(color: context.textSecondary)),
               ],
             ),
-            Text(caption, style: ClaroType.caption.copyWith(color: ClaroColors.mint)),
+            Text(caption, style: ClaroType.caption.copyWith(color: context.brandMint)),
             const SizedBox(height: ClaroSpacing.xl),
             WaterBarChart(values: water, labels: _labels(activity.points)),
           ],
@@ -236,7 +236,7 @@ class _RangeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: ClaroColors.inkPanel, borderRadius: ClaroRadius.pill),
+      decoration: BoxDecoration(color: context.panel, borderRadius: ClaroRadius.pill),
       child: Row(
         children: [
           for (final range in ActivityRange.values)
@@ -248,14 +248,16 @@ class _RangeSelector extends StatelessWidget {
                   duration: ClaroMotion.fast,
                   padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.sm),
                   decoration: BoxDecoration(
-                    color: range == selected ? ClaroColors.mint : const Color(0x00000000),
+                    color: range == selected ? context.brandMint : const Color(0x00000000),
                     borderRadius: ClaroRadius.pill,
                   ),
                   alignment: Alignment.center,
                   child: Text(
                     _labels[range]!,
                     style: ClaroType.label.copyWith(
-                      color: range == selected ? ClaroColors.ink : ClaroColors.onInkMuted,
+                      color: range == selected
+                          ? (context.isDark ? ClaroColors.ink : ClaroColors.card)
+                          : context.textSecondary,
                     ),
                   ),
                 ),

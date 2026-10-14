@@ -38,6 +38,11 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
   bool _splashDone = false;
   bool _signedIn = false;
   Timer? _splashTimer;
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void _setThemeMode(ThemeMode mode) {
+    setState(() => _themeMode = mode);
+  }
 
   @override
   void initState() {
@@ -83,7 +88,9 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
     return MaterialApp(
       title: 'Claro Pulse',
       debugShowCheckedModeBanner: false,
-      theme: ClaroTheme.dark,
+      themeMode: _themeMode,
+      theme: ClaroTheme.light,
+      darkTheme: ClaroTheme.dark,
       home: AnimatedSwitcher(
         duration: ClaroMotion.slow,
         child: _buildHome(),
@@ -99,6 +106,8 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
       return HomeScreen(
         key: const ValueKey('home'),
         services: services,
+        themeMode: _themeMode,
+        onThemeModeChanged: _setThemeMode,
         onLogout: _signOut,
       );
     }
