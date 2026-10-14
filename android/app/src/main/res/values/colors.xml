@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Same value as ClaroColors.ink. An XML colour can't reference Dart code, so
+         this is a deliberate duplicate; it only ever needs to match the app's
+         near-black background. Used by the launcher icon and the launch screen. -->
+    <color name="ic_launcher_background">#FF111110</color>
+    <color name="claro_ink">#FF111110</color>
+</resources>
