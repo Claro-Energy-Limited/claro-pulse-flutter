@@ -9,12 +9,16 @@ import 'claro_type.dart';
 /// `context.palette`; the colour schemes here backstop stock Material widgets
 /// (dialogs, snack bars, text fields) so none of them looks out of place.
 abstract final class ClaroTheme {
-  static ThemeData get dark => _build(
-        palette: ClaroPalette.dark,
+  static ThemeData get dark => darkFor(ClaroAccent.mint);
+
+  static ThemeData get light => lightFor(ClaroAccent.mint);
+
+  static ThemeData darkFor(ClaroAccent accent) => _build(
+        palette: ClaroPalette.darkFor(accent),
         scheme: ColorScheme.dark(
-          primary: ClaroColors.mint,
+          primary: accent.fill,
           onPrimary: ClaroColors.ink,
-          secondary: ClaroColors.mint,
+          secondary: accent.fill,
           onSecondary: ClaroColors.ink,
           surface: ClaroColors.inkPanel,
           onSurface: ClaroColors.onInk,
@@ -26,17 +30,17 @@ abstract final class ClaroTheme {
         ),
       );
 
-  static ThemeData get light => _build(
-        palette: ClaroPalette.light,
-        scheme: const ColorScheme.light(
-          primary: ClaroColors.mintDeep,
+  static ThemeData lightFor(ClaroAccent accent) => _build(
+        palette: ClaroPalette.lightFor(accent),
+        scheme: ColorScheme.light(
+          primary: accent.deep,
           onPrimary: ClaroColors.card,
-          secondary: ClaroColors.mint,
+          secondary: accent.fill,
           onSecondary: ClaroColors.ink,
           surface: ClaroColors.card,
           onSurface: ClaroColors.ink,
-          surfaceContainerHighest: Color(0xFFEFEFEC),
-          onSurfaceVariant: Color(0xFF6B6B66),
+          surfaceContainerHighest: const Color(0xFFEFEFEC),
+          onSurfaceVariant: const Color(0xFF6B6B66),
           outline: ClaroColors.border,
           error: ClaroColors.fault,
           onError: ClaroColors.card,

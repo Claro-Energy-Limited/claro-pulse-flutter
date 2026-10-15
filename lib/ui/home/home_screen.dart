@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -25,6 +26,7 @@ import '../usage/usage_tab.dart';
 import 'home_dashboard.dart';
 import 'pump_control.dart';
 import 'pump_state.dart';
+import 'run_story.dart';
 
 enum HomeNavTab { home, usage, complaints, profile }
 
@@ -334,8 +336,19 @@ class _HomeScreenState extends State<HomeScreen> {
         if (status.runStatus == expected) {
           timer.cancel();
           setState(() => _pendingById.remove(deviceId));
-          _loadRunsFor(deviceId);
-          _snack(command == PumpCommand.start ? 'Pump started' : 'Pump stopped');
+          if (command == PumpCommand.start) _snack('Pump started');
+          await _loadRunsFor(deviceId);
+          if (!mounted) return;
+          if (command == PumpCommand.stop) {
+            // A finished run gets its moment: the run story says it all.
+            // Without a run to show, a short message confirms the stop.
+            final run = _runsById[deviceId]?.firstOrNull;
+            if (run != null && !run.isOngoing) {
+              _openRunStory(run);
+            } else {
+              _snack('Pump stopped');
+            }
+          }
           return;
         }
       } on ApiException {
@@ -353,6 +366,11 @@ class _HomeScreenState extends State<HomeScreen> {
         _snack("The pump didn't confirm. Check it has power, then try again.");
       }
     });
+  }
+
+  void _openRunStory(PumpRun run) {
+    final device = _device;
+    showRunStory(context, run: run, deviceName: device?.deviceUid ?? 'Your pump');
   }
 
   // ── Bluetooth (simulated) ────────────────────────────────────────────────
@@ -481,7 +499,24 @@ class _HomeScreenState extends State<HomeScreen> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _back();
       },
-      child: switch (_route) {
+      child: AnimatedSwitcher(
+        duration: ClaroMotion.base,
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(begin: const Offset(0.04, 0), end: Offset.zero).animate(animation),
+            child: child,
+          ),
+        ),
+        child: KeyedSubtree(key: ValueKey(_route.runtimeType), child: _page()),
+      ),
+    );
+  }
+
+  Widget _page() {
+    return switch (_route) {
         // Adding a device is a camera-first flow, designed dark: it stays
         // dark in both themes.
         QrScanRoute() => _dark(QrScannerScreen(
@@ -527,8 +562,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onBack: () => _setRoute(const TabsRoute()),
           ),
         TabsRoute() => _tabs(),
-      },
-    );
+      };
   }
 
   Widget _dark(Widget child) => Theme(data: ClaroTheme.dark, child: child);
@@ -536,6 +570,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _tabs() {
     return Scaffold(
       backgroundColor: context.palette.bg,
+      extendBody: true,
       body: _tabBody(),
       bottomNavigationBar: _BottomNav(selected: _tab, onSelect: (tab) => setState(() => _tab = tab)),
     );
@@ -559,7 +594,12 @@ class _HomeScreenState extends State<HomeScreen> {
               : pumpVisualFor(kind: DeviceKind.from(device.kind), status: status, pending: pending),
           runs: device == null ? null : _runsById[device.deviceId],
           insights: device == null ? null : _insightsById[device.deviceId],
+          complaintUpdate: _complaints
+              ?.where((c) => c.latestUpdate != null && c.status != ComplaintStatus.resolved)
+              .firstOrNull,
           onSeeAllRuns: () => _goToTab(HomeNavTab.usage),
+          onOpenRunStory: _openRunStory,
+          onOpenComplaints: () => _goToTab(HomeNavTab.complaints),
           unreadAlerts: _unreadAlerts,
           bluetooth: _bluetooth,
           onRefresh: _refreshHome,
@@ -628,50 +668,65 @@ class _BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: p.panel,
-        border: Border(top: BorderSide(color: p.border)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: ClaroSpacing.sm),
-          child: Row(
-            children: [
-              for (final (tab, icon, label) in _items)
-                Expanded(
-                  child: Semantics(
-                    button: true,
-                    selected: tab == selected,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => onSelect(tab),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedContainer(
-                            duration: ClaroMotion.fast,
-                            padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: tab == selected
-                                  ? p.accent.withValues(alpha: p.isDark ? 0.16 : 0.30)
-                                  : const Color(0x00000000),
-                              borderRadius: ClaroRadius.pill,
-                            ),
-                            child: Icon(icon, size: 22, color: tab == selected ? p.accentText : p.textMuted),
+    const radius = BorderRadius.all(Radius.circular(28));
+    // A floating, slightly see-through bar: content scrolls softly underneath.
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.only(bottom: ClaroSpacing.md),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.xs, vertical: ClaroSpacing.sm),
+              decoration: BoxDecoration(
+                color: p.panel.withValues(alpha: p.isDark ? 0.82 : 0.88),
+                borderRadius: radius,
+                border: Border.all(color: p.border),
+              ),
+              child: Row(
+                children: [
+                  for (final (tab, icon, label) in _items)
+                    Expanded(
+                      child: Semantics(
+                        button: true,
+                        selected: tab == selected,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => onSelect(tab),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AnimatedContainer(
+                                duration: ClaroMotion.fast,
+                                padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: tab == selected
+                                      ? p.accent.withValues(alpha: p.isDark ? 0.18 : 0.32)
+                                      : const Color(0x00000000),
+                                  borderRadius: ClaroRadius.pill,
+                                ),
+                                child: Icon(icon, size: 22, color: tab == selected ? p.accentText : p.textMuted),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: ClaroType.caption.copyWith(
+                                  color: tab == selected ? p.accentText : p.textMuted,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            label,
-                            style: ClaroType.caption.copyWith(color: tab == selected ? p.accentText : p.textMuted),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),

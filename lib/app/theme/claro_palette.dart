@@ -10,6 +10,22 @@ import 'claro_colors.dart';
 /// - Green text and icons use [accentText]: mint on dark, the deeper green on
 ///   light, because mint text on white is unreadable (design-system §2.4).
 /// - The same goes for [warnText] and [faultText] versus their fill colours.
+/// The accent colours a farmer can choose in Profile → Appearance.
+///
+/// [fill] is bright, for buttons, chips and glows, always with dark text on it.
+/// [deep] is the readable version for green/blue/etc. TEXT on light backgrounds.
+enum ClaroAccent {
+  mint('Mint', ClaroColors.mint, ClaroColors.mintDeep),
+  sky('Sky', Color(0xFF6CC8FF), Color(0xFF0B6A9E)),
+  teal('Teal', Color(0xFF4FE3D1), Color(0xFF0B7A6E)),
+  lilac('Lilac', Color(0xFFC3B2FF), Color(0xFF5B43C7));
+
+  const ClaroAccent(this.label, this.fill, this.deep);
+  final String label;
+  final Color fill;
+  final Color deep;
+}
+
 @immutable
 class ClaroPalette extends ThemeExtension<ClaroPalette> {
   const ClaroPalette({
@@ -86,6 +102,29 @@ class ClaroPalette extends ThemeExtension<ClaroPalette> {
     warn: ClaroColors.warn,
     warnText: Color(0xFF9A5B00),
   );
+
+  /// The dark palette with the chosen accent.
+  static ClaroPalette darkFor(ClaroAccent a) => dark._withAccent(fill: a.fill, text: a.fill);
+
+  /// The light palette with the chosen accent (deeper shade for text).
+  static ClaroPalette lightFor(ClaroAccent a) => light._withAccent(fill: a.fill, text: a.deep);
+
+  ClaroPalette _withAccent({required Color fill, required Color text}) => ClaroPalette(
+        isDark: isDark,
+        bg: bg,
+        panel: panel,
+        panelHigh: panelHigh,
+        border: border,
+        text: this.text,
+        textMuted: textMuted,
+        accent: fill,
+        accentText: text,
+        onAccent: onAccent,
+        fault: fault,
+        faultText: faultText,
+        warn: warn,
+        warnText: warnText,
+      );
 
   @override
   ClaroPalette copyWith() => this;

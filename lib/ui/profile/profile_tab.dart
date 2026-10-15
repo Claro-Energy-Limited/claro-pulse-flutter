@@ -10,6 +10,45 @@ import '../common/ui_kit.dart';
 import '../components/claro_powered_by.dart';
 import '../dev/component_gallery_screen.dart';
 
+class _AccentSwatch extends StatelessWidget {
+  const _AccentSwatch({required this.accent, required this.selected, required this.onTap});
+
+  final ClaroAccent accent;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '${accent.label} accent',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: ClaroMotion.fast,
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: accent.fill,
+                border: Border.all(color: selected ? p.text : p.border, width: selected ? 3 : 1),
+              ),
+              child: selected ? Icon(Icons.check_rounded, color: p.onAccent, size: 22) : null,
+            ),
+            const SizedBox(height: ClaroSpacing.xs),
+            Text(accent.label, style: ClaroType.caption.copyWith(color: selected ? p.text : p.textMuted)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 String themeModeLabel(ThemeMode mode) => switch (mode) {
       ThemeMode.system => 'System default',
       ThemeMode.light => 'Light',
@@ -68,16 +107,19 @@ class ProfileTab extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: p.panel,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.sheet),
       builder: (sheetContext) => SafeArea(
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(ClaroSpacing.lg, ClaroSpacing.md, ClaroSpacing.lg, ClaroSpacing.lg),
-          child: ValueListenableBuilder<ThemeMode>(
-            valueListenable: settings.themeMode,
-            builder: (context, current, _) {
+          child: ListenableBuilder(
+            listenable: Listenable.merge([settings.themeMode, settings.accent]),
+            builder: (context, _) {
+              final current = settings.themeMode.value;
               final sp = context.palette;
-              return Column(
+              return SingleChildScrollView(
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -106,7 +148,25 @@ class ProfileTab extends StatelessWidget {
                         Navigator.of(sheetContext).pop();
                       },
                     ),
+                  const SizedBox(height: ClaroSpacing.lg),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm),
+                    child: Text('Accent colour', style: ClaroType.subtitle.copyWith(color: sp.text)),
+                  ),
+                  const SizedBox(height: ClaroSpacing.md),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      for (final accent in ClaroAccent.values)
+                        _AccentSwatch(
+                          accent: accent,
+                          selected: settings.accent.value == accent,
+                          onTap: () => settings.setAccent(accent),
+                        ),
+                    ],
+                  ),
                 ],
+                ),
               );
             },
           ),
@@ -127,7 +187,7 @@ class ProfileTab extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, ClaroSpacing.xxl),
+        padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, kNavClearance),
         children: [
           const PageTitle(title: 'Profile'),
           const SizedBox(height: ClaroSpacing.xl),

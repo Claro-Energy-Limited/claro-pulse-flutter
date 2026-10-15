@@ -174,6 +174,7 @@ class PumpInsights {
     required this.dieselSavedLiters,
     required this.panelsNeedCleaning,
     required this.lastCleanedOn,
+    required this.typicalDayLiters,
   });
 
   final WeatherCondition todayCondition;
@@ -196,6 +197,10 @@ class PumpInsights {
 
   /// ISO date.
   final String lastCleanedOn;
+
+  /// Water on a typical good day for this pump: the "full" mark of the ring
+  /// on Home, so today's number has meaning.
+  final double typicalDayLiters;
 }
 
 /// One month's summary, for the monthly report screen.

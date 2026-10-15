@@ -470,6 +470,7 @@ class MockClaroPulseApi implements ClaroPulseApi {
       dieselSavedLiters: 410,
       panelsNeedCleaning: true,
       lastCleanedOn: now.subtract(const Duration(days: 23)).toIso8601String().substring(0, 10),
+      typicalDayLiters: 90000,
     );
   }
 

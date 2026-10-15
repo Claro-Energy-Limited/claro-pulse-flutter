@@ -36,7 +36,7 @@ class ComplaintsTab extends StatelessWidget {
         backgroundColor: p.panel,
         onRefresh: onRefresh,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, ClaroSpacing.xxl),
+          padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, kNavClearance),
           children: [
             Text('Complaints', style: ClaroType.displayLg.copyWith(color: p.text, fontSize: 28)),
             Text(

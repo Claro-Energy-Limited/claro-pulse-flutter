@@ -9,6 +9,7 @@ import '../ui/auth/auth_screen.dart';
 import '../ui/home/home_screen.dart';
 import '../ui/splash/splash_screen.dart';
 import 'theme/claro_dimens.dart';
+import 'theme/claro_palette.dart';
 import 'theme/claro_theme.dart';
 
 /// The app root: splash while services start, then sign-in or home.
@@ -82,31 +83,37 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
   @override
   Widget build(BuildContext context) {
     final settings = _services?.settings;
-    // Follows the phone until the farmer picks Light or Dark in Profile.
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: settings?.themeMode ?? _systemMode,
-      builder: (context, mode, _) => MaterialApp(
-        title: 'Claro Pulse',
-        debugShowCheckedModeBanner: false,
-        theme: ClaroTheme.light,
-        darkTheme: ClaroTheme.dark,
-        themeMode: mode,
-        // Status bar icons: light on the dark theme, dark on the light theme.
-        builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
-          value: Theme.of(context).brightness == Brightness.dark
-              ? SystemUiOverlayStyle.light.copyWith(statusBarColor: const Color(0x00000000))
-              : SystemUiOverlayStyle.dark.copyWith(statusBarColor: const Color(0x00000000)),
-          child: child ?? const SizedBox.shrink(),
-        ),
-        home: AnimatedSwitcher(
-          duration: ClaroMotion.slow,
-          child: _buildHome(),
-        ),
-      ),
+    // Follows the phone until the farmer picks Light or Dark in Profile; the
+    // accent colour is their choice too.
+    return ListenableBuilder(
+      listenable: Listenable.merge([settings?.themeMode ?? _systemMode, settings?.accent ?? _mintAccent]),
+      builder: (context, _) {
+        final mode = settings?.themeMode.value ?? ThemeMode.system;
+        final accent = settings?.accent.value ?? ClaroAccent.mint;
+        return MaterialApp(
+          title: 'Claro Pulse',
+          debugShowCheckedModeBanner: false,
+          theme: ClaroTheme.lightFor(accent),
+          darkTheme: ClaroTheme.darkFor(accent),
+          themeMode: mode,
+          // Status bar icons: light on the dark theme, dark on the light theme.
+          builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+            value: Theme.of(context).brightness == Brightness.dark
+                ? SystemUiOverlayStyle.light.copyWith(statusBarColor: const Color(0x00000000))
+                : SystemUiOverlayStyle.dark.copyWith(statusBarColor: const Color(0x00000000)),
+            child: child ?? const SizedBox.shrink(),
+          ),
+          home: AnimatedSwitcher(
+            duration: ClaroMotion.slow,
+            child: _buildHome(),
+          ),
+        );
+      },
     );
   }
 
   static final ValueNotifier<ThemeMode> _systemMode = ValueNotifier(ThemeMode.system);
+  static final ValueNotifier<ClaroAccent> _mintAccent = ValueNotifier(ClaroAccent.mint);
 
   /// The splash and sign-in screens are designed dark (photo, white logo), so
   /// they stay dark in both themes.

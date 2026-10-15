@@ -9,10 +9,13 @@ import '../common/ui_kit.dart';
 /// "Running now" while the pump runs, otherwise "Last run": when it ran, for
 /// how long, and above all how much water it gave.
 class LastRunCard extends StatelessWidget {
-  const LastRunCard({super.key, required this.run, required this.onSeeAll});
+  const LastRunCard({super.key, required this.run, required this.onSeeAll, required this.onOpenStory});
 
   final PumpRun run;
   final VoidCallback onSeeAll;
+
+  /// Opens the full-screen run story.
+  final VoidCallback onOpenStory;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +36,7 @@ class LastRunCard extends StatelessWidget {
     }
 
     return Panel(
+      onTap: onOpenStory,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -71,9 +75,9 @@ class LastRunCard extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Flexible(
-                child: Text(
-                  formatWhole(run.waterLiters),
-                  overflow: TextOverflow.ellipsis,
+                child: CountUpText(
+                  value: run.waterLiters,
+                  format: formatWhole,
                   style: ClaroType.readoutLg.copyWith(color: p.text),
                 ),
               ),
@@ -182,170 +186,132 @@ IconData weatherIcon(WeatherCondition c) => switch (c) {
       WeatherCondition.rain => Icons.grain_rounded,
     };
 
-/// Today's weather, the best hours to pump, and tomorrow's expected water.
-class WeatherCard extends StatelessWidget {
-  const WeatherCard({super.key, required this.insights});
+/// One swipeable card in the "For you" row on Home.
+class ContextCardData {
+  const ContextCardData({
+    required this.icon,
+    required this.title,
+    required this.body,
+    this.tone = ContextTone.normal,
+    this.onTap,
+  });
 
-  final PumpInsights insights;
+  final IconData icon;
+  final String title;
+  final String body;
+  final ContextTone tone;
+  final VoidCallback? onTap;
+}
+
+enum ContextTone { normal, positive, warning }
+
+/// "Next best action" cards, swiped one at a time: only what's useful right now.
+class ContextCarousel extends StatefulWidget {
+  const ContextCarousel({super.key, required this.cards, this.height = 148});
+
+  final List<ContextCardData> cards;
+  final double height;
+
+  @override
+  State<ContextCarousel> createState() => _ContextCarouselState();
+}
+
+class _ContextCarouselState extends State<ContextCarousel> {
+  final _controller = PageController(viewportFraction: 0.9);
+  int _page = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final i = insights;
-    return Panel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              IconTile(icon: weatherIcon(i.todayCondition), color: p.warnText, size: 48),
-              const SizedBox(width: ClaroSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${i.todayCondition.label} · ${i.todayTempC}°C',
-                      style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      'Best time to run: ${i.bestHours}',
-                      style: ClaroType.caption.copyWith(color: p.textMuted),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: ClaroSpacing.md),
-          Divider(height: 1, color: p.border),
-          const SizedBox(height: ClaroSpacing.md),
-          Row(
-            children: [
-              Icon(weatherIcon(i.tomorrowCondition), size: 20, color: p.textMuted),
-              const SizedBox(width: ClaroSpacing.sm),
-              Expanded(
-                child: Text(
-                  'Tomorrow: ${i.tomorrowCondition.label.toLowerCase()}, ${i.tomorrowTempC}°C',
-                  style: ClaroType.body.copyWith(color: p.text),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: ClaroSpacing.xs),
-          Padding(
-            padding: const EdgeInsets.only(left: 28),
-            child: Text(
-              'About ${formatWhole(i.tomorrowExpectedLiters)} litres expected',
-              style: ClaroType.caption.copyWith(color: p.accentText),
+    final cards = widget.cards;
+    return Column(
+      children: [
+        SizedBox(
+          height: widget.height,
+          child: PageView.builder(
+            controller: _controller,
+            padEnds: false,
+            itemCount: cards.length,
+            onPageChanged: (i) => setState(() => _page = i),
+            itemBuilder: (context, i) => Padding(
+              padding: const EdgeInsets.only(right: ClaroSpacing.md),
+              child: _ContextCard(data: cards[i]),
             ),
           ),
+        ),
+        if (cards.length > 1) ...[
+          const SizedBox(height: ClaroSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 0; i < cards.length; i++)
+                AnimatedContainer(
+                  duration: ClaroMotion.fast,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _page ? 18 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: i == _page ? p.accentText : p.border,
+                    borderRadius: ClaroRadius.pill,
+                  ),
+                ),
+            ],
+          ),
         ],
-      ),
+      ],
     );
   }
 }
 
-/// How much the farmer saved compared with a diesel pump.
-class SavingsCard extends StatelessWidget {
-  const SavingsCard({super.key, required this.insights});
+class _ContextCard extends StatelessWidget {
+  const _ContextCard({required this.data});
 
-  final PumpInsights insights;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final i = insights;
-    return TintedPanel(
-      tint: p.accent,
-      child: Row(
-        children: [
-          IconTile(icon: Icons.savings_rounded, size: 48),
-          const SizedBox(width: ClaroSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Saved this month', style: ClaroType.caption.copyWith(color: p.textMuted)),
-                Text(
-                  '₹${formatWhole(i.savingsThisMonthRupees)}',
-                  style: ClaroType.readoutLg.copyWith(color: p.text, fontSize: 26),
-                ),
-                Text(
-                  '₹${formatWhole(i.savingsTotalRupees)} since installation · '
-                  '${formatWhole(i.dieselSavedLiters)} litres of diesel saved',
-                  style: ClaroType.caption.copyWith(color: p.textMuted),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A reminder to clean the panels when output is lower than the sun suggests.
-class PanelCareCard extends StatelessWidget {
-  const PanelCareCard({super.key, required this.insights});
-
-  final PumpInsights insights;
+  final ContextCardData data;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final cleaned = DateTime.tryParse(insights.lastCleanedOn);
-    final days = cleaned == null ? null : DateTime.now().difference(cleaned).inDays;
-    final last = days == null
-        ? ''
-        : days <= 0
-            ? 'Last cleaned today.'
-            : 'Last cleaned $days day${days == 1 ? '' : 's'} ago.';
-
-    if (!insights.panelsNeedCleaning) {
-      return Panel(
-        child: Row(
+    final (Color tint, bool tinted) = switch (data.tone) {
+      ContextTone.warning => (p.warnText, true),
+      ContextTone.positive => (p.accentText, true),
+      ContextTone.normal => (p.accentText, false),
+    };
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            const IconTile(icon: Icons.solar_power_rounded),
-            const SizedBox(width: ClaroSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Solar panels look clean', style: ClaroType.subtitle.copyWith(color: p.text)),
-                  Text(last, style: ClaroType.caption.copyWith(color: p.textMuted)),
-                ],
-              ),
-            ),
+            IconTile(icon: data.icon, color: tint, size: 36),
+            const Spacer(),
+            if (data.onTap != null) Icon(Icons.arrow_forward_rounded, size: 18, color: p.textMuted),
           ],
         ),
-      );
-    }
-    return TintedPanel(
-      tint: p.warn,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          IconTile(icon: Icons.cleaning_services_rounded, color: p.warnText),
-          const SizedBox(width: ClaroSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Time to clean your solar panels',
-                  style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Your pump is giving less water than expected for this much sun. Dust on the panels is the usual cause. $last',
-                  style: ClaroType.body.copyWith(color: p.textMuted),
-                ),
-              ],
-            ),
+        const SizedBox(height: ClaroSpacing.md),
+        Text(
+          data.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 2),
+        Expanded(
+          child: Text(
+            data.body,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: ClaroType.caption.copyWith(color: p.textMuted),
           ),
-        ],
-      ),
+        ),
+      ],
     );
+    return tinted
+        ? TintedPanel(tint: data.tone == ContextTone.warning ? p.warn : p.accent, onTap: data.onTap, child: content)
+        : Panel(onTap: data.onTap, child: content);
   }
 }

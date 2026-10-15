@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../app/theme/claro_dimens.dart';
@@ -82,7 +84,12 @@ class SectionHeader extends StatelessWidget {
     final p = context.palette;
     return Row(
       children: [
-        Expanded(child: Text(title, style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.w600))),
+        Expanded(
+          child: Text(
+            title.toUpperCase(),
+            style: ClaroType.caption.copyWith(color: p.textMuted, letterSpacing: 1.2, fontWeight: FontWeight.w600),
+          ),
+        ),
         if (actionLabel != null)
           GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -518,6 +525,154 @@ class SheetHandle extends StatelessWidget {
         width: 40,
         height: 4,
         decoration: BoxDecoration(color: context.palette.border, borderRadius: ClaroRadius.pill),
+      ),
+    );
+  }
+}
+
+/// Space to leave at the bottom of scrolling tabs, so the floating tab bar
+/// never covers the last item.
+const double kNavClearance = 120;
+
+/// A number that counts up (or down) to its new value: changes feel live.
+/// Null shows a dash.
+class CountUpText extends StatelessWidget {
+  const CountUpText({
+    super.key,
+    required this.value,
+    required this.format,
+    required this.style,
+    this.duration = const Duration(milliseconds: 700),
+  });
+
+  final double? value;
+  final String Function(double) format;
+  final TextStyle style;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    final v = value;
+    if (v == null) return Text(dash, style: style);
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: v),
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      builder: (context, shown, _) => Text(format(shown), overflow: TextOverflow.ellipsis, style: style),
+    );
+  }
+}
+
+/// A thin circular progress ring with a label in the middle.
+class ProgressRing extends StatelessWidget {
+  const ProgressRing({super.key, required this.fraction, required this.label, this.size = 64});
+
+  /// 0..1 (values above 1 show a full ring).
+  final double fraction;
+  final String label;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return SizedBox.square(
+      dimension: size,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: fraction.clamp(0.0, 1.0)),
+        duration: const Duration(milliseconds: 900),
+        curve: Curves.easeOutCubic,
+        builder: (context, f, _) => CustomPaint(
+          painter: _RingPainter(fraction: f, track: p.border, fill: p.accent),
+          child: Center(
+            child: Text(label, style: ClaroType.caption.copyWith(color: p.text, fontWeight: FontWeight.w600)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  _RingPainter({required this.fraction, required this.track, required this.fill});
+
+  final double fraction;
+  final Color track;
+  final Color fill;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const stroke = 6.0;
+    final rect = Rect.fromCircle(center: size.center(Offset.zero), radius: size.shortestSide / 2 - stroke / 2);
+    Paint paint(Color c) => Paint()
+      ..color = c
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawArc(rect, 0, math.pi * 2, false, paint(track));
+    if (fraction > 0) canvas.drawArc(rect, -math.pi / 2, math.pi * 2 * fraction, false, paint(fill));
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) => old.fraction != fraction || old.fill != fill || old.track != track;
+}
+
+/// One item of the compact stats strip.
+class StripStat {
+  const StripStat({required this.icon, required this.value, required this.unit, required this.label});
+
+  final IconData icon;
+  final String value;
+  final String unit;
+  final String label;
+}
+
+/// Four numbers in one slim card, like a vehicle dashboard.
+class StatsStrip extends StatelessWidget {
+  const StatsStrip({super.key, required this.items});
+
+  final List<StripStat> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Panel(
+      padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.lg, horizontal: ClaroSpacing.sm),
+      child: Row(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) Container(width: 1, height: 44, color: p.border),
+            Expanded(
+              child: Column(
+                children: [
+                  Icon(items[i].icon, size: 18, color: p.accentText),
+                  const SizedBox(height: ClaroSpacing.xs),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: items[i].value,
+                          style: ClaroType.readout.copyWith(
+                            color: items[i].value == dash ? p.textMuted : p.text,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        TextSpan(text: ' ${items[i].unit}', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    items[i].label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ClaroType.caption.copyWith(color: p.textMuted, fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

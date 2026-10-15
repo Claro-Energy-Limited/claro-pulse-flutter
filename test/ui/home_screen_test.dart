@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:claropulse/app/theme/claro_palette.dart';
 import 'package:claropulse/app/theme/claro_theme.dart';
 import 'package:claropulse/core/api/api_exception.dart';
 import 'package:claropulse/core/api/claro_pulse_api.dart';
@@ -120,11 +121,16 @@ void main() {
     expect(find.text('Stopping pump…'), findsOneWidget);
 
     await _settle(tester, 5);
-    expect(find.text('Pump stopped'), findsOneWidget);
     expect(find.text('Start pump'), findsOneWidget);
     expect(find.text('Stopped'), findsOneWidget);
     expect(find.text('Last run'), findsOneWidget);
     expect(find.text('litres pumped'), findsOneWidget);
+
+    // The finished run gets its story.
+    expect(find.text('Run complete'), findsOneWidget);
+    await tester.tap(find.text('Done'));
+    await _settle(tester, 5);
+    expect(find.text('Run complete'), findsNothing);
   });
 
   testWidgets('cancelling the sheet changes nothing', (tester) async {
@@ -168,8 +174,10 @@ void main() {
   testWidgets('pump details', (tester) async {
     await _pumpHome(tester, _mock());
 
-    await tester.tap(find.text('Pump details'));
+    // Tapping the pump on Home opens its details.
+    await tester.tap(find.byKey(const ValueKey('device-hero')));
     await _settle(tester);
+    expect(find.text('Pump details'), findsOneWidget);
     expect(find.text('Claro SP-5 Solar Surface Pump'), findsOneWidget);
     expect(find.text('861236078001482'), findsOneWidget);
     expect(find.text('STACON VFD 5.5 kW'), findsOneWidget);
@@ -287,14 +295,34 @@ void main() {
     expect(find.text('Try again'), findsOneWidget);
   });
 
-  testWidgets('home shows the running run and the "for you" cards', (tester) async {
+  testWidgets('home shows the running run, the ring and swipeable "for you" cards', (tester) async {
     await _pumpHome(tester, _mock());
 
     expect(find.text('Running now'), findsOneWidget);
     expect(find.text('litres so far'), findsOneWidget);
-    expect(find.text('Best time to run: 10 AM – 3 PM'), findsOneWidget);
-    expect(find.text('Saved this month'), findsOneWidget);
-    expect(find.text('Time to clean your solar panels'), findsOneWidget);
+    expect(find.text('of a good day'), findsOneWidget);
+    expect(find.text('RIGHT NOW'), findsOneWidget);
+
+    // Most useful first: something to do, then a complaint update.
+    expect(find.text('Clean your solar panels'), findsOneWidget);
+    expect(find.text('Complaint CP-1038 updated'), findsOneWidget);
+
+    // Swipe to the last card.
+    for (var i = 0; i < 3; i++) {
+      await tester.drag(find.byType(PageView), const Offset(-320, 0));
+      await _settle(tester, 5);
+    }
+    expect(find.text('₹4,850 saved this month'), findsOneWidget);
+  });
+
+  testWidgets('tapping the run card opens its story', (tester) async {
+    await _pumpHome(tester, _mock());
+    await tester.tap(find.text('Running now'));
+    await _settle(tester, 5);
+    expect(find.text('litres so far'), findsNWidgets(2));
+    await tester.tap(find.byTooltip('Close'));
+    await _settle(tester, 5);
+    expect(find.text('litres so far'), findsOneWidget);
   });
 
   testWidgets('"All runs" opens Usage with recent runs and the monthly report', (tester) async {
@@ -303,7 +331,7 @@ void main() {
     await tester.tap(find.text('All runs'));
     await _settle(tester);
     expect(find.text('Water usage'), findsOneWidget);
-    expect(find.text('Recent runs'), findsOneWidget);
+    expect(find.text('RECENT RUNS'), findsOneWidget);
 
     await tester.tap(find.text('Monthly report'));
     await _settle(tester);
@@ -330,5 +358,11 @@ void main() {
 
     expect(settings.themeMode.value, ThemeMode.light);
     expect(find.text('Light'), findsOneWidget);
+
+    await tester.tap(find.text('Appearance'));
+    await _settle(tester, 5);
+    await tester.tap(find.text('Sky'));
+    await _settle(tester, 3);
+    expect(settings.accent.value, ClaroAccent.sky);
   });
 }

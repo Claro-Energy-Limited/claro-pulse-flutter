@@ -7,6 +7,7 @@ import '../../core/api/models/device_models.dart';
 import '../../core/api/models/pump_models.dart';
 import '../../core/util/relative_time.dart';
 import '../common/ui_kit.dart';
+import '../components/dashed_path.dart';
 import '../devices/device_kind.dart';
 import 'home_cards.dart';
 import 'pump_control.dart';
@@ -16,10 +17,12 @@ import 'pump_state.dart';
 String deviceTitle(MyDevice device) =>
     DeviceKind.from(device.kind) == DeviceKind.inverter ? 'Solar Inverter' : 'Solar Pump';
 
-/// The Home tab: the farmer's pump front and centre, like a vehicle app shows
-/// the vehicle. It answers, in this order: is my pump working, how much water
-/// did I get today and in the last run, and what should I know (weather,
-/// savings, panel care)? Technical facts live one tap away in Pump details.
+/// The Home tab, built to be read at a glance, like a vehicle app.
+///
+/// The first screen answers the main questions without scrolling: is my pump
+/// running, and how much water did it give today? The pump stands on a lit
+/// "stage" with the key numbers on it, and the Start/Stop button sits right
+/// below. Everything else (last run, today's numbers, suggestions) follows.
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({
     super.key,
@@ -32,6 +35,7 @@ class HomeDashboard extends StatelessWidget {
     required this.visual,
     required this.runs,
     required this.insights,
+    required this.complaintUpdate,
     required this.unreadAlerts,
     required this.bluetooth,
     required this.onRefresh,
@@ -42,7 +46,9 @@ class HomeDashboard extends StatelessWidget {
     required this.onOpenDetails,
     required this.onOpenAlerts,
     required this.onOpenBluetooth,
+    required this.onOpenComplaints,
     required this.onSeeAllRuns,
+    required this.onOpenRunStory,
     required this.onStart,
     required this.onStop,
   });
@@ -58,8 +64,11 @@ class HomeDashboard extends StatelessWidget {
   /// Newest first; null or empty hides the run card.
   final List<PumpRun>? runs;
 
-  /// Null hides the weather, savings and panel cards.
+  /// Null hides the ring and the suggestion cards that depend on it.
   final PumpInsights? insights;
+
+  /// The newest complaint with an update from the service team, if any.
+  final Complaint? complaintUpdate;
   final int unreadAlerts;
   final ValueNotifier<BluetoothLink> bluetooth;
   final Future<void> Function() onRefresh;
@@ -70,7 +79,9 @@ class HomeDashboard extends StatelessWidget {
   final VoidCallback onOpenDetails;
   final VoidCallback onOpenAlerts;
   final VoidCallback onOpenBluetooth;
+  final VoidCallback onOpenComplaints;
   final VoidCallback onSeeAllRuns;
+  final ValueChanged<PumpRun> onOpenRunStory;
   final VoidCallback onStart;
   final VoidCallback onStop;
 
@@ -84,7 +95,7 @@ class HomeDashboard extends StatelessWidget {
         backgroundColor: p.panel,
         onRefresh: onRefresh,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, ClaroSpacing.xxl),
+          padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, kNavClearance),
           children: [
             _Header(
               device: device,
@@ -94,7 +105,7 @@ class HomeDashboard extends StatelessWidget {
               onOpenAlerts: onOpenAlerts,
               onOpenBluetooth: onOpenBluetooth,
             ),
-            const SizedBox(height: ClaroSpacing.xl),
+            const SizedBox(height: ClaroSpacing.lg),
             ..._body(context),
           ],
         ),
@@ -106,9 +117,7 @@ class HomeDashboard extends StatelessWidget {
     final p = context.palette;
     final devices = this.devices;
     if (devices == null && devicesError == null) {
-      return [
-        SizedBox(height: 320, child: Center(child: CircularProgressIndicator(color: p.accentText))),
-      ];
+      return [SizedBox(height: 360, child: Center(child: CircularProgressIndicator(color: p.accentText)))];
     }
     if (devices == null) {
       return [
@@ -154,64 +163,36 @@ class HomeDashboard extends StatelessWidget {
     }
 
     final kind = DeviceKind.from(device.kind);
-    return [
-      _Hero(kind: kind, visual: visual),
-      const SizedBox(height: ClaroSpacing.xl),
-      if (kind == DeviceKind.inverter) ..._inverterBody(context) else ..._pumpBody(context),
-      const SizedBox(height: ClaroSpacing.lg),
-      Panel(
-        onTap: onOpenDetails,
-        child: Row(
-          children: [
-            const IconTile(icon: Icons.info_outline_rounded),
-            const SizedBox(width: ClaroSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    kind == DeviceKind.inverter ? 'Inverter details' : 'Pump details',
-                    style: ClaroType.subtitle.copyWith(color: p.text),
-                  ),
-                  Text(
-                    'Model, IMEI, installation and warranty',
-                    style: ClaroType.caption.copyWith(color: p.textMuted),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: p.textMuted),
-          ],
+    if (kind == DeviceKind.inverter) {
+      return [
+        _HeroStage(
+          kind: kind,
+          visual: visual,
+          onTap: onOpenDetails,
+          overlay: const _InverterOverlay(),
         ),
-      ),
-    ];
-  }
-
-  List<Widget> _inverterBody(BuildContext context) {
-    final p = context.palette;
-    return [
-      Panel(
-        child: Row(
-          children: [
-            Icon(Icons.hourglass_top_rounded, color: p.textMuted),
-            const SizedBox(width: ClaroSpacing.md),
-            Expanded(
-              child: Text(
-                'Live readings for inverters are coming soon. Your inverter is connected and reporting.',
-                style: ClaroType.body.copyWith(color: p.textMuted),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ];
+      ];
+    }
+    return _pumpBody(context);
   }
 
   List<Widget> _pumpBody(BuildContext context) {
-    final p = context.palette;
     final status = this.status;
+    final insights = this.insights;
+    final lastRun = (runs == null || runs!.isEmpty) ? null : runs!.first;
+
+    final hero = _HeroStage(
+      kind: DeviceKind.pump,
+      visual: visual,
+      onTap: onOpenDetails,
+      overlay: status == null && statusError != null
+          ? null
+          : _PumpOverlay(status: status, visual: visual, typicalDayLiters: insights?.typicalDayLiters),
+    );
+
     if (status == null && statusError != null) {
       return [
+        hero,
         MessageState(
           icon: Icons.sync_problem_rounded,
           title: "Couldn't reach your pump",
@@ -223,52 +204,9 @@ class HomeDashboard extends StatelessWidget {
       ];
     }
 
-    final flow = status?.live.flowRateLpm;
-    final String detail;
-    switch (visual) {
-      case PumpVisual.running:
-        detail = flow != null && flow > 0 ? 'Flowing at ${formatWhole(flow)} litres a minute' : 'Pump is running';
-      case PumpVisual.starting:
-      case PumpVisual.stopping:
-        detail = 'Waiting for the pump to confirm…';
-      case PumpVisual.stopped:
-        detail = 'Pump is off';
-      case PumpVisual.offline:
-        detail = 'Pump is offline';
-      case PumpVisual.attention:
-        detail = 'Pump needs attention';
-      default:
-        detail = visual.label;
-    }
-    final updated = status?.lastReportedAt;
-    final lastRun = (runs == null || runs!.isEmpty) ? null : runs!.first;
-    final insights = this.insights;
-
+    final cards = _contextCards(context);
     return [
-      Text('Water pumped today', style: ClaroType.label.copyWith(color: p.textMuted)),
-      const SizedBox(height: ClaroSpacing.xs),
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          Flexible(
-            child: Text(
-              formatWhole(status?.today.waterLiters),
-              overflow: TextOverflow.ellipsis,
-              style: ClaroType.readoutXl.copyWith(color: p.text),
-            ),
-          ),
-          const SizedBox(width: ClaroSpacing.sm),
-          Text('litres', style: ClaroType.subtitle.copyWith(color: p.textMuted)),
-        ],
-      ),
-      const SizedBox(height: ClaroSpacing.xs),
-      Text(
-        detail,
-        style: ClaroType.body.copyWith(color: visual == PumpVisual.running ? p.accentText : p.textMuted),
-      ),
-      if (updated != null)
-        Text('Updated ${formatRelativeTime(updated)}', style: ClaroType.caption.copyWith(color: p.textMuted)),
+      hero,
       const SizedBox(height: ClaroSpacing.lg),
       PumpControlButton(visual: visual, onStart: onStart, onStop: onStop),
       if (status != null && needsAttention(status)) ...[
@@ -276,66 +214,88 @@ class HomeDashboard extends StatelessWidget {
         _AttentionCard(status: status),
       ],
       if (lastRun != null) ...[
-        const SizedBox(height: ClaroSpacing.lg),
-        LastRunCard(run: lastRun, onSeeAll: onSeeAllRuns),
+        const SizedBox(height: ClaroSpacing.xl),
+        LastRunCard(run: lastRun, onSeeAll: onSeeAllRuns, onOpenStory: () => onOpenRunStory(lastRun)),
       ],
       const SizedBox(height: ClaroSpacing.xl),
-      const SectionHeader(title: 'Today'),
+      const SectionHeader(title: 'Right now'),
       const SizedBox(height: ClaroSpacing.md),
-      Row(
-        children: [
-          Expanded(
-            child: StatTile(
-              icon: Icons.wb_sunny_rounded,
-              label: 'Solar power now',
-              value: formatOneDecimal(status?.live.solarPowerKw),
-              unit: 'kW',
-            ),
-          ),
-          const SizedBox(width: ClaroSpacing.md),
-          Expanded(
-            child: StatTile(
-              icon: Icons.schedule_rounded,
-              label: 'Run time today',
-              value: formatOneDecimal(status?.today.runHours),
-              unit: 'hrs',
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: ClaroSpacing.md),
-      Row(
-        children: [
-          Expanded(
-            child: StatTile(
-              icon: Icons.bolt_rounded,
-              label: 'Energy used today',
-              value: formatOneDecimal(status?.today.energyKwh),
-              unit: 'kWh',
-            ),
-          ),
-          const SizedBox(width: ClaroSpacing.md),
-          Expanded(
-            child: StatTile(
-              icon: Icons.speed_rounded,
-              label: 'Pump speed',
-              value: formatWhole(status?.live.motorSpeedRpm),
-              unit: 'RPM',
-            ),
-          ),
-        ],
-      ),
-      if (insights != null) ...[
+      StatsStrip(items: [
+        StripStat(
+          icon: Icons.wb_sunny_rounded,
+          value: formatOneDecimal(status?.live.solarPowerKw),
+          unit: 'kW',
+          label: 'Solar',
+        ),
+        StripStat(
+          icon: Icons.schedule_rounded,
+          value: formatOneDecimal(status?.today.runHours),
+          unit: 'hrs',
+          label: 'Run today',
+        ),
+        StripStat(
+          icon: Icons.bolt_rounded,
+          value: formatOneDecimal(status?.today.energyKwh),
+          unit: 'kWh',
+          label: 'Energy today',
+        ),
+        StripStat(
+          icon: Icons.speed_rounded,
+          value: formatWhole(status?.live.motorSpeedRpm),
+          unit: 'RPM',
+          label: 'Speed',
+        ),
+      ]),
+      if (cards.isNotEmpty) ...[
         const SizedBox(height: ClaroSpacing.xl),
         const SectionHeader(title: 'For you'),
         const SizedBox(height: ClaroSpacing.md),
-        WeatherCard(insights: insights),
-        const SizedBox(height: ClaroSpacing.md),
-        SavingsCard(insights: insights),
-        const SizedBox(height: ClaroSpacing.md),
-        PanelCareCard(insights: insights),
+        ContextCarousel(cards: cards),
       ],
     ];
+  }
+
+  /// Most useful first: something to do, then something to know.
+  List<ContextCardData> _contextCards(BuildContext context) {
+    final i = insights;
+    final update = complaintUpdate;
+    return [
+      if (i != null && i.panelsNeedCleaning)
+        ContextCardData(
+          icon: Icons.cleaning_services_rounded,
+          title: 'Clean your solar panels',
+          body: _cleaningText(i),
+          tone: ContextTone.warning,
+        ),
+      if (update != null)
+        ContextCardData(
+          icon: Icons.support_agent_rounded,
+          title: 'Complaint ${update.ticketNo} updated',
+          body: update.latestUpdate ?? update.status.label,
+          onTap: onOpenComplaints,
+        ),
+      if (i != null) ...[
+        ContextCardData(
+          icon: weatherIcon(i.tomorrowCondition),
+          title: 'Tomorrow: ${i.tomorrowCondition.label.toLowerCase()}, ${i.tomorrowTempC}°C',
+          body: 'About ${formatWhole(i.tomorrowExpectedLiters)} litres expected. '
+              'Best time to run today: ${i.bestHours}.',
+        ),
+        ContextCardData(
+          icon: Icons.savings_rounded,
+          title: '₹${formatWhole(i.savingsThisMonthRupees)} saved this month',
+          body: '₹${formatWhole(i.savingsTotalRupees)} since installation, compared with diesel.',
+          tone: ContextTone.positive,
+        ),
+      ],
+    ];
+  }
+
+  String _cleaningText(PumpInsights i) {
+    final cleaned = DateTime.tryParse(i.lastCleanedOn);
+    final days = cleaned == null ? null : DateTime.now().difference(cleaned).inDays;
+    final last = days == null || days <= 0 ? '' : ' Last cleaned $days day${days == 1 ? '' : 's'} ago.';
+    return 'Less water than expected for this much sun, usually from dust.$last';
   }
 }
 
@@ -383,8 +343,7 @@ class _Header extends StatelessWidget {
                     if (device != null) Icon(Icons.expand_more_rounded, color: p.textMuted, size: 22),
                   ],
                 ),
-                if (device != null)
-                  Text(device.deviceUid, style: ClaroType.caption.copyWith(color: p.accentText)),
+                if (device != null) Text(device.deviceUid, style: ClaroType.caption.copyWith(color: p.accentText)),
               ],
             ),
           ),
@@ -412,58 +371,321 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// The device photo, with a soft green glow behind it while the pump runs.
-class _Hero extends StatelessWidget {
-  const _Hero({required this.kind, required this.visual});
+/// The pump on a lit stage: a soft spotlight, a floor shadow, flowing-water
+/// lines while it runs, and the key numbers laid over the bottom.
+/// Tapping it opens the device details.
+class _HeroStage extends StatefulWidget {
+  const _HeroStage({required this.kind, required this.visual, required this.onTap, required this.overlay});
 
   final DeviceKind kind;
   final PumpVisual visual;
+  final VoidCallback onTap;
+  final Widget? overlay;
+
+  @override
+  State<_HeroStage> createState() => _HeroStageState();
+}
+
+class _HeroStageState extends State<_HeroStage> with SingleTickerProviderStateMixin {
+  late final AnimationController _flow = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  bool get _live => widget.visual.isLive;
+
+  @override
+  void initState() {
+    super.initState();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_HeroStage old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  void _sync() {
+    if (_live) {
+      if (!_flow.isAnimating) _flow.repeat();
+    } else {
+      _flow
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _flow.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final glowing = visual.isLive;
-    final isInverter = kind == DeviceKind.inverter;
-    final quiet = p.isDark ? const Color(0x14FFFFFF) : const Color(0x0F111110);
-    return ClipRRect(
-      borderRadius: ClaroRadius.lg,
-      child: Container(
-        height: 260,
-        decoration: BoxDecoration(
-          color: p.panel,
-          border: Border.all(color: p.border),
-          borderRadius: ClaroRadius.lg,
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // The glow fades in and out as the pump starts and stops.
-            AnimatedContainer(
-              duration: ClaroMotion.slow,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  radius: 0.8,
-                  colors: glowing
-                      ? [p.accent.withValues(alpha: p.isDark ? 0.26 : 0.38), p.accent.withValues(alpha: 0)]
-                      : [quiet, quiet.withValues(alpha: 0)],
+    final isInverter = widget.kind == DeviceKind.inverter;
+    final spot = p.isDark ? const Color(0x1AFFFFFF) : const Color(0xFFFFFFFF);
+    final shade = p.isDark ? const Color(0xFF000000) : const Color(0xFF111110);
+
+    return Semantics(
+      button: true,
+      label: isInverter ? 'Inverter details' : 'Pump details',
+      child: GestureDetector(
+        key: const ValueKey('device-hero'),
+        onTap: widget.onTap,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.all(Radius.circular(28)),
+          child: Container(
+            height: isInverter ? 300 : 420,
+            decoration: BoxDecoration(
+              color: p.panel,
+              border: Border.all(color: p.border),
+              borderRadius: const BorderRadius.all(Radius.circular(28)),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Spotlight from above.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0, -0.6),
+                      radius: 0.9,
+                      colors: [spot, spot.withValues(alpha: 0)],
+                    ),
+                  ),
                 ),
-              ),
+                // Accent glow, only while running.
+                AnimatedOpacity(
+                  duration: ClaroMotion.slow,
+                  opacity: _live ? 1 : 0,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0, -0.15),
+                        radius: 0.75,
+                        colors: [p.accent.withValues(alpha: p.isDark ? 0.24 : 0.34), p.accent.withValues(alpha: 0)],
+                      ),
+                    ),
+                  ),
+                ),
+                if (isInverter)
+                  Image.asset('assets/images/device_hero_inverter.png', fit: BoxFit.cover)
+                else ...[
+                  // Floor shadow under the pump.
+                  Align(
+                    alignment: const Alignment(0, 0.18),
+                    child: Container(
+                      width: 200,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(Radius.elliptical(100, 11)),
+                        gradient: RadialGradient(
+                          colors: [shade.withValues(alpha: p.isDark ? 0.55 : 0.18), shade.withValues(alpha: 0)],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Flowing water while running.
+                  if (_live)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 200,
+                      height: 40,
+                      child: AnimatedBuilder(
+                        animation: _flow,
+                        builder: (context, _) => CustomPaint(painter: _FlowPainter(_flow.value, p.accentText)),
+                      ),
+                    ),
+                  Positioned(
+                    left: ClaroSpacing.xl,
+                    right: ClaroSpacing.xl,
+                    top: 44,
+                    height: 190,
+                    child: Image.asset('assets/images/device_hero_pump.png', fit: BoxFit.contain),
+                  ),
+                ],
+                // Readable base for the numbers.
+                if (widget.overlay != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 190,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [p.panel.withValues(alpha: 0), p.panel.withValues(alpha: 0.96)],
+                        ),
+                      ),
+                    ),
+                  ),
+                if (widget.overlay != null)
+                  Positioned(
+                    left: ClaroSpacing.lg,
+                    right: ClaroSpacing.lg,
+                    bottom: ClaroSpacing.lg,
+                    child: widget.overlay!,
+                  ),
+                Positioned(
+                  top: ClaroSpacing.md,
+                  left: ClaroSpacing.md,
+                  child: StatusChip(label: widget.visual.label, color: widget.visual.colorIn(p), pulse: _live),
+                ),
+                Positioned(
+                  top: ClaroSpacing.md,
+                  right: ClaroSpacing.md,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: p.panel.withValues(alpha: 0.85),
+                      borderRadius: ClaroRadius.pill,
+                      border: Border.all(color: p.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Details', style: ClaroType.caption.copyWith(color: p.text)),
+                        Icon(Icons.chevron_right_rounded, size: 16, color: p.textMuted),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            if (isInverter)
-              Image.asset('assets/images/device_hero_inverter.png', fit: BoxFit.cover)
-            else
-              Padding(
-                padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.xxl, ClaroSpacing.xl, ClaroSpacing.md),
-                child: Image.asset('assets/images/device_hero_pump.png', fit: BoxFit.contain),
-              ),
-            Positioned(
-              top: ClaroSpacing.md,
-              left: ClaroSpacing.md,
-              child: StatusChip(label: visual.label, color: visual.colorIn(p), pulse: visual.isLive),
-            ),
-          ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+/// Three gently curved lines of moving dashes under the pump: water flowing.
+class _FlowPainter extends CustomPainter {
+  _FlowPainter(this.t, this.color);
+
+  final double t;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    for (var i = 0; i < 3; i++) {
+      final y = size.height * (0.25 + i * 0.25);
+      final path = Path()
+        ..moveTo(w * 0.12, y)
+        ..quadraticBezierTo(w * 0.5, y + (i - 1) * 6, w * 0.88, y);
+      final paint = Paint()
+        ..color = color.withValues(alpha: 0.55 - i * 0.12)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round;
+      drawDashedPath(canvas, path, paint, dash: 10, gap: 8, phase: -t * 36 - i * 6);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FlowPainter old) => old.t != t || old.color != color;
+}
+
+/// The numbers on the pump's stage: water today (counting up), how it's
+/// flowing, and a ring against a typical day.
+class _PumpOverlay extends StatelessWidget {
+  const _PumpOverlay({required this.status, required this.visual, required this.typicalDayLiters});
+
+  final DeviceStatus? status;
+  final PumpVisual visual;
+  final double? typicalDayLiters;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final status = this.status;
+    final water = status?.today.waterLiters;
+    final flow = status?.live.flowRateLpm;
+    final typical = typicalDayLiters;
+
+    final String detail = switch (visual) {
+      PumpVisual.running =>
+        flow != null && flow > 0 ? 'Flowing at ${formatWhole(flow)} L/min' : 'Pump is running',
+      PumpVisual.starting || PumpVisual.stopping => 'Waiting for the pump to confirm…',
+      PumpVisual.stopped => 'Pump is off',
+      PumpVisual.offline => 'Pump is offline',
+      PumpVisual.attention => 'Pump needs attention',
+      _ => visual.label,
+    };
+    final updated = status?.lastReportedAt;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Water pumped today', style: ClaroType.label.copyWith(color: p.textMuted)),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Flexible(
+                    child: CountUpText(
+                      value: water,
+                      format: formatWhole,
+                      style: ClaroType.readoutXl.copyWith(color: p.text),
+                    ),
+                  ),
+                  const SizedBox(width: ClaroSpacing.sm),
+                  Text('litres', style: ClaroType.subtitle.copyWith(color: p.textMuted)),
+                ],
+              ),
+              Text(
+                detail,
+                style: ClaroType.body.copyWith(color: visual.isLive ? p.accentText : p.textMuted),
+              ),
+              if (updated != null)
+                Text('Updated ${formatRelativeTime(updated)}', style: ClaroType.caption.copyWith(color: p.textMuted)),
+            ],
+          ),
+        ),
+        if (typical != null && typical > 0 && water != null) ...[
+          const SizedBox(width: ClaroSpacing.md),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ProgressRing(fraction: water / typical, label: '${(water / typical * 100).clamp(0, 999).round()}%'),
+              const SizedBox(height: 4),
+              Text('of a good day', style: ClaroType.caption.copyWith(color: p.textMuted, fontSize: 10)),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _InverterOverlay extends StatelessWidget {
+  const _InverterOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('Solar inverter', style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.w600)),
+        Text(
+          'Live readings for inverters are coming soon. Your inverter is connected and reporting.',
+          style: ClaroType.caption.copyWith(color: p.textMuted),
+        ),
+      ],
     );
   }
 }

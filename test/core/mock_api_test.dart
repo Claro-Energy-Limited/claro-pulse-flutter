@@ -108,6 +108,7 @@ void main() {
   test('insights and the monthly report', () async {
     final insights = await api.getInsights(MockClaroPulseApi.pumpId);
     expect(insights.bestHours, isNotEmpty);
+    expect(insights.typicalDayLiters, greaterThan(0));
     final report = await api.getMonthlyReport(MockClaroPulseApi.pumpId);
     expect(report.dailyWaterLiters, hasLength(DateTime.now().toUtc().day));
     expect(report.waterLiters, greaterThan(0));
