@@ -1,8 +1,29 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Release signing: the SAME keystore the Kotlin Claro Pulse app was signed with
+// (C:/Users/jenac/keystores/claro-pulse-release.jks, alias claro-pulse). Play only accepts this
+// Flutter app as an update to the existing listing, and phones only upgrade in place, when it is
+// signed with that key. android/key.properties (git-ignored) first, then the environment, under
+// the Kotlin app's own variable names so CI can reuse them. Never commit the keystore or passwords.
+val keyProperties = Properties().apply {
+    val file = rootProject.file("key.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+fun signingValue(propKey: String, envKey: String): String? =
+    keyProperties.getProperty(propKey) ?: System.getenv(envKey)
+
+val releaseStoreFile: String? = signingValue("storeFile", "RELEASE_KEYSTORE_PATH")
+val releaseStorePassword: String? = signingValue("storePassword", "RELEASE_KEYSTORE_PASSWORD")
+val releaseKeyAlias: String? = signingValue("keyAlias", "RELEASE_KEY_ALIAS")
+val releaseKeyPassword: String? = signingValue("keyPassword", "RELEASE_KEY_PASSWORD")
+val hasReleaseSigning: Boolean = releaseStoreFile != null && file(releaseStoreFile).exists() &&
+    releaseStorePassword != null && releaseKeyAlias != null && releaseKeyPassword != null
 
 android {
     namespace = "in.claroenergy.claropulse"
@@ -29,11 +50,23 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Unsigned rather than debug-signed when the key is missing, same as the Kotlin app:
+            // a debug-signed build installs on a test phone and then can never be upgraded by a
+            // real release. build-release-aab.ps1 refuses to build without the key.
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else null
         }
     }
 }

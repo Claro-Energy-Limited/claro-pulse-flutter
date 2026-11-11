@@ -18,7 +18,9 @@ and activity charts, and add a device by QR scan or manual entry.
     Kotlin code. If a spec doesn't cover something, ask rather than guess.
 - App ID: `in.claroenergy.claropulse` (same as the Kotlin app, so the Flutter
   app can replace it on phones). Do not change it.
-- Android only. No iOS, web or desktop.
+- Android and iOS (iOS added 2026-11-11; it builds only on a Mac, see `build-ios.sh`). No web or desktop.
+- Build and release with the scripts in the repo root (see README.md), not hand-typed
+  `flutter build` commands: they pick the right backend, version code and signing key.
 
 The goal is the same screens, layout, copy, behaviour and edge cases as the
 Kotlin app. Not a redesign.

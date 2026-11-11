@@ -48,3 +48,10 @@ app.*.map.json
 .widget_preview/
 
 /android/build/
+
+# Build outputs from the build scripts, and their version counters (this machine only;
+# Play Console / App Store Connect are the real source of truth for what is live)
+/dist/
+/releases/
+/.release-version
+/.release-version-ios
