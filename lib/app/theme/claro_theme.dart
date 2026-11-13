@@ -9,17 +9,17 @@ import 'claro_type.dart';
 /// `context.palette`; the colour schemes here backstop stock Material widgets
 /// (dialogs, snack bars, text fields) so none of them looks out of place.
 abstract final class ClaroTheme {
-  static ThemeData get dark => darkFor(ClaroAccent.mint);
+  static ThemeData get dark => darkFor(ClaroAccent.standard);
 
-  static ThemeData get light => lightFor(ClaroAccent.mint);
+  static ThemeData get light => lightFor(ClaroAccent.standard);
 
   static ThemeData darkFor(ClaroAccent accent) => _build(
         palette: ClaroPalette.darkFor(accent),
         scheme: ColorScheme.dark(
           primary: accent.fill,
-          onPrimary: ClaroColors.ink,
+          onPrimary: accent.onFill,
           secondary: accent.fill,
-          onSecondary: ClaroColors.ink,
+          onSecondary: accent.onFill,
           surface: ClaroColors.inkPanel,
           onSurface: ClaroColors.onInk,
           surfaceContainerHighest: ClaroColors.inkPanelHigh,
@@ -36,7 +36,7 @@ abstract final class ClaroTheme {
           primary: accent.deep,
           onPrimary: ClaroColors.card,
           secondary: accent.fill,
-          onSecondary: ClaroColors.ink,
+          onSecondary: accent.onFill,
           surface: ClaroColors.card,
           onSurface: ClaroColors.ink,
           surfaceContainerHighest: const Color(0xFFEFEFEC),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_type.dart';
@@ -37,9 +38,11 @@ class PumpControlButton extends StatelessWidget {
       foreground = p.faultText;
       border = p.fault.withValues(alpha: 0.45);
     } else {
-      background = p.accent;
-      foreground = p.onAccent;
-      border = p.accent;
+      // Start is green, not the accent: with the red theme an accent Start sat
+      // next to a red Stop and both read as "stop" (deviation from Kotlin, 13 Nov 2026).
+      background = p.ok;
+      foreground = ClaroColors.ink;
+      border = p.ok;
     }
 
     final label = switch (visual) {

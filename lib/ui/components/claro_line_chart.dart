@@ -132,19 +132,19 @@ class _LineChartPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [ClaroColors.mint.withValues(alpha: 0.28), ClaroColors.mint.withValues(alpha: 0)],
+          colors: [ClaroColors.brand.withValues(alpha: 0.28), ClaroColors.brand.withValues(alpha: 0)],
         ).createShader(Offset.zero & size),
     );
     canvas.drawPath(
       line,
       Paint()
-        ..color = ClaroColors.mint
+        ..color = ClaroColors.brand
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.5
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
     );
-    final dot = Paint()..color = ClaroColors.mint;
+    final dot = Paint()..color = ClaroColors.brand;
     for (var i = 0; i < points.length; i++) {
       final v = points[i];
       if (v != null) canvas.drawCircle(Offset(xOf(i), yOf(v)), 2.6, dot);

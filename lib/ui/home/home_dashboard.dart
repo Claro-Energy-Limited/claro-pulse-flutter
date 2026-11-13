@@ -647,7 +647,8 @@ class _PumpOverlay extends StatelessWidget {
               ),
               Text(
                 detail,
-                style: ClaroType.body.copyWith(color: visual.isLive ? p.accentText : p.textMuted),
+                // Live is a status, so it is green whatever the accent (red theme, 13 Nov 2026).
+                style: ClaroType.body.copyWith(color: visual.isLive ? p.okText : p.textMuted),
               ),
               if (updated != null)
                 Text('Updated ${formatRelativeTime(updated)}', style: ClaroType.caption.copyWith(color: p.textMuted)),

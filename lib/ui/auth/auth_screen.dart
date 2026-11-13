@@ -202,13 +202,13 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Widget _sheet() {
     return DecoratedBox(
-      // A thin gradient rim, mint fading to grey, around the top of the sheet.
+      // A thin gradient rim, brand red fading to grey, around the top of the sheet.
       decoration: const BoxDecoration(
         borderRadius: ClaroRadius.sheet,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0x8078FC90), Color(0x1A78FC90), Color(0x33FFFFFF)],
+          colors: [Color(0x80D42328), Color(0x1AD42328), Color(0x33FFFFFF)],
         ),
       ),
       child: Padding(
@@ -324,7 +324,7 @@ class _BrandBand extends StatelessWidget {
                 const SizedBox(height: ClaroSpacing.xs),
                 Text(
                   'Your system, at a glance.',
-                  style: ClaroType.body.copyWith(color: ClaroColors.mint.withValues(alpha: 0.8)),
+                  style: ClaroType.body.copyWith(color: ClaroColors.brandBright.withValues(alpha: 0.9)),
                 ),
               ],
             ),
@@ -354,7 +354,7 @@ class _StepDots extends StatelessWidget {
             width: i == activeIndex ? 24 : 12,
             decoration: BoxDecoration(
               borderRadius: ClaroRadius.pill,
-              color: i <= activeIndex ? ClaroColors.mint : ClaroColors.borderDark,
+              color: i <= activeIndex ? ClaroColors.brand : ClaroColors.borderDark,
             ),
           ),
         ],
@@ -448,7 +448,7 @@ class _PhoneFieldState extends State<_PhoneField> {
         color: ClaroColors.inkPanelHigh,
         borderRadius: ClaroRadius.sm,
         border: Border.all(
-          color: focused ? ClaroColors.mint.withValues(alpha: 0.8) : ClaroColors.borderDark,
+          color: focused ? ClaroColors.brandBright.withValues(alpha: 0.8) : ClaroColors.borderDark,
         ),
       ),
       child: Row(
@@ -471,7 +471,7 @@ class _PhoneFieldState extends State<_PhoneField> {
                 LengthLimitingTextInputFormatter(_phoneLength),
               ],
               style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk),
-              cursorColor: ClaroColors.mint,
+              cursorColor: ClaroColors.brandBright,
               decoration: InputDecoration.collapsed(
                 hintText: '98765 43210',
                 hintStyle: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted),
@@ -552,7 +552,7 @@ class _OtpStep extends StatelessWidget {
             ),
             _TextAction(
               text: cooldownSeconds > 0 ? 'Resend in ${cooldownSeconds}s' : 'Resend code',
-              color: cooldownSeconds > 0 ? ClaroColors.onInkMuted : ClaroColors.mint,
+              color: cooldownSeconds > 0 ? ClaroColors.onInkMuted : ClaroColors.brandBright,
               onTap: canResend ? onResend : null,
             ),
           ],

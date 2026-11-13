@@ -7,7 +7,7 @@ import '../../app/theme/claro_type.dart';
 /// The primary button, ported from the Kotlin `ClaroPulsePrimaryButton`.
 ///
 /// 56 tall, larger than Material's default, for big touch targets that stay
-/// usable in direct sunlight. Mint fill with an ink label: the screens run
+/// usable in direct sunlight. Claro red fill with a white label: the screens run
 /// black, and an ink button on an ink screen would only be findable by its text.
 class ClaroPrimaryButton extends StatelessWidget {
   const ClaroPrimaryButton({
@@ -30,7 +30,7 @@ class ClaroPrimaryButton extends StatelessWidget {
       button: true,
       enabled: isEnabled,
       child: Material(
-        color: isEnabled ? ClaroColors.mint : ClaroColors.mint.withValues(alpha: 0.25),
+        color: isEnabled ? ClaroColors.brand : ClaroColors.brand.withValues(alpha: 0.25),
         borderRadius: ClaroRadius.md,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -44,14 +44,14 @@ class ClaroPrimaryButton extends StatelessWidget {
               child: loading
                   ? const SizedBox.square(
                       dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: ClaroColors.ink),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: ClaroColors.onBrand),
                     )
                   : Text(
                       text,
                       style: ClaroType.subtitle.copyWith(
                         // Dimmed with the fill when disabled: full ink on a faint
-                        // mint would still read as a live button.
-                        color: isEnabled ? ClaroColors.ink : ClaroColors.onInkMuted,
+                        // red would still read as a live button.
+                        color: isEnabled ? ClaroColors.onBrand : ClaroColors.onInkMuted,
                       ),
                     ),
             ),

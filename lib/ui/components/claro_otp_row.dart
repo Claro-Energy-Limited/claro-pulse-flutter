@@ -117,7 +117,7 @@ class _ClaroOtpRowState extends State<ClaroOtpRow> {
           color: filled
               ? ClaroColors.onInk
               : isNext
-                  ? ClaroColors.mint
+                  ? ClaroColors.brandBright
                   : ClaroColors.borderDark,
         ),
       ),

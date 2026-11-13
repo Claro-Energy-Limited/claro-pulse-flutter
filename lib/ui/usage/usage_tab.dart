@@ -350,7 +350,7 @@ class WaterBarChart extends StatelessWidget {
               painter: _BarPainter(
                 values: values,
                 grow: grow,
-                // Mint bars on dark; the deeper green on light, where mint is too pale.
+                // Accent fill on dark; the accent's deeper text shade on light.
                 barColor: p.isDark ? p.accent : p.accentText,
                 gapColor: p.border,
               ),

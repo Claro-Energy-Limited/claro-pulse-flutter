@@ -226,7 +226,7 @@ class _CameraViewState extends State<_CameraView> {
   }
 }
 
-/// "Scanning…" with a pulsing mint dot; "Scanned" with a solid dot once done.
+/// "Scanning…" with a pulsing red dot; "Scanned" with a solid dot once done.
 class _ScanningIndicator extends StatefulWidget {
   const _ScanningIndicator({required this.active});
 
@@ -289,7 +289,7 @@ class _ScanningIndicatorState extends State<_ScanningIndicator> with SingleTicke
                 height: 9,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: ClaroColors.mint.withValues(alpha: alpha),
+                  color: ClaroColors.brandBright.withValues(alpha: alpha),
                 ),
               );
             },

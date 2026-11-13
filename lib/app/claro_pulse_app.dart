@@ -86,10 +86,10 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
     // Follows the phone until the farmer picks Light or Dark in Profile; the
     // accent colour is their choice too.
     return ListenableBuilder(
-      listenable: Listenable.merge([settings?.themeMode ?? _systemMode, settings?.accent ?? _mintAccent]),
+      listenable: Listenable.merge([settings?.themeMode ?? _systemMode, settings?.accent ?? _standardAccent]),
       builder: (context, _) {
         final mode = settings?.themeMode.value ?? ThemeMode.system;
-        final accent = settings?.accent.value ?? ClaroAccent.mint;
+        final accent = settings?.accent.value ?? ClaroAccent.standard;
         return MaterialApp(
           title: 'Claro Pulse',
           debugShowCheckedModeBanner: false,
@@ -113,7 +113,7 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
   }
 
   static final ValueNotifier<ThemeMode> _systemMode = ValueNotifier(ThemeMode.system);
-  static final ValueNotifier<ClaroAccent> _mintAccent = ValueNotifier(ClaroAccent.mint);
+  static final ValueNotifier<ClaroAccent> _standardAccent = ValueNotifier(ClaroAccent.standard);
 
   /// The splash and sign-in screens are designed dark (photo, white logo), so
   /// they stay dark in both themes.

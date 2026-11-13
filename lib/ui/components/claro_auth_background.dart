@@ -5,6 +5,10 @@ import '../../app/theme/claro_colors.dart';
 /// The sign-in backdrop, ported from the Kotlin `ClaroPulseAuthBackground`: a
 /// photo cropped for portrait phones, with a thin dark scrim over the top 30%
 /// so the white logo text stays readable on the photo's bright corner.
+///
+/// Since the red theme (13 Nov 2026) the photo is the red-to-black grain
+/// gradient (magicpattern iAR6yhCkrxc, Unsplash) in place of the Kotlin app's
+/// teal one, cut to the same portrait shape; the web sign-in uses the same image.
 class ClaroAuthBackground extends StatelessWidget {
   const ClaroAuthBackground({super.key, required this.child});
 

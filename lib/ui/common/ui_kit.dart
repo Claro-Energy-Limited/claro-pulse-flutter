@@ -447,8 +447,8 @@ class MessageState extends StatelessWidget {
   }
 }
 
-/// The primary action button for the main screens: a mint fill with dark text
-/// in both themes. Disabled = a faint fill with muted text.
+/// The primary action button for the main screens: an accent fill (Claro red
+/// by default) with the accent's own label colour in both themes. Disabled = a faint fill with muted text.
 class AccentButton extends StatelessWidget {
   const AccentButton({
     super.key,

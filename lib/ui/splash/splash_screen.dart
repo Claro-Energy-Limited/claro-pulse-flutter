@@ -7,7 +7,7 @@ import '../../app/theme/claro_type.dart';
 import '../components/claro_powered_by.dart';
 
 /// Shown for a moment at start-up while the app gets ready: the logo with
-/// slow mint "pulse" rings (the app is called Pulse), and Claro Energy below.
+/// slow red "pulse" rings (the app is called Pulse), and Claro Energy below.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -67,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: ClaroColors.inkPanel,
-                                border: Border.all(color: ClaroColors.mint.withValues(alpha: 0.5), width: 1.5),
+                                border: Border.all(color: ClaroColors.brand.withValues(alpha: 0.6), width: 1.5),
                               ),
                               alignment: Alignment.center,
                               child: SvgPicture.asset('assets/logos/claro_logomark_white.svg', width: 48, height: 48),
@@ -83,7 +83,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                       const SizedBox(height: ClaroSpacing.xs),
                       Text(
                         'Smart solar pumping',
-                        style: ClaroType.body.copyWith(color: ClaroColors.mint.withValues(alpha: 0.85)),
+                        style: ClaroType.body.copyWith(color: ClaroColors.brandBright.withValues(alpha: 0.9)),
                       ),
                     ],
                   ),
@@ -101,7 +101,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   }
 }
 
-/// Three mint rings expanding outward and fading, one after another.
+/// Three red rings expanding outward and fading, one after another.
 class _PulseRings extends CustomPainter {
   _PulseRings(this.t);
 
@@ -117,7 +117,7 @@ class _PulseRings extends CustomPainter {
       final paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5
-        ..color = ClaroColors.mint.withValues(alpha: (1 - phase) * 0.45);
+        ..color = ClaroColors.brand.withValues(alpha: (1 - phase) * 0.55);
       canvas.drawCircle(center, radius, paint);
     }
   }

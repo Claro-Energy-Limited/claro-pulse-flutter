@@ -80,7 +80,7 @@ class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
                   color: ClaroColors.inkPanelHigh,
                   borderRadius: ClaroRadius.sm,
                   border: Border.all(
-                    color: focused ? ClaroColors.mint.withValues(alpha: 0.8) : ClaroColors.borderDark,
+                    color: focused ? ClaroColors.brandBright.withValues(alpha: 0.8) : ClaroColors.borderDark,
                   ),
                 ),
                 child: TextField(
@@ -93,7 +93,7 @@ class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
                     LengthLimitingTextInputFormatter(_maxDigits),
                   ],
                   style: ClaroType.subtitle.copyWith(color: ClaroColors.onInk),
-                  cursorColor: ClaroColors.mint,
+                  cursorColor: ClaroColors.brandBright,
                   decoration: InputDecoration.collapsed(
                     hintText: 'e.g. 861234050123456',
                     hintStyle: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted),

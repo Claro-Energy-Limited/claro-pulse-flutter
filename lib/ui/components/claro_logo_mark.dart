@@ -31,7 +31,7 @@ class ClaroLogoMark extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('CLARO', style: ClaroType.caption.copyWith(fontWeight: FontWeight.w600, color: ClaroColors.mint)),
+              Text('CLARO', style: ClaroType.caption.copyWith(fontWeight: FontWeight.w600, color: ClaroColors.brandBright)),
               Text('PULSE', style: ClaroType.subtitle.copyWith(fontWeight: FontWeight.w600, color: ClaroColors.onInk)),
             ],
           ),

@@ -199,7 +199,7 @@ class _ComingSoonTag extends StatelessWidget {
       ),
       child: Text(
         'Full readings coming soon',
-        style: ClaroType.caption.copyWith(color: ClaroColors.mint),
+        style: ClaroType.caption.copyWith(color: ClaroColors.brandBright),
       ),
     );
   }

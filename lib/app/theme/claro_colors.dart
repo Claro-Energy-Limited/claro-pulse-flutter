@@ -5,8 +5,28 @@ import 'package:flutter/painting.dart';
 /// Source of truth: RMS `docs/design/design-system.md` §2. Do not add a colour here
 /// that isn't in that table; derive a tint or shade from these instead.
 abstract final class ClaroColors {
+  // ── Brand (§2.1, red theme 13 Nov 2026) ─────────────────────────────────────
+  /// The Claro logo red: the brand accent (buttons, focus, links, selected
+  /// items, charts). A FILL; text on it is [onBrand] (white, 5.2:1). Not a
+  /// status colour: running / live / healthy stays [mint].
+  static const brand = Color(0xFFD42328);
+
+  /// Text and icons on a [brand] fill.
+  static const onBrand = Color(0xFFFFFFFF);
+
+  /// Brand red as TEXT or icons on dark ([ink]) surfaces: 6.8:1. [brand]
+  /// itself is only 3.7:1 there.
+  static const brandBright = Color(0xFFFF6B70);
+
+  /// Brand red as TEXT or icons on light surfaces: 7.4:1 on white.
+  static const brandDeep = Color(0xFFA8191F);
+
+  /// Light red tint behind brand content on light surfaces.
+  static const brandBg = Color(0xFFFDEBEC);
+
   // ── Core (§2.1) ─────────────────────────────────────────────────────────────
-  /// Primary accent: healthy / active / positive.
+  /// Status green: running / live / healthy / success. Since the red theme it
+  /// is no longer the brand accent, only the "it's working" colour.
   ///
   /// On white surfaces Mint is fill-only (about 1.25:1 contrast). On [ink] it is
   /// the readable green for text and icons (over 12:1), while [mintDeep] falls
@@ -23,7 +43,7 @@ abstract final class ClaroColors {
   static const card = Color(0xFFFFFFFF);
 
   // ── Derived (§2.2) ──────────────────────────────────────────────────────────
-  /// Green text/icons on light surfaces only (§2.4).
+  /// Status-green text/icons on light surfaces only (§2.4).
   static const mintDeep = Color(0xFF1F7A4C);
   static const mintBg = Color(0xFFE7FCEC);
   static const fault = Color(0xFFE5484D);

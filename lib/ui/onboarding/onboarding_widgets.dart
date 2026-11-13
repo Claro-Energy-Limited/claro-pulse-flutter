@@ -73,7 +73,7 @@ class EnterManuallyLink extends StatelessWidget {
         padding: const EdgeInsets.all(ClaroSpacing.sm),
         child: Text(
           'Enter device ID manually instead',
-          style: ClaroType.label.copyWith(color: ClaroColors.mint),
+          style: ClaroType.label.copyWith(color: ClaroColors.brandBright),
         ),
       ),
     );

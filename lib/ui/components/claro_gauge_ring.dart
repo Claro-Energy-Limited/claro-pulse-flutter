@@ -63,7 +63,7 @@ class _GaugePainter extends CustomPainter {
 
     canvas.drawArc(rect, -math.pi / 2, 2 * math.pi, false, stroke(ClaroColors.border));
     if (fraction > 0) {
-      canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * fraction, false, stroke(ClaroColors.mintDeep));
+      canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * fraction, false, stroke(ClaroColors.brandDeep));
     }
   }
 

@@ -22,8 +22,10 @@ class AppSettings {
   /// Follows the phone ([ThemeMode.system]) until the farmer chooses otherwise.
   final ValueNotifier<ThemeMode> themeMode = ValueNotifier(ThemeMode.system);
 
-  /// The app's accent colour; Claro mint until the farmer picks another.
-  final ValueNotifier<ClaroAccent> accent = ValueNotifier(ClaroAccent.mint);
+  /// The app's accent colour; Claro red until the farmer picks another. A
+  /// saved "mint" (the accent before the red theme) no longer exists and falls
+  /// back to Claro red.
+  final ValueNotifier<ClaroAccent> accent = ValueNotifier(ClaroAccent.standard);
 
   Future<void> load() async {
     try {
@@ -35,7 +37,7 @@ class AppSettings {
       final storedAccent = await _storage.read(key: _kAccent).timeout(timeout);
       accent.value = ClaroAccent.values.firstWhere(
         (a) => a.name == storedAccent,
-        orElse: () => ClaroAccent.mint,
+        orElse: () => ClaroAccent.standard,
       );
     } catch (e) {
       debugPrint('AppSettings: could not read settings ($e); following the phone');
