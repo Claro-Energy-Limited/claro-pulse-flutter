@@ -3,19 +3,25 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_theme.dart';
-import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_type.dart';
+import '../../config/demo_users.dart';
 import '../../core/api/api_exception.dart';
 import '../../core/api/claro_pulse_api.dart';
 import '../../core/api/models/device_models.dart';
 import '../../core/api/models/pump_models.dart';
+import '../../core/classifier/inverter_classifier.dart';
+import '../../core/models/smartnet_models.dart';
 import '../../core/services.dart';
 import '../complaints/complaints_tab.dart';
 import '../complaints/new_complaint_screen.dart';
 import '../devices/device_kind.dart';
 import '../devices/pump_details_screen.dart';
+import '../inverter/inverter_details_view.dart';
+import '../inverter/inverter_home_view.dart';
+import '../inverter/inverter_usage_view.dart';
 import '../notifications/notifications_screen.dart';
 import '../onboarding/device_claim_screen.dart';
 import '../onboarding/manual_device_entry_screen.dart';
@@ -137,7 +143,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ClaroPulseApi get _api => widget.services.api;
 
+  DemoUserConfig? get _demoUser => DemoUsers.findByPhone(widget.services.tokenStore.phone);
+
+  SmartnetLatestReading? _smartnetLatest;
+  InverterClassification? _smartnetClassification;
+  SmartnetTodayGraph? _smartnetTodayGraph;
+  Smartnet7DaysHistory? _smartnetHistory7Days;
+  SmartnetMonthHistory? _smartnetMonthHistory;
+  List<SmartnetCustomRangePoint> _smartnetRecentRecords = const [];
+  bool _isLoadingSmartnet = false;
+  String? _smartnetError;
+
   MyDevice? get _device {
+    if (_demoUser != null) {
+      final demo = _demoUser!;
+      return MyDevice(
+        deviceId: demo.rmuSno,
+        deviceUid: 'CP-INV-${demo.rmuSno.substring(demo.rmuSno.length - 4)}',
+        serialNo: demo.inverterSerial,
+        siteId: 'site-jaipur',
+        addressLine: demo.districtState,
+        assignedAt: demo.installedDate,
+        kind: 'INVERTER',
+        imei: demo.rmuImei,
+      );
+    }
     final devices = _devices;
     if (devices == null || devices.isEmpty) return null;
     return devices[_selected.clamp(0, devices.length - 1)];
@@ -146,17 +176,108 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDevices();
+    if (_demoUser != null) {
+      _loadSmartnetData();
+    } else {
+      _loadDevices();
+    }
     _loadAlerts();
     _loadComplaints();
     _refreshTimer = Timer.periodic(widget.refreshInterval, (_) {
-      final device = _device;
-      if (!mounted || device == null || _pendingById.containsKey(device.deviceId)) return;
-      if (_route is TabsRoute && _tab == HomeNavTab.home) {
-        _loadStatusFor(device.deviceId, quiet: true);
-        _loadRunsFor(device.deviceId);
+      if (_demoUser != null) {
+        _loadSmartnetData();
+      } else {
+        final device = _device;
+        if (!mounted || device == null || _pendingById.containsKey(device.deviceId)) return;
+        if (_route is TabsRoute && _tab == HomeNavTab.home) {
+          _loadStatusFor(device.deviceId, quiet: true);
+          _loadRunsFor(device.deviceId);
+        }
       }
     });
+  }
+
+  Future<void> _loadSmartnetData() async {
+    final demo = _demoUser;
+    if (demo == null) return;
+
+    if (_smartnetLatest == null) {
+      setState(() {
+        _isLoadingSmartnet = true;
+        _smartnetError = null;
+      });
+    }
+
+    try {
+      final sno = demo.rmuSno;
+      final api = widget.services.smartnetApi;
+
+      final nowUtc = DateTime.now().toUtc();
+      final istNow = nowUtc.add(const Duration(hours: 5, minutes: 30));
+      final istMidnight = DateTime.utc(istNow.year, istNow.month, istNow.day).subtract(const Duration(hours: 5, minutes: 30));
+      final tgStartTime = '${istMidnight.toIso8601String().split('.').first}.000Z';
+
+      final monthStart = DateTime.utc(nowUtc.year, nowUtc.month, 1);
+      final mgStartTime = '${monthStart.toIso8601String().split('.').first}.000Z';
+
+      final latest = await api.fetchLatest(sno);
+      final classification = InverterClassifier.classify(latest, nowUtc: nowUtc);
+
+      SmartnetTodayGraph? todayGraph;
+      Smartnet7DaysHistory? history7Days;
+      SmartnetMonthHistory? monthHistory;
+      List<SmartnetCustomRangePoint> recentRecords = [];
+
+      try {
+        todayGraph = await api.fetchTodayGraph(sno, tgStartTime);
+      } catch (_) {}
+
+      try {
+        history7Days = await api.fetchLast7Days(sno);
+      } catch (_) {}
+
+      try {
+        monthHistory = await api.fetchMonth(sno, mgStartTime);
+      } catch (_) {}
+
+      try {
+        final endTimeCr = '${nowUtc.toIso8601String().split('.').first}.000Z';
+        recentRecords = await api.fetchCustomRange(
+          sno: sno,
+          startingTimeUtc: tgStartTime,
+          endTimeUtc: endTimeCr,
+          intervalMinutes: 10,
+          fields: 'pvv,pvp,gv,gHz,it,iv,ii,gov,guv,gof,guf,ioc,dc,tmp,pvov,pvuv,pvoc,dcov,dcuv,ef',
+          ratingKw: demo.ratingKva,
+        );
+      } catch (_) {}
+
+      if (!mounted) return;
+      setState(() {
+        _smartnetLatest = latest;
+        _smartnetClassification = classification;
+        _smartnetTodayGraph = todayGraph;
+        _smartnetHistory7Days = history7Days;
+        _smartnetMonthHistory = monthHistory;
+        _smartnetRecentRecords = recentRecords;
+        _isLoadingSmartnet = false;
+        _smartnetError = null;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _smartnetError = e.message;
+        _isLoadingSmartnet = false;
+        _smartnetClassification = InverterClassifier.classify(null);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _smartnetError = '$e';
+        _isLoadingSmartnet = false;
+        _smartnetClassification = InverterClassifier.classify(null);
+      });
+    }
   }
 
   @override
@@ -252,7 +373,66 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  List<Complaint> _inverterComplaintsFor(DemoUserConfig demo) {
+    if (demo.phone.contains('3')) {
+      // User C (Suresh) - Faulty / Offline Inverter 25L12790B0 (S2SEG1240027869)
+      return [
+        Complaint(
+          id: 'c-suresh-1',
+          ticketNo: 'CP-8842',
+          deviceId: demo.rmuSno,
+          category: ComplaintCategory.deviceOffline,
+          description: 'Inverter reporting grid under-voltage fault (guv) and monitoring link lost. Output power is 0 W.',
+          status: ComplaintStatus.inProgress,
+          createdAt: '2026-11-03T16:15:00.000Z',
+          updatedAt: '2026-11-12T10:30:00.000Z',
+          latestUpdate: 'Technician assigned to Jaipur Solar Park site; inspecting ACDB breaker and grid voltage today.',
+        ),
+      ];
+    } else if (demo.phone.contains('2')) {
+      // User B (Lakshmi) - Warning Inverter 25L12757B0 (S2SEG1240027863)
+      return [
+        Complaint(
+          id: 'c-lakshmi-1',
+          ticketNo: 'CP-8839',
+          deviceId: demo.rmuSno,
+          category: ComplaintCategory.other,
+          description: 'Grid frequency shifting outside limits during afternoon generation.',
+          status: ComplaintStatus.inProgress,
+          createdAt: '2026-11-10T11:20:00.000Z',
+          updatedAt: '2026-11-11T14:00:00.000Z',
+          latestUpdate: 'Grid quality ticket logged with local electrical utility provider; monitoring grid frequency.',
+        ),
+      ];
+    } else {
+      // User A (Ramesh) - Healthy Inverter 25L12324B0 (S2SEG1240027560)
+      return [
+        Complaint(
+          id: 'c-ramesh-1',
+          ticketNo: 'CP-8810',
+          deviceId: demo.rmuSno,
+          category: ComplaintCategory.solarPanel,
+          description: 'Routine maintenance: solar panel washing and string voltage inspection.',
+          status: ComplaintStatus.resolved,
+          createdAt: '2026-10-20T09:00:00.000Z',
+          updatedAt: '2026-10-21T16:30:00.000Z',
+          latestUpdate: 'Panels washed with plain water and array connections verified OK by site team.',
+        ),
+      ];
+    }
+  }
+
   Future<void> _loadComplaints() async {
+    final demo = _demoUser;
+    if (demo != null) {
+      if (!mounted) return;
+      setState(() {
+        _complaintsError = null;
+        _complaints ??= _inverterComplaintsFor(demo);
+      });
+      return;
+    }
+
     setState(() => _complaintsError = null);
     try {
       final complaints = await _api.listComplaints();
@@ -516,6 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _page() {
+    final demo = _demoUser;
     return switch (_route) {
         // Adding a device is a camera-first flow, designed dark: it stays
         // dark in both themes.
@@ -543,11 +724,17 @@ class _HomeScreenState extends State<HomeScreen> {
             api: _api,
             onBack: () => _goToTab(HomeNavTab.usage),
           ),
-        PumpDetailsRoute(:final device) => PumpDetailsScreen(
-            device: device,
-            api: _api,
-            onBack: () => _setRoute(const TabsRoute()),
-          ),
+        PumpDetailsRoute(:final device) => demo != null
+            ? InverterDetailsView(
+                config: demo,
+                latest: _smartnetLatest,
+                onBack: () => _setRoute(const TabsRoute()),
+              )
+            : PumpDetailsScreen(
+                device: device,
+                api: _api,
+                onBack: () => _setRoute(const TabsRoute()),
+              ),
         AlertsRoute() => NotificationsScreen(
             notifications: _alerts,
             onBack: () => _setRoute(const TabsRoute()),
@@ -577,7 +764,60 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _tabBody() {
+    final demo = _demoUser;
     final device = _device;
+
+    if (demo != null) {
+      switch (_tab) {
+        case HomeNavTab.home:
+          return InverterHomeView(
+            config: demo,
+            latest: _smartnetLatest,
+            classification: _smartnetClassification ?? InverterClassifier.classify(null),
+            todayGraph: _smartnetTodayGraph,
+            history7Days: _smartnetHistory7Days,
+            isLoading: _isLoadingSmartnet,
+            error: _smartnetError,
+            onRefresh: _loadSmartnetData,
+            onOpenDetails: () {
+              if (device != null) _setRoute(PumpDetailsRoute(device));
+            },
+            onOpenAlerts: _openAlerts,
+            onOpenComplaints: () => _goToTab(HomeNavTab.complaints),
+            unreadAlerts: _unreadAlerts,
+          );
+        case HomeNavTab.usage:
+          return InverterUsageView(
+            config: demo,
+            todayGraph: _smartnetTodayGraph,
+            history7Days: _smartnetHistory7Days,
+            monthHistory: _smartnetMonthHistory,
+            recentRecords: _smartnetRecentRecords,
+            isLoading: _isLoadingSmartnet,
+            error: _smartnetError,
+            onRefresh: _loadSmartnetData,
+          );
+        case HomeNavTab.complaints:
+          return ComplaintsTab(
+            complaints: _complaints,
+            error: _complaintsError,
+            onRetry: _loadComplaints,
+            onRaise: _openNewComplaint,
+            onRefresh: _loadComplaints,
+          );
+        case HomeNavTab.profile:
+          return ProfileTab(
+            phone: widget.services.tokenStore.phone,
+            deviceCount: 1,
+            isDemo: false,
+            settings: widget.services.settings,
+            onOpenDevices: () {},
+            onOpenComplaints: () => _goToTab(HomeNavTab.complaints),
+            onLogout: widget.onLogout,
+          );
+      }
+    }
+
     switch (_tab) {
       case HomeNavTab.home:
         final status = device == null ? null : _statusById[device.deviceId];

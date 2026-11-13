@@ -5,6 +5,7 @@ import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_theme.dart';
 import '../../app/theme/claro_type.dart';
+import '../../config/demo_users.dart';
 import '../../core/settings/app_settings.dart';
 import '../common/ui_kit.dart';
 import '../components/claro_powered_by.dart';
@@ -184,6 +185,9 @@ class ProfileTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    final demo = DemoUsers.findByPhone(phone);
+    final titleText = demo != null ? '${demo.name} (+91 $phone)' : (phone == null ? 'Signed in' : '+91 $phone');
+
     return SafeArea(
       bottom: false,
       child: ListView(
@@ -211,10 +215,13 @@ class ProfileTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        phone == null ? 'Signed in' : '+91 $phone',
+                        titleText,
                         style: ClaroType.title.copyWith(color: p.text),
                       ),
-                      Text('Claro Pulse account', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                      Text(
+                        demo != null ? 'Live SmartNet Inverter Account' : 'Claro Pulse account',
+                        style: ClaroType.caption.copyWith(color: p.textMuted),
+                      ),
                     ],
                   ),
                 ),

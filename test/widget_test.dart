@@ -74,10 +74,18 @@ void main() {
 
   testWidgets('a saved session skips sign-in', (tester) async {
     _tallScreen(tester);
-    FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r', 'phone': '9000000001'});
+    FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r', 'phone': '9876543210'});
     await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices, minSplash: Duration.zero));
     await _frames(tester);
     expect(find.text('Water pumped today'), findsOneWidget);
+  });
+
+  testWidgets('demo user saved session shows inverter home view', (tester) async {
+    _tallScreen(tester);
+    FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r', 'phone': '9000000001'});
+    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices, minSplash: Duration.zero));
+    await _frames(tester);
+    expect(find.text('Solar inverter'), findsOneWidget);
   });
 
   testWidgets('an expired session drops back to sign-in', (tester) async {

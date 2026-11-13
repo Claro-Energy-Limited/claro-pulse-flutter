@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'api/auth_interceptor.dart';
 import 'api/claro_pulse_api.dart';
 import 'api/mock_claro_pulse_api.dart';
+import 'api/smartnet_api.dart';
 import 'auth/session_expiry.dart';
 import 'auth/token_store.dart';
 import 'config/api_config.dart';
@@ -19,12 +20,15 @@ class AppServices {
     required this.sessionExpiry,
     required this.api,
     required this.isMock,
+    SmartnetApi? smartnetApi,
     AppSettings? settings,
-  }) : settings = settings ?? AppSettings();
+  })  : smartnetApi = smartnetApi ?? SmartnetApi(),
+        settings = settings ?? AppSettings();
 
   final TokenStore tokenStore;
   final SessionExpiry sessionExpiry;
   final ClaroPulseApi api;
+  final SmartnetApi smartnetApi;
 
   /// True when [api] is the built-in fake backend (see [useMockApi]).
   final bool isMock;

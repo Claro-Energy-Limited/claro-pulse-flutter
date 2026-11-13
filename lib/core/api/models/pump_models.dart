@@ -56,13 +56,37 @@ enum ComplaintStatus {
 enum ComplaintCategory {
   pumpNotStarting('Pump not starting'),
   lowWaterFlow('Low water flow'),
+  inverterNotExporting('Inverter not exporting'),
+  gridConnectionIssue('Grid voltage / frequency issue'),
   solarPanel('Solar panel problem'),
   deviceOffline('Device offline'),
+  inverterOverheating('Inverter overheating'),
   noise('Unusual noise'),
   other('Something else');
 
   const ComplaintCategory(this.label);
   final String label;
+
+  static List<ComplaintCategory> categoriesForKind(String? kind) {
+    if (kind == 'INVERTER') {
+      return [
+        inverterNotExporting,
+        gridConnectionIssue,
+        solarPanel,
+        deviceOffline,
+        inverterOverheating,
+        other,
+      ];
+    }
+    return [
+      pumpNotStarting,
+      lowWaterFlow,
+      solarPanel,
+      deviceOffline,
+      noise,
+      other,
+    ];
+  }
 }
 
 class Complaint {
