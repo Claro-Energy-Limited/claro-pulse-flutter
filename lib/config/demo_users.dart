@@ -77,6 +77,21 @@ abstract final class DemoUsers {
       panelCapacityKwp: 2.0,
       installedDate: '2026-10-10',
     ),
+    // LOCAL TEST ONLY (Chinmaya's phone) - do not commit. Inverter 26A17059B5 from the local RMS DB;
+    // rating, panel size and install date are David's defaults, not real values.
+    '6370535011': DemoUserConfig(
+      phone: '6370535011',
+      name: 'cj',
+      rmuSno: 'S2SEG1250033615',
+      inverterSerial: '26A17059B5',
+      rmuImei: '867530900698765',
+      siteName: 'Ahmedabad Grid-Tie Station 1',
+      districtState: 'Ahmedabad, Gujarat',
+      model: 'GTI-1P · type SEG1',
+      ratingKva: 2.0,
+      panelCapacityKwp: 2.0,
+      installedDate: '2026-10-10',
+    ),
   };
 
   /// Returns true if [phone] matches one of the demo users.
