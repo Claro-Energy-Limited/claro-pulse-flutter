@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_palette.dart';
@@ -54,7 +54,10 @@ class ManualEntryRoute extends HomeRoute {
 }
 
 class ClaimConfirmRoute extends HomeRoute {
-  const ClaimConfirmRoute({required this.scannedValue, required this.enteredManually});
+  const ClaimConfirmRoute({
+    required this.scannedValue,
+    required this.enteredManually,
+  });
 
   final String scannedValue;
   final bool enteredManually;
@@ -135,7 +138,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Complaint>? _complaints;
   String? _complaintsError;
 
-  final ValueNotifier<BluetoothLink> _bluetooth = ValueNotifier(BluetoothLink.off);
+  final ValueNotifier<BluetoothLink> _bluetooth = ValueNotifier(
+    BluetoothLink.off,
+  );
 
   Timer? _refreshTimer;
   Timer? _confirmTimer;
@@ -143,7 +148,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ClaroPulseApi get _api => widget.services.api;
 
-  DemoUserConfig? get _demoUser => DemoUsers.findByPhone(widget.services.tokenStore.phone);
+  DemoUserConfig? get _demoUser =>
+      DemoUsers.findByPhone(widget.services.tokenStore.phone);
 
   SmartnetLatestReading? _smartnetLatest;
   InverterClassification? _smartnetClassification;
@@ -188,7 +194,10 @@ class _HomeScreenState extends State<HomeScreen> {
         _loadSmartnetData();
       } else {
         final device = _device;
-        if (!mounted || device == null || _pendingById.containsKey(device.deviceId)) return;
+        if (!mounted ||
+            device == null ||
+            _pendingById.containsKey(device.deviceId))
+          return;
         if (_route is TabsRoute && _tab == HomeNavTab.home) {
           _loadStatusFor(device.deviceId, quiet: true);
           _loadRunsFor(device.deviceId);
@@ -214,14 +223,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final nowUtc = DateTime.now().toUtc();
       final istNow = nowUtc.add(const Duration(hours: 5, minutes: 30));
-      final istMidnight = DateTime.utc(istNow.year, istNow.month, istNow.day).subtract(const Duration(hours: 5, minutes: 30));
-      final tgStartTime = '${istMidnight.toIso8601String().split('.').first}.000Z';
+      final istMidnight = DateTime.utc(
+        istNow.year,
+        istNow.month,
+        istNow.day,
+      ).subtract(const Duration(hours: 5, minutes: 30));
+      final tgStartTime =
+          '${istMidnight.toIso8601String().split('.').first}.000Z';
 
       final monthStart = DateTime.utc(nowUtc.year, nowUtc.month, 1);
-      final mgStartTime = '${monthStart.toIso8601String().split('.').first}.000Z';
+      final mgStartTime =
+          '${monthStart.toIso8601String().split('.').first}.000Z';
 
       final latest = await api.fetchLatest(sno);
-      final classification = InverterClassifier.classify(latest, nowUtc: nowUtc);
+      final classification = InverterClassifier.classify(
+        latest,
+        nowUtc: nowUtc,
+      );
 
       SmartnetTodayGraph? todayGraph;
       Smartnet7DaysHistory? history7Days;
@@ -340,7 +358,9 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() {
         _devices = devices;
-        _selected = devices.isEmpty ? 0 : _selected.clamp(0, devices.length - 1);
+        _selected = devices.isEmpty
+            ? 0
+            : _selected.clamp(0, devices.length - 1);
       });
       final device = _device;
       if (device != null) {
@@ -550,7 +570,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openRunStory(PumpRun run) {
     final device = _device;
-    showRunStory(context, run: run, deviceName: device?.deviceUid ?? 'Your pump');
+    showRunStory(
+      context,
+      run: run,
+      deviceName: device?.deviceUid ?? 'Your pump',
+    );
   }
 
   // ── Bluetooth (simulated) ────────────────────────────────────────────────
@@ -581,9 +605,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void _setRoute(HomeRoute route) => setState(() => _route = route);
 
   void _goToTab(HomeNavTab tab) => setState(() {
-        _route = const TabsRoute();
-        _tab = tab;
-      });
+    _route = const TabsRoute();
+    _tab = tab;
+  });
 
   void _openAlerts() {
     _setRoute(const AlertsRoute());
@@ -609,31 +633,48 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (sheetContext) => SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(ClaroSpacing.lg, ClaroSpacing.lg, ClaroSpacing.lg, ClaroSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+            ClaroSpacing.lg,
+            ClaroSpacing.lg,
+            ClaroSpacing.lg,
+            ClaroSpacing.md,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm),
-                child: Text('Your devices', style: ClaroType.title.copyWith(color: p.text)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: ClaroSpacing.sm,
+                ),
+                child: Text(
+                  'Your devices',
+                  style: ClaroType.title.copyWith(color: p.text),
+                ),
               ),
               const SizedBox(height: ClaroSpacing.md),
               for (var i = 0; i < devices.length; i++)
                 ListTile(
-                  shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.md),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: ClaroRadius.md,
+                  ),
                   leading: Icon(
                     DeviceKind.from(devices[i].kind) == DeviceKind.inverter
                         ? Icons.solar_power_rounded
                         : Icons.water_drop_rounded,
                     color: p.accentText,
                   ),
-                  title: Text(deviceTitle(devices[i]), style: ClaroType.subtitle.copyWith(color: p.text)),
+                  title: Text(
+                    deviceTitle(devices[i]),
+                    style: ClaroType.subtitle.copyWith(color: p.text),
+                  ),
                   subtitle: Text(
                     devices[i].deviceUid,
                     style: ClaroType.caption.copyWith(color: p.textMuted),
                   ),
-                  trailing: i == _selected ? Icon(Icons.check_circle_rounded, color: p.accentText) : null,
+                  trailing: i == _selected
+                      ? Icon(Icons.check_circle_rounded, color: p.accentText)
+                      : null,
                   onTap: () {
                     Navigator.of(sheetContext).pop();
                     _selectDevice(i);
@@ -641,9 +682,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               Divider(color: p.border),
               ListTile(
-                shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.md),
-                leading: Icon(Icons.add_circle_outline_rounded, color: p.accentText),
-                title: Text('Add a device', style: ClaroType.subtitle.copyWith(color: p.accentText)),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: ClaroRadius.md,
+                ),
+                leading: Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: p.accentText,
+                ),
+                title: Text(
+                  'Add a device',
+                  style: ClaroType.subtitle.copyWith(color: p.accentText),
+                ),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   _setRoute(const QrScanRoute());
@@ -686,7 +735,10 @@ class _HomeScreenState extends State<HomeScreen> {
         transitionBuilder: (child, animation) => FadeTransition(
           opacity: animation,
           child: SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0.04, 0), end: Offset.zero).animate(animation),
+            position: Tween<Offset>(
+              begin: const Offset(0.04, 0),
+              end: Offset.zero,
+            ).animate(animation),
             child: child,
           ),
         ),
@@ -698,33 +750,44 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _page() {
     final demo = _demoUser;
     return switch (_route) {
-        // Adding a device is a camera-first flow, designed dark: it stays
-        // dark in both themes.
-        QrScanRoute() => _dark(QrScannerScreen(
-            onScanned: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: false)),
-            onEnterManually: () => _setRoute(const ManualEntryRoute()),
-            onClose: () => _setRoute(const TabsRoute()),
-          )),
-        ManualEntryRoute() => _dark(ManualDeviceEntryScreen(
-            onSubmit: (value) => _setRoute(ClaimConfirmRoute(scannedValue: value, enteredManually: true)),
-            onBack: () => _setRoute(const QrScanRoute()),
-          )),
-        ClaimConfirmRoute(:final scannedValue, :final enteredManually) => _dark(DeviceClaimScreen(
-            scannedValue: scannedValue,
-            enteredManually: enteredManually,
-            api: _api,
-            onSubmitted: () {
-              _goToTab(HomeNavTab.home);
-              _loadDevices();
-            },
-            onBack: () => _setRoute(const TabsRoute()),
-          )),
-        MonthlyReportRoute(:final device) => MonthlyReportScreen(
-            device: device,
-            api: _api,
-            onBack: () => _goToTab(HomeNavTab.usage),
+      // Adding a device is a camera-first flow, designed dark: it stays
+      // dark in both themes.
+      QrScanRoute() => _dark(
+        QrScannerScreen(
+          onScanned: (value) => _setRoute(
+            ClaimConfirmRoute(scannedValue: value, enteredManually: false),
           ),
-        PumpDetailsRoute(:final device) => demo != null
+          onEnterManually: () => _setRoute(const ManualEntryRoute()),
+          onClose: () => _setRoute(const TabsRoute()),
+        ),
+      ),
+      ManualEntryRoute() => _dark(
+        ManualDeviceEntryScreen(
+          onSubmit: (value) => _setRoute(
+            ClaimConfirmRoute(scannedValue: value, enteredManually: true),
+          ),
+          onBack: () => _setRoute(const QrScanRoute()),
+        ),
+      ),
+      ClaimConfirmRoute(:final scannedValue, :final enteredManually) => _dark(
+        DeviceClaimScreen(
+          scannedValue: scannedValue,
+          enteredManually: enteredManually,
+          api: _api,
+          onSubmitted: () {
+            _goToTab(HomeNavTab.home);
+            _loadDevices();
+          },
+          onBack: () => _setRoute(const TabsRoute()),
+        ),
+      ),
+      MonthlyReportRoute(:final device) => MonthlyReportScreen(
+        device: device,
+        api: _api,
+        onBack: () => _goToTab(HomeNavTab.usage),
+      ),
+      PumpDetailsRoute(:final device) =>
+        demo != null
             ? InverterDetailsView(
                 config: demo,
                 latest: _smartnetLatest,
@@ -735,21 +798,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 api: _api,
                 onBack: () => _setRoute(const TabsRoute()),
               ),
-        AlertsRoute() => NotificationsScreen(
-            notifications: _alerts,
-            onBack: () => _setRoute(const TabsRoute()),
-          ),
-        NewComplaintRoute(:final device) => NewComplaintScreen(
-            device: device,
-            api: _api,
-            onSubmitted: () {
-              _goToTab(HomeNavTab.complaints);
-              _loadComplaints();
-            },
-            onBack: () => _setRoute(const TabsRoute()),
-          ),
-        TabsRoute() => _tabs(),
-      };
+      AlertsRoute() => NotificationsScreen(
+        notifications: _alerts,
+        onBack: () => _setRoute(const TabsRoute()),
+      ),
+      NewComplaintRoute(:final device) => NewComplaintScreen(
+        device: device,
+        api: _api,
+        onSubmitted: () {
+          _goToTab(HomeNavTab.complaints);
+          _loadComplaints();
+        },
+        onBack: () => _setRoute(const TabsRoute()),
+      ),
+      TabsRoute() => _tabs(),
+    };
   }
 
   Widget _dark(Widget child) => Theme(data: ClaroTheme.dark, child: child);
@@ -759,7 +822,10 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: context.palette.bg,
       extendBody: true,
       body: _tabBody(),
-      bottomNavigationBar: _BottomNav(selected: _tab, onSelect: (tab) => setState(() => _tab = tab)),
+      bottomNavigationBar: _BottomNav(
+        selected: _tab,
+        onSelect: (tab) => setState(() => _tab = tab),
+      ),
     );
   }
 
@@ -773,7 +839,8 @@ class _HomeScreenState extends State<HomeScreen> {
           return InverterHomeView(
             config: demo,
             latest: _smartnetLatest,
-            classification: _smartnetClassification ?? InverterClassifier.classify(null),
+            classification:
+                _smartnetClassification ?? InverterClassifier.classify(null),
             todayGraph: _smartnetTodayGraph,
             history7Days: _smartnetHistory7Days,
             isLoading: _isLoadingSmartnet,
@@ -828,14 +895,24 @@ class _HomeScreenState extends State<HomeScreen> {
           claims: _claims,
           device: device,
           status: status,
-          statusError: device == null ? null : _statusErrorById[device.deviceId],
+          statusError: device == null
+              ? null
+              : _statusErrorById[device.deviceId],
           visual: device == null
               ? PumpVisual.checking
-              : pumpVisualFor(kind: DeviceKind.from(device.kind), status: status, pending: pending),
+              : pumpVisualFor(
+                  kind: DeviceKind.from(device.kind),
+                  status: status,
+                  pending: pending,
+                ),
           runs: device == null ? null : _runsById[device.deviceId],
           insights: device == null ? null : _insightsById[device.deviceId],
           complaintUpdate: _complaints
-              ?.where((c) => c.latestUpdate != null && c.status != ComplaintStatus.resolved)
+              ?.where(
+                (c) =>
+                    c.latestUpdate != null &&
+                    c.status != ComplaintStatus.resolved,
+              )
               .firstOrNull,
           onSeeAllRuns: () => _goToTab(HomeNavTab.usage),
           onOpenRunStory: _openRunStory,
@@ -920,7 +997,10 @@ class _BottomNav extends StatelessWidget {
           child: BackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.xs, vertical: ClaroSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                horizontal: ClaroSpacing.xs,
+                vertical: ClaroSpacing.sm,
+              ),
               decoration: BoxDecoration(
                 color: p.panel.withValues(alpha: p.isDark ? 0.82 : 0.88),
                 borderRadius: radius,
@@ -941,14 +1021,25 @@ class _BottomNav extends StatelessWidget {
                             children: [
                               AnimatedContainer(
                                 duration: ClaroMotion.fast,
-                                padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: ClaroSpacing.lg,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: tab == selected
-                                      ? p.accent.withValues(alpha: p.isDark ? 0.18 : 0.32)
+                                      ? p.accent.withValues(
+                                          alpha: p.isDark ? 0.18 : 0.32,
+                                        )
                                       : const Color(0x00000000),
                                   borderRadius: ClaroRadius.pill,
                                 ),
-                                child: Icon(icon, size: 22, color: tab == selected ? p.accentText : p.textMuted),
+                                child: Icon(
+                                  icon,
+                                  size: 22,
+                                  color: tab == selected
+                                      ? p.accentText
+                                      : p.textMuted,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -956,7 +1047,9 @@ class _BottomNav extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: ClaroType.caption.copyWith(
-                                  color: tab == selected ? p.accentText : p.textMuted,
+                                  color: tab == selected
+                                      ? p.accentText
+                                      : p.textMuted,
                                 ),
                               ),
                             ],

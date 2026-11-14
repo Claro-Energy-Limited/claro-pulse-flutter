@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -60,12 +60,20 @@ class _InverterHomeViewState extends State<InverterHomeView> {
         backgroundColor: p.panel,
         onRefresh: widget.onRefresh,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, kNavClearance),
+          padding: const EdgeInsets.fromLTRB(
+            ClaroSpacing.xl,
+            ClaroSpacing.lg,
+            ClaroSpacing.xl,
+            kNavClearance,
+          ),
           children: [
             _buildHeader(context),
             const SizedBox(height: ClaroSpacing.xl),
             if (widget.isLoading && widget.latest == null)
-              const SizedBox(height: 320, child: Center(child: CircularProgressIndicator()))
+              const SizedBox(
+                height: 320,
+                child: Center(child: CircularProgressIndicator()),
+              )
             else if (widget.error != null && widget.latest == null)
               MessageState(
                 icon: Icons.sync_problem_rounded,
@@ -78,7 +86,8 @@ class _InverterHomeViewState extends State<InverterHomeView> {
             else ...[
               _buildTopHeroCard(context),
               const SizedBox(height: ClaroSpacing.xl),
-              if (widget.classification.isWarning || widget.classification.isFault) ...[
+              if (widget.classification.isWarning ||
+                  widget.classification.isFault) ...[
                 _buildWhatNeedsAttention(context),
                 const SizedBox(height: ClaroSpacing.xl),
               ],
@@ -106,12 +115,19 @@ class _InverterHomeViewState extends State<InverterHomeView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${greeting()}, ${widget.config.name}',
-                  style: ClaroType.caption.copyWith(color: p.textMuted)),
+              Text(
+                '${greeting()}, ${widget.config.name}',
+                style: ClaroType.caption.copyWith(color: p.textMuted),
+              ),
               const SizedBox(height: 2),
-              Text('Solar inverter', style: ClaroType.title.copyWith(color: p.text, fontSize: 24)),
-              Text('STATCON GTI-1P · sno ${widget.config.rmuSno}',
-                  style: ClaroType.caption.copyWith(color: p.accentText)),
+              Text(
+                'Solar inverter',
+                style: ClaroType.title.copyWith(color: p.text, fontSize: 24),
+              ),
+              Text(
+                'STATCON GTI-1P · sno ${widget.config.rmuSno}',
+                style: ClaroType.caption.copyWith(color: p.accentText),
+              ),
             ],
           ),
         ),
@@ -146,7 +162,9 @@ class _InverterHomeViewState extends State<InverterHomeView> {
     }
 
     final updated = latest?.createdAt;
-    final updatedText = updated != null ? 'Updated ${formatRelativeTime(updated.toIso8601String())}' : '';
+    final updatedText = updated != null
+        ? 'Updated ${formatRelativeTime(updated.toIso8601String())}'
+        : '';
 
     String mainLabel;
     String mainReadout;
@@ -158,7 +176,8 @@ class _InverterHomeViewState extends State<InverterHomeView> {
       mainLabel = 'Serving to grid now';
       mainReadout = '${latest?.outputPowerWatts.round() ?? 0}';
       unitLabel = 'W';
-      subtitleText = 'Panels are working, but no power is reaching the grid. Energy today ${todayGen == null ? '0.0' : formatOneDecimal(todayGen)} kWh. $updatedText';
+      subtitleText =
+          'Panels are working, but no power is reaching the grid. Energy today ${todayGen == null ? '0.0' : formatOneDecimal(todayGen)} kWh. $updatedText';
       subtitleColor = ClaroColors.fault;
     } else if (cls.isWarning) {
       mainLabel = 'Energy made today';
@@ -182,12 +201,19 @@ class _InverterHomeViewState extends State<InverterHomeView> {
         children: [
           Row(
             children: [
-              StatusChip(label: cls.label, color: badgeColor, pulse: cls.isHealthy),
+              StatusChip(
+                label: cls.label,
+                color: badgeColor,
+                pulse: cls.isHealthy,
+              ),
               const Spacer(),
               GestureDetector(
                 onTap: widget.onOpenDetails,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.md, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: ClaroSpacing.md,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: p.panelHigh,
                     borderRadius: ClaroRadius.pill,
@@ -196,8 +222,15 @@ class _InverterHomeViewState extends State<InverterHomeView> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Details', style: ClaroType.caption.copyWith(color: p.accentText)),
-                      Icon(Icons.chevron_right_rounded, size: 14, color: p.accentText),
+                      Text(
+                        'Details',
+                        style: ClaroType.caption.copyWith(color: p.accentText),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 14,
+                        color: p.accentText,
+                      ),
                     ],
                   ),
                 ),
@@ -216,10 +249,16 @@ class _InverterHomeViewState extends State<InverterHomeView> {
             children: [
               Text(
                 mainReadout,
-                style: ClaroType.readoutXl.copyWith(color: p.text, fontSize: 40),
+                style: ClaroType.readoutXl.copyWith(
+                  color: p.text,
+                  fontSize: 40,
+                ),
               ),
               const SizedBox(width: ClaroSpacing.xs),
-              Text(unitLabel, style: ClaroType.title.copyWith(color: p.textMuted)),
+              Text(
+                unitLabel,
+                style: ClaroType.title.copyWith(color: p.textMuted),
+              ),
             ],
           ),
           const SizedBox(height: ClaroSpacing.sm),
@@ -253,33 +292,55 @@ class _InverterHomeViewState extends State<InverterHomeView> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(issue.title, style: ClaroType.subtitle.copyWith(color: accentColor, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        issue.title,
+                        style: ClaroType.subtitle.copyWith(
+                          color: accentColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: ClaroSpacing.sm,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.15),
                         borderRadius: ClaroRadius.pill,
                       ),
-                      child: Text(issue.tag, style: ClaroType.caption.copyWith(color: accentColor)),
+                      child: Text(
+                        issue.tag,
+                        style: ClaroType.caption.copyWith(color: accentColor),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: ClaroSpacing.sm),
-                Text('Where: ${issue.where}', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                Text(
+                  'Where: ${issue.where}',
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
+                ),
                 if (issue.id == 'grid_voltage') ...[
                   const SizedBox(height: ClaroSpacing.md),
                   _buildFlowDiagram(context),
                 ],
                 const SizedBox(height: ClaroSpacing.md),
-                Text(issue.whatToDo, style: ClaroType.body.copyWith(color: p.text)),
+                Text(
+                  issue.whatToDo,
+                  style: ClaroType.body.copyWith(color: p.text),
+                ),
               ],
             ),
           ),
           const SizedBox(height: ClaroSpacing.md),
         ],
         const SizedBox(height: ClaroSpacing.md),
-        SectionHeader(title: cls.isFault ? 'TRY THESE FIRST' : 'IF IT KEEPS HAPPENING, TRY THESE'),
+        SectionHeader(
+          title: cls.isFault
+              ? 'TRY THESE FIRST'
+              : 'IF IT KEEPS HAPPENING, TRY THESE',
+        ),
         const SizedBox(height: ClaroSpacing.md),
         Panel(
           child: Column(
@@ -287,7 +348,9 @@ class _InverterHomeViewState extends State<InverterHomeView> {
             children: [
               for (var i = 0; i < cls.tryTheseFirst.length; i++) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.xs),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: ClaroSpacing.xs,
+                  ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -299,11 +362,20 @@ class _InverterHomeViewState extends State<InverterHomeView> {
                           color: p.panelHigh,
                         ),
                         alignment: Alignment.center,
-                        child: Text('${i + 1}', style: ClaroType.caption.copyWith(color: p.text, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          '${i + 1}',
+                          style: ClaroType.caption.copyWith(
+                            color: p.text,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: ClaroSpacing.md),
                       Expanded(
-                        child: Text(cls.tryTheseFirst[i], style: ClaroType.body.copyWith(color: p.text)),
+                        child: Text(
+                          cls.tryTheseFirst[i],
+                          style: ClaroType.body.copyWith(color: p.text),
+                        ),
                       ),
                     ],
                   ),
@@ -343,12 +415,18 @@ class _InverterHomeViewState extends State<InverterHomeView> {
             if (i > 0)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(Icons.arrow_forward_rounded, size: 12, color: p.textMuted),
+                child: Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 12,
+                  color: p.textMuted,
+                ),
               ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: stages[i].$2 ? ClaroColors.fault.withValues(alpha: 0.2) : p.panelHigh,
+                color: stages[i].$2
+                    ? ClaroColors.fault.withValues(alpha: 0.2)
+                    : p.panelHigh,
                 borderRadius: ClaroRadius.pill,
                 border: Border.all(
                   color: stages[i].$2 ? ClaroColors.fault : p.border,
@@ -358,7 +436,9 @@ class _InverterHomeViewState extends State<InverterHomeView> {
                 stages[i].$1,
                 style: ClaroType.caption.copyWith(
                   color: stages[i].$2 ? ClaroColors.fault : p.text,
-                  fontWeight: stages[i].$2 ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: stages[i].$2
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                 ),
               ),
             ),
@@ -412,7 +492,9 @@ class _InverterHomeViewState extends State<InverterHomeView> {
               child: _GridTile(
                 label: 'Grid voltage',
                 value: '${r?.gv == null ? '—' : r!.gv!.round()} V',
-                highlightColor: isFault && (r?.gov == true || r?.guv == true) ? ClaroColors.fault : null,
+                highlightColor: isFault && (r?.gov == true || r?.guv == true)
+                    ? ClaroColors.fault
+                    : null,
               ),
             ),
             const SizedBox(width: ClaroSpacing.sm),
@@ -420,7 +502,9 @@ class _InverterHomeViewState extends State<InverterHomeView> {
               child: _GridTile(
                 label: 'Grid freq',
                 value: '${formatOneDecimal(r?.gHz)} Hz',
-                highlightColor: isWarn && (r?.gof == true || r?.guf == true) ? ClaroColors.warn : null,
+                highlightColor: isWarn && (r?.gof == true || r?.guf == true)
+                    ? ClaroColors.warn
+                    : null,
               ),
             ),
             const SizedBox(width: ClaroSpacing.sm),
@@ -443,7 +527,10 @@ class _InverterHomeViewState extends State<InverterHomeView> {
     final isFault = widget.classification.isFault;
 
     return Panel(
-      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: ClaroSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: ClaroSpacing.lg,
+        vertical: ClaroSpacing.md,
+      ),
       child: Column(
         children: [
           _RowItem(
@@ -455,7 +542,9 @@ class _InverterHomeViewState extends State<InverterHomeView> {
           _RowItem(
             label: 'Grid connected',
             value: r?.grs == true ? 'Yes' : 'No',
-            valueColor: r?.grs == true ? p.accentText : (isFault ? ClaroColors.fault : p.textMuted),
+            valueColor: r?.grs == true
+                ? p.accentText
+                : (isFault ? ClaroColors.fault : p.textMuted),
           ),
           Divider(height: 16, color: p.border),
           _RowItem(
@@ -508,20 +597,40 @@ class _InverterHomeViewState extends State<InverterHomeView> {
                     shape: BoxShape.circle,
                     color: iconColor.withValues(alpha: 0.14),
                   ),
-                  child: Icon(cls.isHealthy ? Icons.check : Icons.health_and_safety_outlined, color: iconColor, size: 22),
+                  child: Icon(
+                    cls.isHealthy
+                        ? Icons.check
+                        : Icons.health_and_safety_outlined,
+                    color: iconColor,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: ClaroSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(checkTitle, style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.bold)),
+                      Text(
+                        checkTitle,
+                        style: ClaroType.subtitle.copyWith(
+                          color: p.text,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      Text(checkSub, style: ClaroType.caption.copyWith(color: p.textMuted)),
+                      Text(
+                        checkSub,
+                        style: ClaroType.caption.copyWith(color: p.textMuted),
+                      ),
                     ],
                   ),
                 ),
-                Icon(_showAllChecks ? Icons.expand_less_rounded : Icons.chevron_right_rounded, color: p.textMuted),
+                Icon(
+                  _showAllChecks
+                      ? Icons.expand_less_rounded
+                      : Icons.chevron_right_rounded,
+                  color: p.textMuted,
+                ),
               ],
             ),
           ),
@@ -550,7 +659,11 @@ class _InverterHomeViewState extends State<InverterHomeView> {
       ('DC bus over-voltage', 'dcov', r?.dcov == true ? 'Active' : 'OK'),
       ('DC bus under-voltage', 'dcuv', r?.dcuv == true ? 'Active' : 'OK'),
       ('Inverter over-current', 'ioc', r?.ioc == true ? 'Active' : 'OK'),
-      ('Temperature', 'tmp', r?.tmp == true || (r?.it ?? 0) >= 65 ? 'Warning' : 'OK'),
+      (
+        'Temperature',
+        'tmp',
+        r?.tmp == true || (r?.it ?? 0) >= 65 ? 'Warning' : 'OK',
+      ),
     ];
 
     return Column(
@@ -563,13 +676,16 @@ class _InverterHomeViewState extends State<InverterHomeView> {
                 Text(title, style: ClaroType.body.copyWith(color: p.text)),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: ClaroSpacing.sm,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: status == 'Active'
                         ? ClaroColors.fault.withValues(alpha: 0.15)
                         : status == 'Warning'
-                            ? ClaroColors.warn.withValues(alpha: 0.15)
-                            : p.accentText.withValues(alpha: 0.15),
+                        ? ClaroColors.warn.withValues(alpha: 0.15)
+                        : p.accentText.withValues(alpha: 0.15),
                     borderRadius: ClaroRadius.pill,
                   ),
                   child: Text(
@@ -578,8 +694,8 @@ class _InverterHomeViewState extends State<InverterHomeView> {
                       color: status == 'Active'
                           ? ClaroColors.fault
                           : status == 'Warning'
-                              ? ClaroColors.warn
-                              : p.accentText,
+                          ? ClaroColors.warn
+                          : p.accentText,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -594,7 +710,10 @@ class _InverterHomeViewState extends State<InverterHomeView> {
   Widget _buildThisWeekChart(BuildContext context) {
     final p = context.palette;
     final points = widget.history7Days?.points ?? [];
-    final total = points.map((pt) => pt.dkWh).whereType<double>().fold<double>(0, (a, b) => a + b);
+    final total = points
+        .map((pt) => pt.dkWh)
+        .whereType<double>()
+        .fold<double>(0, (a, b) => a + b);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -609,14 +728,25 @@ class _InverterHomeViewState extends State<InverterHomeView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Last 7 days', style: ClaroType.caption.copyWith(color: p.textMuted)),
-                  Text('${formatOneDecimal(total)} kWh', style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Last 7 days',
+                    style: ClaroType.caption.copyWith(color: p.textMuted),
+                  ),
+                  Text(
+                    '${formatOneDecimal(total)} kWh',
+                    style: ClaroType.subtitle.copyWith(
+                      color: p.text,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: ClaroSpacing.lg),
               ClaroLineChart(
                 points: points.map((pt) => pt.dkWh).toList(),
-                xLabels: points.map((pt) => pt.label.split(',').last.trim()).toList(),
+                xLabels: points
+                    .map((pt) => pt.label.split(',').last.trim())
+                    .toList(),
               ),
             ],
           ),
@@ -644,18 +774,30 @@ class _InverterHomeViewState extends State<InverterHomeView> {
                   shape: BoxShape.circle,
                   color: Color(0xFF382F1D),
                 ),
-                child: const Icon(Icons.wb_sunny_outlined, color: ClaroColors.warn, size: 20),
+                child: const Icon(
+                  Icons.wb_sunny_outlined,
+                  color: ClaroColors.warn,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: ClaroSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Best hours today: 10 AM – 3 PM', style: ClaroType.subtitle.copyWith(color: ClaroColors.warn, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Best hours today: 10 AM – 3 PM',
+                      style: ClaroType.subtitle.copyWith(
+                        color: ClaroColors.warn,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Your inverter is producing well. Keep panels clean every few weeks with plain water, early morning.',
-                      style: ClaroType.caption.copyWith(color: const Color(0xFFD4C8B8)),
+                      style: ClaroType.caption.copyWith(
+                        color: const Color(0xFFD4C8B8),
+                      ),
                     ),
                   ],
                 ),
@@ -669,7 +811,11 @@ class _InverterHomeViewState extends State<InverterHomeView> {
 }
 
 class _GridTile extends StatelessWidget {
-  const _GridTile({required this.label, required this.value, this.highlightColor});
+  const _GridTile({
+    required this.label,
+    required this.value,
+    this.highlightColor,
+  });
 
   final String label;
   final String value;
@@ -691,9 +837,19 @@ class _GridTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: ClaroType.caption.copyWith(color: p.textMuted, fontSize: 11)),
+          Text(
+            label,
+            style: ClaroType.caption.copyWith(color: p.textMuted, fontSize: 11),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: ClaroType.title.copyWith(color: color ?? p.text, fontSize: 15, fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: ClaroType.title.copyWith(
+              color: color ?? p.text,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -701,7 +857,11 @@ class _GridTile extends StatelessWidget {
 }
 
 class _RowItem extends StatelessWidget {
-  const _RowItem({required this.label, required this.value, required this.valueColor});
+  const _RowItem({
+    required this.label,
+    required this.value,
+    required this.valueColor,
+  });
 
   final String label;
   final String value;
@@ -714,7 +874,13 @@ class _RowItem extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: ClaroType.body.copyWith(color: p.textMuted)),
-        Text(value, style: ClaroType.subtitle.copyWith(color: valueColor, fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: ClaroType.subtitle.copyWith(
+            color: valueColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }

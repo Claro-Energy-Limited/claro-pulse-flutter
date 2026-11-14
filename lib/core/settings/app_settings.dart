@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show ThemeMode;
+import 'package:material_ui/material_ui.dart' show ThemeMode;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../app/theme/claro_palette.dart';
@@ -10,8 +10,10 @@ import '../../app/theme/claro_palette.dart';
 /// timeouts: a slow store must never block start-up. If it can't be read, the
 /// app simply follows the phone's setting.
 class AppSettings {
-  AppSettings([FlutterSecureStorage? storage, this.timeout = const Duration(seconds: 3)])
-      : _storage = storage ?? const FlutterSecureStorage();
+  AppSettings([
+    FlutterSecureStorage? storage,
+    this.timeout = const Duration(seconds: 3),
+  ]) : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
   final Duration timeout;
@@ -40,7 +42,9 @@ class AppSettings {
         orElse: () => ClaroAccent.standard,
       );
     } catch (e) {
-      debugPrint('AppSettings: could not read settings ($e); following the phone');
+      debugPrint(
+        'AppSettings: could not read settings ($e); following the phone',
+      );
     }
   }
 

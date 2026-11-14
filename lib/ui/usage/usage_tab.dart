@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_palette.dart';
@@ -61,7 +61,10 @@ class _UsageTabState extends State<UsageTab> {
       _error = null;
     });
     try {
-      final activity = await widget.api.getDeviceActivity(device.deviceId, range);
+      final activity = await widget.api.getDeviceActivity(
+        device.deviceId,
+        range,
+      );
       if (!mounted || range != _range) return;
       setState(() {
         _activity = activity;
@@ -99,11 +102,18 @@ class _UsageTabState extends State<UsageTab> {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, kNavClearance),
+        padding: const EdgeInsets.fromLTRB(
+          ClaroSpacing.xl,
+          ClaroSpacing.lg,
+          ClaroSpacing.xl,
+          kNavClearance,
+        ),
         children: [
           PageTitle(
             title: 'Water usage',
-            subtitle: device == null ? null : '${deviceTitle(device)} · ${device.deviceUid}',
+            subtitle: device == null
+                ? null
+                : '${deviceTitle(device)} · ${device.deviceUid}',
           ),
           const SizedBox(height: ClaroSpacing.xl),
           if (device == null)
@@ -142,7 +152,12 @@ class _UsageTabState extends State<UsageTab> {
     final p = context.palette;
     final activity = _activity;
     if (activity == null && _loading) {
-      return [SizedBox(height: 280, child: Center(child: CircularProgressIndicator(color: p.accentText)))];
+      return [
+        SizedBox(
+          height: 280,
+          child: Center(child: CircularProgressIndicator(color: p.accentText)),
+        ),
+      ];
     }
     if (activity == null) {
       return [
@@ -160,8 +175,10 @@ class _UsageTabState extends State<UsageTab> {
     final water = activity.points.map((pt) => pt.waterLiters).toList();
     final reported = water.whereType<double>().toList();
     final total = reported.fold<double>(0, (a, b) => a + b);
-    double sumOf(double? Function(ActivityPoint) pick) =>
-        activity.points.map(pick).whereType<double>().fold<double>(0, (a, b) => a + b);
+    double sumOf(double? Function(ActivityPoint) pick) => activity.points
+        .map(pick)
+        .whereType<double>()
+        .fold<double>(0, (a, b) => a + b);
     final average = reported.isEmpty ? null : total / reported.length;
 
     final caption = switch (_range) {
@@ -175,7 +192,10 @@ class _UsageTabState extends State<UsageTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Total water', style: ClaroType.label.copyWith(color: p.textMuted)),
+            Text(
+              'Total water',
+              style: ClaroType.label.copyWith(color: p.textMuted),
+            ),
             const SizedBox(height: ClaroSpacing.xs),
             Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -185,14 +205,23 @@ class _UsageTabState extends State<UsageTab> {
                   child: Text(
                     reported.isEmpty ? dash : formatWhole(total),
                     overflow: TextOverflow.ellipsis,
-                    style: ClaroType.readoutXl.copyWith(color: p.text, fontSize: 38),
+                    style: ClaroType.readoutXl.copyWith(
+                      color: p.text,
+                      fontSize: 38,
+                    ),
                   ),
                 ),
                 const SizedBox(width: ClaroSpacing.sm),
-                Text('litres', style: ClaroType.subtitle.copyWith(color: p.textMuted)),
+                Text(
+                  'litres',
+                  style: ClaroType.subtitle.copyWith(color: p.textMuted),
+                ),
               ],
             ),
-            Text(caption, style: ClaroType.caption.copyWith(color: p.accentText)),
+            Text(
+              caption,
+              style: ClaroType.caption.copyWith(color: p.accentText),
+            ),
             const SizedBox(height: ClaroSpacing.xl),
             WaterBarChart(values: water, labels: _labels(activity.points)),
           ],
@@ -259,7 +288,10 @@ class _ReportLink extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Monthly report', style: ClaroType.subtitle.copyWith(color: p.text)),
+                Text(
+                  'Monthly report',
+                  style: ClaroType.subtitle.copyWith(color: p.text),
+                ),
                 Text(
                   'Water, run time and savings for this month',
                   style: ClaroType.caption.copyWith(color: p.textMuted),
@@ -305,15 +337,21 @@ class _RangeSelector extends StatelessWidget {
                 onTap: () => onSelect(range),
                 child: AnimatedContainer(
                   duration: ClaroMotion.fast,
-                  padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: ClaroSpacing.sm,
+                  ),
                   decoration: BoxDecoration(
-                    color: range == selected ? p.accent : const Color(0x00000000),
+                    color: range == selected
+                        ? p.accent
+                        : const Color(0x00000000),
                     borderRadius: ClaroRadius.pill,
                   ),
                   alignment: Alignment.center,
                   child: Text(
                     _labels[range]!,
-                    style: ClaroType.label.copyWith(color: range == selected ? p.onAccent : p.textMuted),
+                    style: ClaroType.label.copyWith(
+                      color: range == selected ? p.onAccent : p.textMuted,
+                    ),
                   ),
                 ),
               ),
@@ -327,7 +365,12 @@ class _RangeSelector extends StatelessWidget {
 /// Rounded bars, one per period. A period with no report shows a small grey
 /// dot on the baseline: a gap, never a fake zero.
 class WaterBarChart extends StatelessWidget {
-  const WaterBarChart({super.key, required this.values, required this.labels, this.height = 170});
+  const WaterBarChart({
+    super.key,
+    required this.values,
+    required this.labels,
+    this.height = 170,
+  });
 
   final List<double?> values;
   final List<String> labels;
@@ -368,8 +411,8 @@ class WaterBarChart extends StatelessWidget {
                     textAlign: i == 0
                         ? TextAlign.start
                         : i == labels.length - 1
-                            ? TextAlign.end
-                            : TextAlign.center,
+                        ? TextAlign.end
+                        : TextAlign.center,
                     style: ClaroType.caption.copyWith(color: p.textMuted),
                   ),
                 ),
@@ -382,7 +425,12 @@ class WaterBarChart extends StatelessWidget {
 }
 
 class _BarPainter extends CustomPainter {
-  _BarPainter({required this.values, required this.grow, required this.barColor, required this.gapColor});
+  _BarPainter({
+    required this.values,
+    required this.grow,
+    required this.barColor,
+    required this.gapColor,
+  });
 
   final List<double?> values;
   final double grow;
@@ -392,7 +440,10 @@ class _BarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (values.isEmpty) return;
-    final maxValue = values.whereType<double>().fold<double>(0, (a, b) => a > b ? a : b);
+    final maxValue = values.whereType<double>().fold<double>(
+      0,
+      (a, b) => a > b ? a : b,
+    );
     final slot = size.width / values.length;
     final barWidth = (slot * 0.62).clamp(2.0, 22.0);
     final bar = Paint()..color = barColor;
@@ -419,5 +470,8 @@ class _BarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BarPainter old) =>
-      old.values != values || old.grow != grow || old.barColor != barColor || old.gapColor != gapColor;
+      old.values != values ||
+      old.grow != grow ||
+      old.barColor != barColor ||
+      old.gapColor != gapColor;
 }

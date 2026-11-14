@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../app/theme/claro_colors.dart';
@@ -15,7 +15,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late final AnimationController _rings = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2400),
@@ -67,10 +68,19 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: ClaroColors.inkPanel,
-                                border: Border.all(color: ClaroColors.brand.withValues(alpha: 0.6), width: 1.5),
+                                border: Border.all(
+                                  color: ClaroColors.brand.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  width: 1.5,
+                                ),
                               ),
                               alignment: Alignment.center,
-                              child: SvgPicture.asset('assets/logos/claro_logomark_white.svg', width: 48, height: 48),
+                              child: SvgPicture.asset(
+                                'assets/logos/claro_logomark_white.svg',
+                                width: 48,
+                                height: 48,
+                              ),
                             ),
                           ],
                         ),
@@ -78,12 +88,17 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                       const SizedBox(height: ClaroSpacing.xl),
                       Text(
                         'Claro Pulse',
-                        style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk, letterSpacing: 0.5),
+                        style: ClaroType.displayLg.copyWith(
+                          color: ClaroColors.onInk,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                       const SizedBox(height: ClaroSpacing.xs),
                       Text(
                         'Smart solar pumping',
-                        style: ClaroType.body.copyWith(color: ClaroColors.brandBright.withValues(alpha: 0.9)),
+                        style: ClaroType.body.copyWith(
+                          color: ClaroColors.brandBright.withValues(alpha: 0.9),
+                        ),
                       ),
                     ],
                   ),

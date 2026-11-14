@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/theme/claro_colors.dart';
@@ -15,7 +15,12 @@ const int otpLength = 6;
 /// cursor (not hidden), so it keeps receiving taps and keyboard input. Tapping
 /// anywhere on the row focuses it and opens the keyboard.
 class ClaroOtpRow extends StatefulWidget {
-  const ClaroOtpRow({super.key, required this.value, required this.onChanged, this.focusNode});
+  const ClaroOtpRow({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    this.focusNode,
+  });
 
   final String value;
   final ValueChanged<String> onChanged;
@@ -26,10 +31,13 @@ class ClaroOtpRow extends StatefulWidget {
 }
 
 class _ClaroOtpRowState extends State<ClaroOtpRow> {
-  late final TextEditingController _controller = TextEditingController(text: widget.value);
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.value,
+  );
   FocusNode? _ownFocusNode;
 
-  FocusNode get _focusNode => widget.focusNode ?? (_ownFocusNode ??= FocusNode());
+  FocusNode get _focusNode =>
+      widget.focusNode ?? (_ownFocusNode ??= FocusNode());
 
   @override
   void didUpdateWidget(ClaroOtpRow old) {
@@ -117,8 +125,8 @@ class _ClaroOtpRowState extends State<ClaroOtpRow> {
           color: filled
               ? ClaroColors.onInk
               : isNext
-                  ? ClaroColors.brandBright
-                  : ClaroColors.borderDark,
+              ? ClaroColors.brandBright
+              : ClaroColors.borderDark,
         ),
       ),
       child: Text(

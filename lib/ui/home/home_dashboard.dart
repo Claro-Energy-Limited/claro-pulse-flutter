@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_palette.dart';

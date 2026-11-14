@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -8,7 +8,11 @@ import 'dashed_path.dart';
 
 /// One live reading annotated around the hero photo, e.g. Solar · 5.4 kW.
 class HeroCallout {
-  const HeroCallout({required this.label, required this.value, required this.unit});
+  const HeroCallout({
+    required this.label,
+    required this.value,
+    required this.unit,
+  });
 
   final String label;
   final String value;
@@ -17,7 +21,11 @@ class HeroCallout {
 
 /// A "since midnight" total shown below the diagram: a plain tile, no wire.
 class HeroMetric {
-  const HeroMetric({required this.label, required this.value, required this.unit});
+  const HeroMetric({
+    required this.label,
+    required this.value,
+    required this.unit,
+  });
 
   final String label;
   final String value;
@@ -55,7 +63,8 @@ class DeviceHeroCard extends StatefulWidget {
   State<DeviceHeroCard> createState() => _DeviceHeroCardState();
 }
 
-class _DeviceHeroCardState extends State<DeviceHeroCard> with SingleTickerProviderStateMixin {
+class _DeviceHeroCardState extends State<DeviceHeroCard>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _flow = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 750),
@@ -127,7 +136,9 @@ class _DeviceHeroCardState extends State<DeviceHeroCard> with SingleTickerProvid
             children: [
               for (var i = 0; i < widget.todaySummary.length; i++) ...[
                 if (i > 0) const SizedBox(width: ClaroSpacing.md),
-                Expanded(child: _TodaySummaryTile(metric: widget.todaySummary[i])),
+                Expanded(
+                  child: _TodaySummaryTile(metric: widget.todaySummary[i]),
+                ),
               ],
             ],
           ),
@@ -177,7 +188,10 @@ class _HeroImage extends StatelessWidget {
                 ),
               ),
             if (isInverter && comingSoon)
-              const Align(alignment: Alignment.bottomCenter, child: _ComingSoonTag()),
+              const Align(
+                alignment: Alignment.bottomCenter,
+                child: _ComingSoonTag(),
+              ),
           ],
         ),
       ),
@@ -192,7 +206,10 @@ class _ComingSoonTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: ClaroSpacing.sm),
-      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.md, vertical: ClaroSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: ClaroSpacing.md,
+        vertical: ClaroSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: ClaroColors.ink.withValues(alpha: 0.72),
         borderRadius: ClaroRadius.pill,
@@ -206,7 +223,11 @@ class _ComingSoonTag extends StatelessWidget {
 }
 
 class _CalloutColumn extends StatelessWidget {
-  const _CalloutColumn({required this.callout, required this.muted, required this.alignEnd});
+  const _CalloutColumn({
+    required this.callout,
+    required this.muted,
+    required this.alignEnd,
+  });
 
   final HeroCallout callout;
   final bool muted;
@@ -218,9 +239,13 @@ class _CalloutColumn extends StatelessWidget {
     // not: blown up to 28 next to a 14 unit it reads as a broken sliver. At unit
     // size it reads as a calm "— kW": clearly "nothing here".
     final hasValue = callout.value != noData;
-    final valueColor = muted || !hasValue ? ClaroColors.onInkMuted : ClaroColors.onInk;
+    final valueColor = muted || !hasValue
+        ? ClaroColors.onInkMuted
+        : ClaroColors.onInk;
     return Column(
-      crossAxisAlignment: alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -229,13 +254,21 @@ class _CalloutColumn extends StatelessWidget {
           children: [
             Text(
               callout.value,
-              style: (hasValue ? ClaroType.readoutLg : ClaroType.body).copyWith(color: valueColor),
+              style: (hasValue ? ClaroType.readoutLg : ClaroType.body).copyWith(
+                color: valueColor,
+              ),
             ),
             const SizedBox(width: 4),
-            Text(callout.unit, style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted)),
+            Text(
+              callout.unit,
+              style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
+            ),
           ],
         ),
-        Text(callout.label.toUpperCase(), style: ClaroType.label.copyWith(color: ClaroColors.onInkMuted)),
+        Text(
+          callout.label.toUpperCase(),
+          style: ClaroType.label.copyWith(color: ClaroColors.onInkMuted),
+        ),
       ],
     );
   }
@@ -251,11 +284,17 @@ class _TodaySummaryTile extends StatelessWidget {
     final hasValue = metric.value != noData;
     return Container(
       padding: const EdgeInsets.all(ClaroSpacing.md),
-      decoration: BoxDecoration(color: ClaroColors.inkPanel, borderRadius: ClaroRadius.md),
+      decoration: BoxDecoration(
+        color: ClaroColors.inkPanel,
+        borderRadius: ClaroRadius.md,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(metric.label, style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
+          Text(
+            metric.label,
+            style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted),
+          ),
           const SizedBox(height: ClaroSpacing.xs),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -266,12 +305,19 @@ class _TodaySummaryTile extends StatelessWidget {
                   metric.value,
                   overflow: TextOverflow.ellipsis,
                   style: ClaroType.readout.copyWith(
-                    color: hasValue ? ClaroColors.onInk : ClaroColors.onInkMuted,
+                    color: hasValue
+                        ? ClaroColors.onInk
+                        : ClaroColors.onInkMuted,
                   ),
                 ),
               ),
               const SizedBox(width: 4),
-              Text(metric.unit, style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
+              Text(
+                metric.unit,
+                style: ClaroType.caption.copyWith(
+                  color: ClaroColors.onInkMuted,
+                ),
+              ),
             ],
           ),
         ],
@@ -284,7 +330,11 @@ class _TodaySummaryTile extends StatelessWidget {
 /// mirrored pair: real wires take different routes to different terminals.
 /// [intoDevice] decides which end touches the photo.
 class _WireRow extends StatelessWidget {
-  const _WireRow({required this.intoDevice, required this.live, required this.flow});
+  const _WireRow({
+    required this.intoDevice,
+    required this.live,
+    required this.flow,
+  });
 
   final bool intoDevice;
   final bool live;
@@ -310,7 +360,11 @@ class _WireRow extends StatelessWidget {
 }
 
 class _WirePainter extends CustomPainter {
-  _WirePainter({required this.intoDevice, required this.live, required this.phase});
+  _WirePainter({
+    required this.intoDevice,
+    required this.live,
+    required this.phase,
+  });
 
   final bool intoDevice;
   final bool live;

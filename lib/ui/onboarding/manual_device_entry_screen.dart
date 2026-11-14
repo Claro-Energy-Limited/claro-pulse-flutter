@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/theme/claro_colors.dart';
@@ -19,13 +19,18 @@ const _minDigits = 6;
 /// Beyond that it only checks the value isn't trivially short; the backend
 /// decides whether an identifier is a real device.
 class ManualDeviceEntryScreen extends StatefulWidget {
-  const ManualDeviceEntryScreen({super.key, required this.onSubmit, required this.onBack});
+  const ManualDeviceEntryScreen({
+    super.key,
+    required this.onSubmit,
+    required this.onBack,
+  });
 
   final ValueChanged<String> onSubmit;
   final VoidCallback onBack;
 
   @override
-  State<ManualDeviceEntryScreen> createState() => _ManualDeviceEntryScreenState();
+  State<ManualDeviceEntryScreen> createState() =>
+      _ManualDeviceEntryScreenState();
 }
 
 class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
@@ -64,7 +69,10 @@ class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
             children: [
               OnboardingBackButton(onPressed: widget.onBack),
               const SizedBox(height: ClaroSpacing.xxl),
-              Text('Enter device ID', style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk)),
+              Text(
+                'Enter device ID',
+                style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk),
+              ),
               const SizedBox(height: ClaroSpacing.sm),
               Text(
                 'Type the IMEI number printed on your device or its box.',
@@ -74,13 +82,17 @@ class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
               AnimatedContainer(
                 duration: ClaroMotion.fast,
                 height: 56,
-                padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: ClaroSpacing.lg,
+                ),
                 alignment: Alignment.centerLeft,
                 decoration: BoxDecoration(
                   color: ClaroColors.inkPanelHigh,
                   borderRadius: ClaroRadius.sm,
                   border: Border.all(
-                    color: focused ? ClaroColors.brandBright.withValues(alpha: 0.8) : ClaroColors.borderDark,
+                    color: focused
+                        ? ClaroColors.brandBright.withValues(alpha: 0.8)
+                        : ClaroColors.borderDark,
                   ),
                 ),
                 child: TextField(
@@ -96,14 +108,20 @@ class _ManualDeviceEntryScreenState extends State<ManualDeviceEntryScreen> {
                   cursorColor: ClaroColors.brandBright,
                   decoration: InputDecoration.collapsed(
                     hintText: 'e.g. 861234050123456',
-                    hintStyle: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted),
+                    hintStyle: ClaroType.subtitle.copyWith(
+                      color: ClaroColors.onInkMuted,
+                    ),
                   ),
                   onChanged: (_) => setState(() {}),
                   onSubmitted: (_) => _submit(),
                 ),
               ),
               const SizedBox(height: ClaroSpacing.xl),
-              ClaroPrimaryButton(text: 'Continue', onPressed: _submit, enabled: _valid),
+              ClaroPrimaryButton(
+                text: 'Continue',
+                onPressed: _submit,
+                enabled: _valid,
+              ),
             ],
           ),
         ),

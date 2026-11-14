@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_palette.dart';
@@ -54,7 +54,12 @@ class Panel extends StatelessWidget {
 
 /// A tinted card for warnings, faults and highlights.
 class TintedPanel extends StatelessWidget {
-  const TintedPanel({super.key, required this.tint, required this.child, this.onTap});
+  const TintedPanel({
+    super.key,
+    required this.tint,
+    required this.child,
+    this.onTap,
+  });
 
   final Color tint;
   final Widget child;
@@ -73,7 +78,12 @@ class TintedPanel extends StatelessWidget {
 
 /// A section title, with an optional action on the right.
 class SectionHeader extends StatelessWidget {
-  const SectionHeader({super.key, required this.title, this.actionLabel, this.onAction});
+  const SectionHeader({
+    super.key,
+    required this.title,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final String title;
   final String? actionLabel;
@@ -87,7 +97,11 @@ class SectionHeader extends StatelessWidget {
         Expanded(
           child: Text(
             title.toUpperCase(),
-            style: ClaroType.caption.copyWith(color: p.textMuted, letterSpacing: 1.2, fontWeight: FontWeight.w600),
+            style: ClaroType.caption.copyWith(
+              color: p.textMuted,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         if (actionLabel != null)
@@ -96,7 +110,10 @@ class SectionHeader extends StatelessWidget {
             onTap: onAction,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.xs),
-              child: Text(actionLabel!, style: ClaroType.label.copyWith(color: p.accentText)),
+              child: Text(
+                actionLabel!,
+                style: ClaroType.label.copyWith(color: p.accentText),
+              ),
             ),
           ),
       ],
@@ -142,10 +159,18 @@ class CircleIconButton extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: p.panel,
-                  border: Border.all(color: active ? p.accentText.withValues(alpha: 0.6) : p.border),
+                  border: Border.all(
+                    color: active
+                        ? p.accentText.withValues(alpha: 0.6)
+                        : p.border,
+                  ),
                 ),
                 alignment: Alignment.center,
-                child: Icon(icon, size: size * 0.45, color: active ? p.accentText : p.text),
+                child: Icon(
+                  icon,
+                  size: size * 0.45,
+                  color: active ? p.accentText : p.text,
+                ),
               ),
               if (badgeCount > 0)
                 Positioned(
@@ -163,7 +188,11 @@ class CircleIconButton extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       badgeCount > 9 ? '9+' : '$badgeCount',
-                      style: ClaroType.caption.copyWith(color: const Color(0xFFFFFFFF), fontSize: 10, height: 1),
+                      style: ClaroType.caption.copyWith(
+                        color: const Color(0xFFFFFFFF),
+                        fontSize: 10,
+                        height: 1,
+                      ),
                     ),
                   ),
                 ),
@@ -178,7 +207,12 @@ class CircleIconButton extends StatelessWidget {
 /// A pill-shaped status label with a dot. The dot pulses when [pulse] is true,
 /// which is used only for a running pump: motion means "live".
 class StatusChip extends StatefulWidget {
-  const StatusChip({super.key, required this.label, required this.color, this.pulse = false});
+  const StatusChip({
+    super.key,
+    required this.label,
+    required this.color,
+    this.pulse = false,
+  });
 
   final String label;
   final Color color;
@@ -188,7 +222,8 @@ class StatusChip extends StatefulWidget {
   State<StatusChip> createState() => _StatusChipState();
 }
 
-class _StatusChipState extends State<StatusChip> with SingleTickerProviderStateMixin {
+class _StatusChipState extends State<StatusChip>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
@@ -226,7 +261,10 @@ class _StatusChipState extends State<StatusChip> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final p = context.palette;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.md, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: ClaroSpacing.md,
+        vertical: 6,
+      ),
       decoration: BoxDecoration(
         // A solid backing so the label stays readable over the photo.
         color: Color.alphaBlend(widget.color.withValues(alpha: 0.16), p.panel),
@@ -243,12 +281,17 @@ class _StatusChipState extends State<StatusChip> with SingleTickerProviderStateM
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: widget.color.withValues(alpha: widget.pulse ? 0.4 + 0.6 * _controller.value : 1),
+                color: widget.color.withValues(
+                  alpha: widget.pulse ? 0.4 + 0.6 * _controller.value : 1,
+                ),
               ),
             ),
           ),
           const SizedBox(width: ClaroSpacing.sm),
-          Text(widget.label, style: ClaroType.label.copyWith(color: widget.color)),
+          Text(
+            widget.label,
+            style: ClaroType.label.copyWith(color: widget.color),
+          ),
         ],
       ),
     );
@@ -314,11 +357,19 @@ class StatTile extends StatelessWidget {
                 child: Text(
                   value,
                   overflow: TextOverflow.ellipsis,
-                  style: ClaroType.readoutLg.copyWith(color: hasValue ? p.text : p.textMuted, fontSize: 22),
+                  style: ClaroType.readoutLg.copyWith(
+                    color: hasValue ? p.text : p.textMuted,
+                    fontSize: 22,
+                  ),
                 ),
               ),
               const SizedBox(width: 4),
-              Flexible(child: Text(unit, style: ClaroType.caption.copyWith(color: p.textMuted))),
+              Flexible(
+                child: Text(
+                  unit,
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 2),
@@ -352,7 +403,12 @@ class MiniStat extends StatelessWidget {
 
 /// A page title bar with a round back button, for full-screen pages.
 class BackHeader extends StatelessWidget {
-  const BackHeader({super.key, required this.title, required this.onBack, this.trailing});
+  const BackHeader({
+    super.key,
+    required this.title,
+    required this.onBack,
+    this.trailing,
+  });
 
   final String title;
   final VoidCallback onBack;
@@ -361,13 +417,26 @@ class BackHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(ClaroSpacing.lg, ClaroSpacing.md, ClaroSpacing.lg, ClaroSpacing.md),
+      padding: const EdgeInsets.fromLTRB(
+        ClaroSpacing.lg,
+        ClaroSpacing.md,
+        ClaroSpacing.lg,
+        ClaroSpacing.md,
+      ),
       child: Row(
         children: [
-          CircleIconButton(icon: Icons.arrow_back_rounded, tooltip: 'Back', onPressed: onBack, size: 40),
+          CircleIconButton(
+            icon: Icons.arrow_back_rounded,
+            tooltip: 'Back',
+            onPressed: onBack,
+            size: 40,
+          ),
           const SizedBox(width: ClaroSpacing.md),
           Expanded(
-            child: Text(title, style: ClaroType.title.copyWith(color: context.palette.text)),
+            child: Text(
+              title,
+              style: ClaroType.title.copyWith(color: context.palette.text),
+            ),
           ),
           ?trailing,
         ],
@@ -389,8 +458,15 @@ class PageTitle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: ClaroType.displayLg.copyWith(color: p.text, fontSize: 28)),
-        if (subtitle != null) Text(subtitle!, style: ClaroType.caption.copyWith(color: p.textMuted)),
+        Text(
+          title,
+          style: ClaroType.displayLg.copyWith(color: p.text, fontSize: 28),
+        ),
+        if (subtitle != null)
+          Text(
+            subtitle!,
+            style: ClaroType.caption.copyWith(color: p.textMuted),
+          ),
       ],
     );
   }
@@ -427,18 +503,32 @@ class MessageState extends StatelessWidget {
           Container(
             width: 64,
             height: 64,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: tint.withValues(alpha: 0.12)),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: tint.withValues(alpha: 0.12),
+            ),
             child: Icon(icon, color: tint, size: 28),
           ),
           const SizedBox(height: ClaroSpacing.lg),
-          Text(title, textAlign: TextAlign.center, style: ClaroType.title.copyWith(color: p.text)),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: ClaroType.title.copyWith(color: p.text),
+          ),
           const SizedBox(height: ClaroSpacing.xs),
-          Text(message, textAlign: TextAlign.center, style: ClaroType.body.copyWith(color: p.textMuted)),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: ClaroType.body.copyWith(color: p.textMuted),
+          ),
           if (actionLabel != null) ...[
             const SizedBox(height: ClaroSpacing.lg),
             TextButton(
               onPressed: onAction,
-              child: Text(actionLabel!, style: ClaroType.subtitle.copyWith(color: p.accentText)),
+              child: Text(
+                actionLabel!,
+                style: ClaroType.subtitle.copyWith(color: p.accentText),
+              ),
             ),
           ],
         ],
@@ -485,13 +575,20 @@ class AccentButton extends StatelessWidget {
               child: loading
                   ? SizedBox.square(
                       dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: p.onAccent),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: p.onAccent,
+                      ),
                     )
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (icon != null) ...[
-                          Icon(icon, size: 20, color: active ? p.onAccent : p.textMuted),
+                          Icon(
+                            icon,
+                            size: 20,
+                            color: active ? p.onAccent : p.textMuted,
+                          ),
                           const SizedBox(width: ClaroSpacing.sm),
                         ],
                         Flexible(
@@ -524,7 +621,10 @@ class SheetHandle extends StatelessWidget {
       child: Container(
         width: 40,
         height: 4,
-        decoration: BoxDecoration(color: context.palette.border, borderRadius: ClaroRadius.pill),
+        decoration: BoxDecoration(
+          color: context.palette.border,
+          borderRadius: ClaroRadius.pill,
+        ),
       ),
     );
   }
@@ -558,14 +658,20 @@ class CountUpText extends StatelessWidget {
       tween: Tween(begin: 0, end: v),
       duration: duration,
       curve: Curves.easeOutCubic,
-      builder: (context, shown, _) => Text(format(shown), overflow: TextOverflow.ellipsis, style: style),
+      builder: (context, shown, _) =>
+          Text(format(shown), overflow: TextOverflow.ellipsis, style: style),
     );
   }
 }
 
 /// A thin circular progress ring with a label in the middle.
 class ProgressRing extends StatelessWidget {
-  const ProgressRing({super.key, required this.fraction, required this.label, this.size = 64});
+  const ProgressRing({
+    super.key,
+    required this.fraction,
+    required this.label,
+    this.size = 64,
+  });
 
   /// 0..1 (values above 1 show a full ring).
   final double fraction;
@@ -584,7 +690,13 @@ class ProgressRing extends StatelessWidget {
         builder: (context, f, _) => CustomPaint(
           painter: _RingPainter(fraction: f, track: p.border, fill: p.accent),
           child: Center(
-            child: Text(label, style: ClaroType.caption.copyWith(color: p.text, fontWeight: FontWeight.w600)),
+            child: Text(
+              label,
+              style: ClaroType.caption.copyWith(
+                color: p.text,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
       ),
@@ -593,7 +705,11 @@ class ProgressRing extends StatelessWidget {
 }
 
 class _RingPainter extends CustomPainter {
-  _RingPainter({required this.fraction, required this.track, required this.fill});
+  _RingPainter({
+    required this.fraction,
+    required this.track,
+    required this.fill,
+  });
 
   final double fraction;
   final Color track;
@@ -602,23 +718,39 @@ class _RingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const stroke = 6.0;
-    final rect = Rect.fromCircle(center: size.center(Offset.zero), radius: size.shortestSide / 2 - stroke / 2);
+    final rect = Rect.fromCircle(
+      center: size.center(Offset.zero),
+      radius: size.shortestSide / 2 - stroke / 2,
+    );
     Paint paint(Color c) => Paint()
       ..color = c
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round;
     canvas.drawArc(rect, 0, math.pi * 2, false, paint(track));
-    if (fraction > 0) canvas.drawArc(rect, -math.pi / 2, math.pi * 2 * fraction, false, paint(fill));
+    if (fraction > 0)
+      canvas.drawArc(
+        rect,
+        -math.pi / 2,
+        math.pi * 2 * fraction,
+        false,
+        paint(fill),
+      );
   }
 
   @override
-  bool shouldRepaint(_RingPainter old) => old.fraction != fraction || old.fill != fill || old.track != track;
+  bool shouldRepaint(_RingPainter old) =>
+      old.fraction != fraction || old.fill != fill || old.track != track;
 }
 
 /// One item of the compact stats strip.
 class StripStat {
-  const StripStat({required this.icon, required this.value, required this.unit, required this.label});
+  const StripStat({
+    required this.icon,
+    required this.value,
+    required this.unit,
+    required this.label,
+  });
 
   final IconData icon;
   final String value;
@@ -636,7 +768,10 @@ class StatsStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return Panel(
-      padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.lg, horizontal: ClaroSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        vertical: ClaroSpacing.lg,
+        horizontal: ClaroSpacing.sm,
+      ),
       child: Row(
         children: [
           for (var i = 0; i < items.length; i++) ...[
@@ -652,11 +787,16 @@ class StatsStrip extends StatelessWidget {
                         TextSpan(
                           text: items[i].value,
                           style: ClaroType.readout.copyWith(
-                            color: items[i].value == dash ? p.textMuted : p.text,
+                            color: items[i].value == dash
+                                ? p.textMuted
+                                : p.text,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        TextSpan(text: ' ${items[i].unit}', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                        TextSpan(
+                          text: ' ${items[i].unit}',
+                          style: ClaroType.caption.copyWith(color: p.textMuted),
+                        ),
                       ],
                     ),
                     maxLines: 1,
@@ -666,7 +806,10 @@ class StatsStrip extends StatelessWidget {
                     items[i].label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: ClaroType.caption.copyWith(color: p.textMuted, fontSize: 10),
+                    style: ClaroType.caption.copyWith(
+                      color: p.textMuted,
+                      fontSize: 10,
+                    ),
                   ),
                 ],
               ),
@@ -695,9 +838,23 @@ String formatWhole(double? value) {
 }
 
 /// 5.24 → "5.2". Null → "—".
-String formatOneDecimal(double? value) => value == null ? dash : value.toStringAsFixed(1);
+String formatOneDecimal(double? value) =>
+    value == null ? dash : value.toStringAsFixed(1);
 
-const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const _months = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
 const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 /// "2026-03-14" or a full ISO timestamp → "14 Mar 2026". Unparseable → as given.

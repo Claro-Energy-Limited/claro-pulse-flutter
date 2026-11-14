@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,8 +18,11 @@ import 'package:claropulse/ui/onboarding/qr_scanner_screen.dart';
 
 /// The mock with scripted device-list and status behaviour.
 class _ScriptedApi extends MockClaroPulseApi {
-  _ScriptedApi({this.failDevices = false, this.noDevices = false, this.dryRun = false})
-      : super(latency: Duration.zero, confirmDelay: Duration.zero);
+  _ScriptedApi({
+    this.failDevices = false,
+    this.noDevices = false,
+    this.dryRun = false,
+  }) : super(latency: Duration.zero, confirmDelay: Duration.zero);
 
   final bool failDevices;
   final bool noDevices;
@@ -43,7 +46,11 @@ class _ScriptedApi extends MockClaroPulseApi {
       connectionStatus: 'ONLINE',
       lastReportedAt: real.lastReportedAt,
       today: real.today,
-      live: const LiveReadings(solarPowerKw: 5.0, flowRateLpm: 0, motorSpeedRpm: 0),
+      live: const LiveReadings(
+        solarPowerKw: 5.0,
+        flowRateLpm: 0,
+        motorSpeedRpm: 0,
+      ),
       faultText: null,
       protections: const Protections(dryRun: true, waterLevelLow: false),
     );
@@ -70,7 +77,11 @@ Future<void> _pumpHome(
 
   final store = TokenStore();
   await store.load();
-  await store.saveSession(accessToken: 'a', refreshToken: 'r', phone: '9876543210');
+  await store.saveSession(
+    accessToken: 'a',
+    refreshToken: 'r',
+    phone: '9876543210',
+  );
   final services = AppServices(
     tokenStore: store,
     sessionExpiry: SessionExpiry(),
@@ -78,23 +89,28 @@ Future<void> _pumpHome(
     isMock: true,
     settings: settings,
   );
-  await tester.pumpWidget(MaterialApp(
-    theme: ClaroTheme.dark,
-    home: HomeScreen(
-      services: services,
-      onLogout: onLogout ?? () {},
-      confirmPollInterval: const Duration(milliseconds: 100),
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: ClaroTheme.dark,
+      home: HomeScreen(
+        services: services,
+        onLogout: onLogout ?? () {},
+        confirmPollInterval: const Duration(milliseconds: 100),
+      ),
     ),
-  ));
+  );
   await _settle(tester);
 }
 
-MockClaroPulseApi _mock() => MockClaroPulseApi(latency: Duration.zero, confirmDelay: Duration.zero);
+MockClaroPulseApi _mock() =>
+    MockClaroPulseApi(latency: Duration.zero, confirmDelay: Duration.zero);
 
 void main() {
   setUp(() => FlutterSecureStorage.setMockInitialValues({}));
 
-  testWidgets('home shows the pump, water today and the controls', (tester) async {
+  testWidgets('home shows the pump, water today and the controls', (
+    tester,
+  ) async {
     await _pumpHome(tester, _mock());
 
     expect(find.text('Solar Pump'), findsOneWidget);
@@ -107,7 +123,9 @@ void main() {
     }
   });
 
-  testWidgets('stopping asks first, waits for the pump, then confirms', (tester) async {
+  testWidgets('stopping asks first, waits for the pump, then confirms', (
+    tester,
+  ) async {
     await _pumpHome(tester, _mock());
 
     await tester.tap(find.text('Stop pump'));
@@ -143,7 +161,9 @@ void main() {
     expect(find.text('Stopping pump…'), findsNothing);
   });
 
-  testWidgets('start is blocked with a reason when the well may be dry', (tester) async {
+  testWidgets('start is blocked with a reason when the well may be dry', (
+    tester,
+  ) async {
     await _pumpHome(tester, _ScriptedApi(dryRun: true));
 
     expect(find.text('Needs attention'), findsOneWidget);
@@ -154,7 +174,11 @@ void main() {
 
     await tester.tap(find.text('Start pump').last);
     await _settle(tester, 5);
-    expect(find.text('Start the pump?'), findsOneWidget, reason: 'disabled button does nothing');
+    expect(
+      find.text('Start the pump?'),
+      findsOneWidget,
+      reason: 'disabled button does nothing',
+    );
   });
 
   testWidgets('switching to the inverter', (tester) async {
@@ -228,7 +252,10 @@ void main() {
     await tester.tap(find.text('Raise a complaint'));
     await _settle(tester);
     await tester.tap(find.text('Low water flow'));
-    await tester.enterText(find.byType(TextField), 'Very little water since this morning');
+    await tester.enterText(
+      find.byType(TextField),
+      'Very little water since this morning',
+    );
     await tester.pump();
     await tester.tap(find.text('Submit complaint'));
     await _settle(tester);
@@ -256,7 +283,9 @@ void main() {
     expect(find.textContaining('litres a day'), findsOneWidget);
   });
 
-  testWidgets('profile shows the number and logs out after confirming', (tester) async {
+  testWidgets('profile shows the number and logs out after confirming', (
+    tester,
+  ) async {
     var loggedOut = false;
     await _pumpHome(tester, _mock(), onLogout: () => loggedOut = true);
 
@@ -272,8 +301,12 @@ void main() {
     expect(loggedOut, isTrue);
   });
 
-  testWidgets('add a device from the device switcher opens the scanner', (tester) async {
-    QrScannerScreen.permissionOverride = const FixedCameraPermission(CameraAccess.denied);
+  testWidgets('add a device from the device switcher opens the scanner', (
+    tester,
+  ) async {
+    QrScannerScreen.permissionOverride = const FixedCameraPermission(
+      CameraAccess.denied,
+    );
     addTearDown(() => QrScannerScreen.permissionOverride = null);
     await _pumpHome(tester, _mock());
 
@@ -295,25 +328,28 @@ void main() {
     expect(find.text('Try again'), findsOneWidget);
   });
 
-  testWidgets('home shows the running run, the ring and swipeable "for you" cards', (tester) async {
-    await _pumpHome(tester, _mock());
+  testWidgets(
+    'home shows the running run, the ring and swipeable "for you" cards',
+    (tester) async {
+      await _pumpHome(tester, _mock());
 
-    expect(find.text('Running now'), findsOneWidget);
-    expect(find.text('litres so far'), findsOneWidget);
-    expect(find.text('of a good day'), findsOneWidget);
-    expect(find.text('RIGHT NOW'), findsOneWidget);
+      expect(find.text('Running now'), findsOneWidget);
+      expect(find.text('litres so far'), findsOneWidget);
+      expect(find.text('of a good day'), findsOneWidget);
+      expect(find.text('RIGHT NOW'), findsOneWidget);
 
-    // Most useful first: something to do, then a complaint update.
-    expect(find.text('Clean your solar panels'), findsOneWidget);
-    expect(find.text('Complaint CP-1038 updated'), findsOneWidget);
+      // Most useful first: something to do, then a complaint update.
+      expect(find.text('Clean your solar panels'), findsOneWidget);
+      expect(find.text('Complaint CP-1038 updated'), findsOneWidget);
 
-    // Swipe to the last card.
-    for (var i = 0; i < 3; i++) {
-      await tester.drag(find.byType(PageView), const Offset(-320, 0));
-      await _settle(tester, 5);
-    }
-    expect(find.text('₹4,850 saved this month'), findsOneWidget);
-  });
+      // Swipe to the last card.
+      for (var i = 0; i < 3; i++) {
+        await tester.drag(find.byType(PageView), const Offset(-320, 0));
+        await _settle(tester, 5);
+      }
+      expect(find.text('₹4,850 saved this month'), findsOneWidget);
+    },
+  );
 
   testWidgets('tapping the run card opens its story', (tester) async {
     await _pumpHome(tester, _mock());
@@ -325,23 +361,26 @@ void main() {
     expect(find.text('litres so far'), findsOneWidget);
   });
 
-  testWidgets('"All runs" opens Usage with recent runs and the monthly report', (tester) async {
-    await _pumpHome(tester, _mock());
+  testWidgets(
+    '"All runs" opens Usage with recent runs and the monthly report',
+    (tester) async {
+      await _pumpHome(tester, _mock());
 
-    await tester.tap(find.text('All runs'));
-    await _settle(tester);
-    expect(find.text('Water usage'), findsOneWidget);
-    expect(find.text('RECENT RUNS'), findsOneWidget);
+      await tester.tap(find.text('All runs'));
+      await _settle(tester);
+      expect(find.text('Water usage'), findsOneWidget);
+      expect(find.text('RECENT RUNS'), findsOneWidget);
 
-    await tester.tap(find.text('Monthly report'));
-    await _settle(tester);
-    expect(find.text('Best day'), findsOneWidget);
-    expect(find.text('Share report'), findsOneWidget);
+      await tester.tap(find.text('Monthly report'));
+      await _settle(tester);
+      expect(find.text('Best day'), findsOneWidget);
+      expect(find.text('Share report'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Back'));
-    await _settle(tester);
-    expect(find.text('Water usage'), findsOneWidget);
-  });
+      await tester.tap(find.byTooltip('Back'));
+      await _settle(tester);
+      expect(find.text('Water usage'), findsOneWidget);
+    },
+  );
 
   testWidgets('appearance can be set to light, dark or system', (tester) async {
     final settings = AppSettings();

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'claro_colors.dart';
 import 'claro_palette.dart';
@@ -14,40 +14,43 @@ abstract final class ClaroTheme {
   static ThemeData get light => lightFor(ClaroAccent.standard);
 
   static ThemeData darkFor(ClaroAccent accent) => _build(
-        palette: ClaroPalette.darkFor(accent),
-        scheme: ColorScheme.dark(
-          primary: accent.fill,
-          onPrimary: accent.onFill,
-          secondary: accent.fill,
-          onSecondary: accent.onFill,
-          surface: ClaroColors.inkPanel,
-          onSurface: ClaroColors.onInk,
-          surfaceContainerHighest: ClaroColors.inkPanelHigh,
-          onSurfaceVariant: ClaroColors.onInkMuted,
-          outline: ClaroColors.borderDark,
-          error: ClaroColors.fault,
-          onError: ClaroColors.ink,
-        ),
-      );
+    palette: ClaroPalette.darkFor(accent),
+    scheme: ColorScheme.dark(
+      primary: accent.fill,
+      onPrimary: accent.onFill,
+      secondary: accent.fill,
+      onSecondary: accent.onFill,
+      surface: ClaroColors.inkPanel,
+      onSurface: ClaroColors.onInk,
+      surfaceContainerHighest: ClaroColors.inkPanelHigh,
+      onSurfaceVariant: ClaroColors.onInkMuted,
+      outline: ClaroColors.borderDark,
+      error: ClaroColors.fault,
+      onError: ClaroColors.ink,
+    ),
+  );
 
   static ThemeData lightFor(ClaroAccent accent) => _build(
-        palette: ClaroPalette.lightFor(accent),
-        scheme: ColorScheme.light(
-          primary: accent.deep,
-          onPrimary: ClaroColors.card,
-          secondary: accent.fill,
-          onSecondary: accent.onFill,
-          surface: ClaroColors.card,
-          onSurface: ClaroColors.ink,
-          surfaceContainerHighest: const Color(0xFFEFEFEC),
-          onSurfaceVariant: const Color(0xFF6B6B66),
-          outline: ClaroColors.border,
-          error: ClaroColors.fault,
-          onError: ClaroColors.card,
-        ),
-      );
+    palette: ClaroPalette.lightFor(accent),
+    scheme: ColorScheme.light(
+      primary: accent.deep,
+      onPrimary: ClaroColors.card,
+      secondary: accent.fill,
+      onSecondary: accent.onFill,
+      surface: ClaroColors.card,
+      onSurface: ClaroColors.ink,
+      surfaceContainerHighest: const Color(0xFFEFEFEC),
+      onSurfaceVariant: const Color(0xFF6B6B66),
+      outline: ClaroColors.border,
+      error: ClaroColors.fault,
+      onError: ClaroColors.card,
+    ),
+  );
 
-  static ThemeData _build({required ClaroPalette palette, required ColorScheme scheme}) {
+  static ThemeData _build({
+    required ClaroPalette palette,
+    required ColorScheme scheme,
+  }) {
     return ThemeData(
       useMaterial3: true,
       brightness: palette.isDark ? Brightness.dark : Brightness.light,
@@ -68,11 +71,15 @@ abstract final class ClaroTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: palette.isDark ? ClaroColors.card : ClaroColors.ink,
-        contentTextStyle: ClaroType.body.copyWith(color: palette.isDark ? ClaroColors.ink : ClaroColors.onInk),
+        contentTextStyle: ClaroType.body.copyWith(
+          color: palette.isDark ? ClaroColors.ink : ClaroColors.onInk,
+        ),
       ),
       dialogTheme: DialogThemeData(backgroundColor: palette.panel),
       bottomSheetTheme: BottomSheetThemeData(backgroundColor: palette.panel),
-      progressIndicatorTheme: ProgressIndicatorThemeData(color: palette.accentText),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: palette.accentText,
+      ),
     );
   }
 }

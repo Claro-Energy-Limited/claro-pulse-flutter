@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/theme/claro_colors.dart';
@@ -106,7 +106,10 @@ class _AuthScreenState extends State<AuthScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = _messageFor(e, "Couldn't send the code. Check your connection and try again.");
+        _error = _messageFor(
+          e,
+          "Couldn't send the code. Check your connection and try again.",
+        );
       });
     }
   }
@@ -125,12 +128,18 @@ class _AuthScreenState extends State<AuthScreen> {
       FocusManager.instance.primaryFocus?.unfocus();
       // The checkmark gets a beat on screen before handing off: an instant
       // cut reads as a glitch, not a confirmation.
-      _handoffTimer = Timer(const Duration(milliseconds: 900), widget.onAuthenticated);
+      _handoffTimer = Timer(
+        const Duration(milliseconds: 900),
+        widget.onAuthenticated,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = _messageFor(e, "That code didn't match. Check it and try again.");
+        _error = _messageFor(
+          e,
+          "That code didn't match. Check it and try again.",
+        );
       });
     }
   }
@@ -160,7 +169,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 left: 0,
                 right: 0,
                 height: height * 0.6,
-                child: Image.asset('assets/images/auth_background.jpg', fit: BoxFit.cover),
+                child: Image.asset(
+                  'assets/images/auth_background.jpg',
+                  fit: BoxFit.cover,
+                ),
               ),
               Positioned(
                 top: 0,
@@ -229,7 +241,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (_step != _AuthStep.signedIn) ...[
-                        _StepDots(activeIndex: _step == _AuthStep.phone ? 0 : 1),
+                        _StepDots(
+                          activeIndex: _step == _AuthStep.phone ? 0 : 1,
+                        ),
                         const SizedBox(height: ClaroSpacing.lg),
                       ],
                       AnimatedSwitcher(
@@ -239,10 +253,15 @@ class _AuthScreenState extends State<AuthScreen> {
                           children: [...previous, ?current],
                         ),
                         transitionBuilder: _transition,
-                        child: KeyedSubtree(key: ValueKey(_step), child: _stepContent()),
+                        child: KeyedSubtree(
+                          key: ValueKey(_step),
+                          child: _stepContent(),
+                        ),
                       ),
                       const SizedBox(height: ClaroSpacing.xl),
-                      const ClaroPoweredBy(captionColor: ClaroColors.onInkMuted),
+                      const ClaroPoweredBy(
+                        captionColor: ClaroColors.onInkMuted,
+                      ),
                     ],
                   ),
                 ),
@@ -319,12 +338,17 @@ class _BrandBand extends StatelessWidget {
               children: [
                 Text(
                   'Claro Pulse',
-                  style: ClaroType.displayLg.copyWith(letterSpacing: 0.5, color: ClaroColors.onInk),
+                  style: ClaroType.displayLg.copyWith(
+                    letterSpacing: 0.5,
+                    color: ClaroColors.onInk,
+                  ),
                 ),
                 const SizedBox(height: ClaroSpacing.xs),
                 Text(
                   'Your system, at a glance.',
-                  style: ClaroType.body.copyWith(color: ClaroColors.brandBright.withValues(alpha: 0.9)),
+                  style: ClaroType.body.copyWith(
+                    color: ClaroColors.brandBright.withValues(alpha: 0.9),
+                  ),
                 ),
               ],
             ),
@@ -354,7 +378,9 @@ class _StepDots extends StatelessWidget {
             width: i == activeIndex ? 24 : 12,
             decoration: BoxDecoration(
               borderRadius: ClaroRadius.pill,
-              color: i <= activeIndex ? ClaroColors.brand : ClaroColors.borderDark,
+              color: i <= activeIndex
+                  ? ClaroColors.brand
+                  : ClaroColors.borderDark,
             ),
           ),
         ],
@@ -383,17 +409,27 @@ class _PhoneStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Sign in', style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk)),
+        Text(
+          'Sign in',
+          style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk),
+        ),
         const SizedBox(height: ClaroSpacing.sm),
         Text(
           "Enter your mobile number. We'll send a code to verify it's you.",
           style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
         ),
         const SizedBox(height: ClaroSpacing.xl),
-        _PhoneField(controller: controller, onChanged: onChanged, onSubmit: onSubmit),
+        _PhoneField(
+          controller: controller,
+          onChanged: onChanged,
+          onSubmit: onSubmit,
+        ),
         if (error != null) ...[
           const SizedBox(height: ClaroSpacing.sm),
-          Text(error!, style: ClaroType.caption.copyWith(color: ClaroColors.fault)),
+          Text(
+            error!,
+            style: ClaroType.caption.copyWith(color: ClaroColors.fault),
+          ),
         ],
         const SizedBox(height: ClaroSpacing.xl),
         ValueListenableBuilder<TextEditingValue>(
@@ -411,7 +447,11 @@ class _PhoneStep extends StatelessWidget {
 }
 
 class _PhoneField extends StatefulWidget {
-  const _PhoneField({required this.controller, required this.onChanged, required this.onSubmit});
+  const _PhoneField({
+    required this.controller,
+    required this.onChanged,
+    required this.onSubmit,
+  });
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
@@ -448,14 +488,22 @@ class _PhoneFieldState extends State<_PhoneField> {
         color: ClaroColors.inkPanelHigh,
         borderRadius: ClaroRadius.sm,
         border: Border.all(
-          color: focused ? ClaroColors.brandBright.withValues(alpha: 0.8) : ClaroColors.borderDark,
+          color: focused
+              ? ClaroColors.brandBright.withValues(alpha: 0.8)
+              : ClaroColors.borderDark,
         ),
       ),
       child: Row(
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: ClaroSpacing.lg, right: ClaroSpacing.sm),
-            child: Text('+91', style: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted)),
+            padding: const EdgeInsets.only(
+              left: ClaroSpacing.lg,
+              right: ClaroSpacing.sm,
+            ),
+            child: Text(
+              '+91',
+              style: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted),
+            ),
           ),
           Container(width: 1, height: 24, color: ClaroColors.borderDark),
           const SizedBox(width: ClaroSpacing.sm),
@@ -474,7 +522,9 @@ class _PhoneFieldState extends State<_PhoneField> {
               cursorColor: ClaroColors.brandBright,
               decoration: InputDecoration.collapsed(
                 hintText: '98765 43210',
-                hintStyle: ClaroType.subtitle.copyWith(color: ClaroColors.onInkMuted),
+                hintStyle: ClaroType.subtitle.copyWith(
+                  color: ClaroColors.onInkMuted,
+                ),
               ),
               onChanged: widget.onChanged,
               onSubmitted: (_) => widget.onSubmit(),
@@ -518,7 +568,10 @@ class _OtpStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Enter the code', style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk)),
+        Text(
+          'Enter the code',
+          style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk),
+        ),
         const SizedBox(height: ClaroSpacing.sm),
         Text(
           'We sent a 6-digit code to +91 $phone',
@@ -528,11 +581,17 @@ class _OtpStep extends StatelessWidget {
         ClaroOtpRow(value: otp, onChanged: onOtpChanged),
         if (error != null) ...[
           const SizedBox(height: ClaroSpacing.sm),
-          Text(error!, style: ClaroType.caption.copyWith(color: ClaroColors.fault)),
+          Text(
+            error!,
+            style: ClaroType.caption.copyWith(color: ClaroColors.fault),
+          ),
         ],
         if (hint != null) ...[
           const SizedBox(height: ClaroSpacing.sm),
-          Text(hint!, style: ClaroType.caption.copyWith(color: ClaroColors.warn)),
+          Text(
+            hint!,
+            style: ClaroType.caption.copyWith(color: ClaroColors.warn),
+          ),
         ],
         const SizedBox(height: ClaroSpacing.xl),
         ClaroPrimaryButton(
@@ -551,8 +610,12 @@ class _OtpStep extends StatelessWidget {
               onTap: loading ? null : onChangeNumber,
             ),
             _TextAction(
-              text: cooldownSeconds > 0 ? 'Resend in ${cooldownSeconds}s' : 'Resend code',
-              color: cooldownSeconds > 0 ? ClaroColors.onInkMuted : ClaroColors.brandBright,
+              text: cooldownSeconds > 0
+                  ? 'Resend in ${cooldownSeconds}s'
+                  : 'Resend code',
+              color: cooldownSeconds > 0
+                  ? ClaroColors.onInkMuted
+                  : ClaroColors.brandBright,
               onTap: canResend ? onResend : null,
             ),
           ],
@@ -563,7 +626,11 @@ class _OtpStep extends StatelessWidget {
 }
 
 class _TextAction extends StatelessWidget {
-  const _TextAction({required this.text, required this.color, required this.onTap});
+  const _TextAction({
+    required this.text,
+    required this.color,
+    required this.onTap,
+  });
 
   final String text;
   final Color color;
@@ -601,9 +668,15 @@ class _SignedInStep extends StatelessWidget {
           child: const Icon(Icons.check, color: ClaroColors.mint, size: 32),
         ),
         const SizedBox(height: ClaroSpacing.lg),
-        Text("You're signed in", style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
+        Text(
+          "You're signed in",
+          style: ClaroType.title.copyWith(color: ClaroColors.onInk),
+        ),
         const SizedBox(height: ClaroSpacing.xs),
-        Text('+91 $phone', style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted)),
+        Text(
+          '+91 $phone',
+          style: ClaroType.body.copyWith(color: ClaroColors.onInkMuted),
+        ),
       ],
     );
   }

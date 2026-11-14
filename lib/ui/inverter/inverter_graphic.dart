@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../core/classifier/inverter_classifier.dart';

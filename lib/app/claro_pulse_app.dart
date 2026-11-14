@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../core/api/mock_claro_pulse_api.dart';
@@ -86,7 +86,10 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
     // Follows the phone until the farmer picks Light or Dark in Profile; the
     // accent colour is their choice too.
     return ListenableBuilder(
-      listenable: Listenable.merge([settings?.themeMode ?? _systemMode, settings?.accent ?? _standardAccent]),
+      listenable: Listenable.merge([
+        settings?.themeMode ?? _systemMode,
+        settings?.accent ?? _standardAccent,
+      ]),
       builder: (context, _) {
         final mode = settings?.themeMode.value ?? ThemeMode.system;
         final accent = settings?.accent.value ?? ClaroAccent.standard;
@@ -99,8 +102,12 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
           // Status bar icons: light on the dark theme, dark on the light theme.
           builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
             value: Theme.of(context).brightness == Brightness.dark
-                ? SystemUiOverlayStyle.light.copyWith(statusBarColor: const Color(0x00000000))
-                : SystemUiOverlayStyle.dark.copyWith(statusBarColor: const Color(0x00000000)),
+                ? SystemUiOverlayStyle.light.copyWith(
+                    statusBarColor: const Color(0x00000000),
+                  )
+                : SystemUiOverlayStyle.dark.copyWith(
+                    statusBarColor: const Color(0x00000000),
+                  ),
             child: child ?? const SizedBox.shrink(),
           ),
           home: AnimatedSwitcher(
@@ -112,23 +119,32 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
     );
   }
 
-  static final ValueNotifier<ThemeMode> _systemMode = ValueNotifier(ThemeMode.system);
-  static final ValueNotifier<ClaroAccent> _standardAccent = ValueNotifier(ClaroAccent.standard);
+  static final ValueNotifier<ThemeMode> _systemMode = ValueNotifier(
+    ThemeMode.system,
+  );
+  static final ValueNotifier<ClaroAccent> _standardAccent = ValueNotifier(
+    ClaroAccent.standard,
+  );
 
   /// The splash and sign-in screens are designed dark (photo, white logo), so
   /// they stay dark in both themes.
   Widget _dark(Widget child) => Theme(
-        data: ClaroTheme.dark,
-        child: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle.light.copyWith(statusBarColor: const Color(0x00000000)),
-          child: child,
-        ),
-      );
+    data: ClaroTheme.dark,
+    child: AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: const Color(0x00000000),
+      ),
+      child: child,
+    ),
+  );
 
   Widget _buildHome() {
     final services = _services;
     if (services == null || !_splashDone) {
-      return KeyedSubtree(key: const ValueKey('splash'), child: _dark(const SplashScreen()));
+      return KeyedSubtree(
+        key: const ValueKey('splash'),
+        child: _dark(const SplashScreen()),
+      );
     }
 
     if (_signedIn) {
@@ -152,7 +168,9 @@ class _ClaroPulseAppState extends State<ClaroPulseApp> {
             );
           },
           onAuthenticated: () => setState(() => _signedIn = true),
-          otpHint: services.isMock ? 'Mock mode: use code ${MockClaroPulseApi.otpCode}' : null,
+          otpHint: services.isMock
+              ? 'Mock mode: use code ${MockClaroPulseApi.otpCode}'
+              : null,
         ),
       ),
     );

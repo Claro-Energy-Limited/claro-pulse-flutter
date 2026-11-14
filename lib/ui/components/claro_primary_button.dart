@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -30,7 +30,9 @@ class ClaroPrimaryButton extends StatelessWidget {
       button: true,
       enabled: isEnabled,
       child: Material(
-        color: isEnabled ? ClaroColors.brand : ClaroColors.brand.withValues(alpha: 0.25),
+        color: isEnabled
+            ? ClaroColors.brand
+            : ClaroColors.brand.withValues(alpha: 0.25),
         borderRadius: ClaroRadius.md,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -44,14 +46,19 @@ class ClaroPrimaryButton extends StatelessWidget {
               child: loading
                   ? const SizedBox.square(
                       dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: ClaroColors.onBrand),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: ClaroColors.onBrand,
+                      ),
                     )
                   : Text(
                       text,
                       style: ClaroType.subtitle.copyWith(
                         // Dimmed with the fill when disabled: full ink on a faint
                         // red would still read as a live button.
-                        color: isEnabled ? ClaroColors.onBrand : ClaroColors.onInkMuted,
+                        color: isEnabled
+                            ? ClaroColors.onBrand
+                            : ClaroColors.onInkMuted,
                       ),
                     ),
             ),

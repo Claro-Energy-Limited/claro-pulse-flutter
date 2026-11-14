@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -54,7 +54,9 @@ class _DeviceClaimScreenState extends State<DeviceClaimScreen> {
     try {
       await widget.api.submitDeviceClaim(
         deviceIdentifier: widget.scannedValue,
-        proofReference: widget.enteredManually ? DeviceClaimScreen.proofManual : DeviceClaimScreen.proofScanned,
+        proofReference: widget.enteredManually
+            ? DeviceClaimScreen.proofManual
+            : DeviceClaimScreen.proofScanned,
       );
       if (!mounted) return;
       setState(() {
@@ -77,7 +79,9 @@ class _DeviceClaimScreenState extends State<DeviceClaimScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(ClaroSpacing.xl),
-          child: _submitted ? _SubmittedState(onDone: widget.onSubmitted) : _confirm(),
+          child: _submitted
+              ? _SubmittedState(onDone: widget.onSubmitted)
+              : _confirm(),
         ),
       ),
     );
@@ -90,7 +94,10 @@ class _DeviceClaimScreenState extends State<DeviceClaimScreen> {
         children: [
           OnboardingBackButton(onPressed: widget.onBack),
           const SizedBox(height: ClaroSpacing.xxl),
-          Text('Add this device?', style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk)),
+          Text(
+            'Add this device?',
+            style: ClaroType.displayLg.copyWith(color: ClaroColors.onInk),
+          ),
           const SizedBox(height: ClaroSpacing.sm),
           Text(
             "We'll send this to your utility's team for a quick review before it shows up on your dashboard.",
@@ -108,18 +115,33 @@ class _DeviceClaimScreenState extends State<DeviceClaimScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Device ID', style: ClaroType.caption.copyWith(color: ClaroColors.onInkMuted)),
+                Text(
+                  'Device ID',
+                  style: ClaroType.caption.copyWith(
+                    color: ClaroColors.onInkMuted,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(widget.scannedValue, style: ClaroType.readout.copyWith(color: ClaroColors.onInk)),
+                Text(
+                  widget.scannedValue,
+                  style: ClaroType.readout.copyWith(color: ClaroColors.onInk),
+                ),
               ],
             ),
           ),
           if (_error != null) ...[
             const SizedBox(height: ClaroSpacing.md),
-            Text(_error!, style: ClaroType.caption.copyWith(color: ClaroColors.fault)),
+            Text(
+              _error!,
+              style: ClaroType.caption.copyWith(color: ClaroColors.fault),
+            ),
           ],
           const SizedBox(height: ClaroSpacing.xl),
-          ClaroPrimaryButton(text: 'Submit for review', onPressed: _submit, loading: _submitting),
+          ClaroPrimaryButton(
+            text: 'Submit for review',
+            onPressed: _submit,
+            loading: _submitting,
+          ),
         ],
       ),
     );
@@ -148,7 +170,10 @@ class _SubmittedState extends StatelessWidget {
               child: const Icon(Icons.check, color: ClaroColors.mint, size: 36),
             ),
             const SizedBox(height: ClaroSpacing.lg),
-            Text('Submitted for review', style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
+            Text(
+              'Submitted for review',
+              style: ClaroType.title.copyWith(color: ClaroColors.onInk),
+            ),
             const SizedBox(height: ClaroSpacing.xs),
             Text(
               "We'll let you know once it's approved and showing live data.",

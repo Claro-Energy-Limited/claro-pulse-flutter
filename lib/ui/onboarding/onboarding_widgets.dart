@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -20,9 +20,16 @@ class OnboardingBackButton extends StatelessWidget {
         child: Container(
           width: 36,
           height: 36,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: ClaroColors.inkPanel),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: ClaroColors.inkPanel,
+          ),
           alignment: Alignment.center,
-          child: const Icon(Icons.keyboard_arrow_left, color: ClaroColors.onInk, size: 22),
+          child: const Icon(
+            Icons.keyboard_arrow_left,
+            color: ClaroColors.onInk,
+            size: 22,
+          ),
         ),
       ),
     );

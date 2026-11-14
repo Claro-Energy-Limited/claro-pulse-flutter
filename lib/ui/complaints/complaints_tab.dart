@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -36,9 +36,17 @@ class ComplaintsTab extends StatelessWidget {
         backgroundColor: p.panel,
         onRefresh: onRefresh,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, kNavClearance),
+          padding: const EdgeInsets.fromLTRB(
+            ClaroSpacing.xl,
+            ClaroSpacing.lg,
+            ClaroSpacing.xl,
+            kNavClearance,
+          ),
           children: [
-            Text('Complaints', style: ClaroType.displayLg.copyWith(color: p.text, fontSize: 28)),
+            Text(
+              'Complaints',
+              style: ClaroType.displayLg.copyWith(color: p.text, fontSize: 28),
+            ),
             Text(
               "Tell us what's wrong and track the fix.",
               style: ClaroType.caption.copyWith(color: p.textMuted),
@@ -47,7 +55,12 @@ class ComplaintsTab extends StatelessWidget {
             _RaiseCard(onTap: onRaise),
             const SizedBox(height: ClaroSpacing.xl),
             if (complaints == null && error == null)
-              SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: p.accentText)))
+              SizedBox(
+                height: 200,
+                child: Center(
+                  child: CircularProgressIndicator(color: p.accentText),
+                ),
+              )
             else if (complaints == null)
               MessageState(
                 icon: Icons.sync_problem_rounded,
@@ -104,7 +117,10 @@ class _RaiseCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Raise a complaint', style: ClaroType.subtitle.copyWith(color: p.text)),
+                Text(
+                  'Raise a complaint',
+                  style: ClaroType.subtitle.copyWith(color: p.text),
+                ),
                 Text(
                   'Pump, water flow, solar panels or anything else',
                   style: ClaroType.caption.copyWith(color: p.textMuted),
@@ -119,7 +135,8 @@ class _RaiseCard extends StatelessWidget {
   }
 }
 
-Color complaintStatusColor(ComplaintStatus status, ClaroPalette p) => switch (status) {
+Color complaintStatusColor(ComplaintStatus status, ClaroPalette p) =>
+    switch (status) {
       ComplaintStatus.open => p.warnText,
       ComplaintStatus.inProgress => p.accentText,
       ComplaintStatus.resolved => p.textMuted,
@@ -141,17 +158,32 @@ class ComplaintCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(c.ticketNo, style: ClaroType.readoutSm.copyWith(color: p.textMuted)),
+              Text(
+                c.ticketNo,
+                style: ClaroType.readoutSm.copyWith(color: p.textMuted),
+              ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: 2),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: ClaroRadius.pill),
-                child: Text(c.status.label, style: ClaroType.caption.copyWith(color: color)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: ClaroSpacing.sm,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: ClaroRadius.pill,
+                ),
+                child: Text(
+                  c.status.label,
+                  style: ClaroType.caption.copyWith(color: color),
+                ),
               ),
             ],
           ),
           const SizedBox(height: ClaroSpacing.sm),
-          Text(c.category.label, style: ClaroType.subtitle.copyWith(color: p.text)),
+          Text(
+            c.category.label,
+            style: ClaroType.subtitle.copyWith(color: p.text),
+          ),
           const SizedBox(height: 2),
           Text(
             c.description,
@@ -164,14 +196,24 @@ class ComplaintCard extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(ClaroSpacing.md),
-              decoration: BoxDecoration(color: p.panelHigh, borderRadius: ClaroRadius.md),
+              decoration: BoxDecoration(
+                color: p.panelHigh,
+                borderRadius: ClaroRadius.md,
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.support_agent_rounded, size: 18, color: p.accentText),
+                  Icon(
+                    Icons.support_agent_rounded,
+                    size: 18,
+                    color: p.accentText,
+                  ),
                   const SizedBox(width: ClaroSpacing.sm),
                   Expanded(
-                    child: Text(c.latestUpdate!, style: ClaroType.caption.copyWith(color: p.text)),
+                    child: Text(
+                      c.latestUpdate!,
+                      style: ClaroType.caption.copyWith(color: p.text),
+                    ),
                   ),
                 ],
               ),

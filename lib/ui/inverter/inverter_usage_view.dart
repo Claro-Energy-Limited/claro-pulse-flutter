@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -50,16 +50,31 @@ class _InverterUsageViewState extends State<InverterUsageView> {
         backgroundColor: p.panel,
         onRefresh: widget.onRefresh,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, kNavClearance),
+          padding: const EdgeInsets.fromLTRB(
+            ClaroSpacing.xl,
+            ClaroSpacing.lg,
+            ClaroSpacing.xl,
+            kNavClearance,
+          ),
           children: [
-            Text('Energy', style: ClaroType.displayLg.copyWith(color: p.text, fontSize: 28)),
-            Text('Solar inverter · sno ${widget.config.rmuSno}',
-                style: ClaroType.caption.copyWith(color: p.textMuted)),
+            Text(
+              'Energy',
+              style: ClaroType.displayLg.copyWith(color: p.text, fontSize: 28),
+            ),
+            Text(
+              'Solar inverter · sno ${widget.config.rmuSno}',
+              style: ClaroType.caption.copyWith(color: p.textMuted),
+            ),
             const SizedBox(height: ClaroSpacing.xl),
             _buildRangeSelector(context),
             const SizedBox(height: ClaroSpacing.xl),
-            if (widget.isLoading && widget.todayGraph == null && widget.history7Days == null)
-              const SizedBox(height: 280, child: Center(child: CircularProgressIndicator()))
+            if (widget.isLoading &&
+                widget.todayGraph == null &&
+                widget.history7Days == null)
+              const SizedBox(
+                height: 280,
+                child: Center(child: CircularProgressIndicator()),
+              )
             else ...[
               _buildChartSection(context),
               const SizedBox(height: ClaroSpacing.xl),
@@ -95,9 +110,13 @@ class _InverterUsageViewState extends State<InverterUsageView> {
                 onTap: () => setState(() => _range = range),
                 child: AnimatedContainer(
                   duration: ClaroMotion.fast,
-                  padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: ClaroSpacing.sm,
+                  ),
                   decoration: BoxDecoration(
-                    color: range == _range ? p.accentText : const Color(0x00000000),
+                    color: range == _range
+                        ? p.accentText
+                        : const Color(0x00000000),
                     borderRadius: ClaroRadius.pill,
                   ),
                   alignment: Alignment.center,
@@ -151,7 +170,10 @@ class _InverterUsageViewState extends State<InverterUsageView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Energy made today', style: ClaroType.label.copyWith(color: p.textMuted)),
+          Text(
+            'Energy made today',
+            style: ClaroType.label.copyWith(color: p.textMuted),
+          ),
           const SizedBox(height: ClaroSpacing.xs),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -161,11 +183,17 @@ class _InverterUsageViewState extends State<InverterUsageView> {
                 child: Text(
                   todayGen == null ? '—' : formatOneDecimal(todayGen),
                   overflow: TextOverflow.ellipsis,
-                  style: ClaroType.readoutXl.copyWith(color: p.text, fontSize: 38),
+                  style: ClaroType.readoutXl.copyWith(
+                    color: p.text,
+                    fontSize: 38,
+                  ),
                 ),
               ),
               const SizedBox(width: ClaroSpacing.sm),
-              Text('kWh', style: ClaroType.subtitle.copyWith(color: p.textMuted)),
+              Text(
+                'kWh',
+                style: ClaroType.subtitle.copyWith(color: p.textMuted),
+              ),
             ],
           ),
           if (maxPvp > 0) ...[
@@ -189,14 +217,20 @@ class _InverterUsageViewState extends State<InverterUsageView> {
     final p = context.palette;
     final history = widget.history7Days;
     final points = history?.points ?? [];
-    final total = points.map((pt) => pt.dkWh).whereType<double>().fold<double>(0, (a, b) => a + b);
+    final total = points
+        .map((pt) => pt.dkWh)
+        .whereType<double>()
+        .fold<double>(0, (a, b) => a + b);
 
     return Panel(
       padding: const EdgeInsets.all(ClaroSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Energy this week', style: ClaroType.label.copyWith(color: p.textMuted)),
+          Text(
+            'Energy this week',
+            style: ClaroType.label.copyWith(color: p.textMuted),
+          ),
           const SizedBox(height: ClaroSpacing.xs),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -206,17 +240,25 @@ class _InverterUsageViewState extends State<InverterUsageView> {
                 child: Text(
                   points.isEmpty ? '—' : formatOneDecimal(total),
                   overflow: TextOverflow.ellipsis,
-                  style: ClaroType.readoutXl.copyWith(color: p.text, fontSize: 38),
+                  style: ClaroType.readoutXl.copyWith(
+                    color: p.text,
+                    fontSize: 38,
+                  ),
                 ),
               ),
               const SizedBox(width: ClaroSpacing.sm),
-              Text('kWh', style: ClaroType.subtitle.copyWith(color: p.textMuted)),
+              Text(
+                'kWh',
+                style: ClaroType.subtitle.copyWith(color: p.textMuted),
+              ),
             ],
           ),
           const SizedBox(height: ClaroSpacing.xl),
           ClaroLineChart(
             points: points.map((pt) => pt.dkWh).toList(),
-            xLabels: points.map((pt) => pt.label.split(',').last.trim()).toList(),
+            xLabels: points
+                .map((pt) => pt.label.split(',').last.trim())
+                .toList(),
           ),
         ],
       ),
@@ -227,7 +269,10 @@ class _InverterUsageViewState extends State<InverterUsageView> {
     final p = context.palette;
     final history = widget.monthHistory;
     final points = history?.points ?? [];
-    final total = points.map((pt) => pt.dkWh).whereType<double>().fold<double>(0, (a, b) => a + b);
+    final total = points
+        .map((pt) => pt.dkWh)
+        .whereType<double>()
+        .fold<double>(0, (a, b) => a + b);
 
     // Filter points up to current date (skip future empty days)
     final now = DateTime.now();
@@ -236,14 +281,25 @@ class _InverterUsageViewState extends State<InverterUsageView> {
       return !pt.createdAt!.isAfter(now);
     }).toList();
 
-    final chartPoints = (validPoints.isNotEmpty ? validPoints : points).map((pt) => pt.dkWh).toList();
-    final labels = (validPoints.isNotEmpty ? validPoints : points).where((pt) => pt.label.isNotEmpty).map((pt) => pt.label).toList();
+    final chartPoints = (validPoints.isNotEmpty ? validPoints : points)
+        .map((pt) => pt.dkWh)
+        .toList();
+    final labels = (validPoints.isNotEmpty ? validPoints : points)
+        .where((pt) => pt.label.isNotEmpty)
+        .map((pt) => pt.label)
+        .toList();
 
     // Select ~5 distributed x-axis labels to prevent text overlapping
     final xLabels = <String>[];
     if (labels.isNotEmpty) {
       final count = labels.length;
-      final indices = {0, count ~/ 4, count ~/ 2, (count * 3) ~/ 4, count - 1}.toList()..sort();
+      final indices = {
+        0,
+        count ~/ 4,
+        count ~/ 2,
+        (count * 3) ~/ 4,
+        count - 1,
+      }.toList()..sort();
       for (final idx in indices) {
         if (idx < count) xLabels.add(labels[idx]);
       }
@@ -254,7 +310,10 @@ class _InverterUsageViewState extends State<InverterUsageView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Energy this month', style: ClaroType.label.copyWith(color: p.textMuted)),
+          Text(
+            'Energy this month',
+            style: ClaroType.label.copyWith(color: p.textMuted),
+          ),
           const SizedBox(height: ClaroSpacing.xs),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -264,18 +323,21 @@ class _InverterUsageViewState extends State<InverterUsageView> {
                 child: Text(
                   points.isEmpty ? '—' : formatOneDecimal(total),
                   overflow: TextOverflow.ellipsis,
-                  style: ClaroType.readoutXl.copyWith(color: p.text, fontSize: 38),
+                  style: ClaroType.readoutXl.copyWith(
+                    color: p.text,
+                    fontSize: 38,
+                  ),
                 ),
               ),
               const SizedBox(width: ClaroSpacing.sm),
-              Text('kWh', style: ClaroType.subtitle.copyWith(color: p.textMuted)),
+              Text(
+                'kWh',
+                style: ClaroType.subtitle.copyWith(color: p.textMuted),
+              ),
             ],
           ),
           const SizedBox(height: ClaroSpacing.xl),
-          ClaroLineChart(
-            points: chartPoints,
-            xLabels: xLabels,
-          ),
+          ClaroLineChart(points: chartPoints, xLabels: xLabels),
         ],
       ),
     );
@@ -283,8 +345,14 @@ class _InverterUsageViewState extends State<InverterUsageView> {
 
   Widget _buildSummaryTiles(BuildContext context) {
     final p = context.palette;
-    final weekTotal = widget.history7Days?.points.map((pt) => pt.dkWh).whereType<double>().fold<double>(0, (a, b) => a + b);
-    final monthTotal = widget.monthHistory?.points.map((pt) => pt.dkWh).whereType<double>().fold<double>(0, (a, b) => a + b);
+    final weekTotal = widget.history7Days?.points
+        .map((pt) => pt.dkWh)
+        .whereType<double>()
+        .fold<double>(0, (a, b) => a + b);
+    final monthTotal = widget.monthHistory?.points
+        .map((pt) => pt.dkWh)
+        .whereType<double>()
+        .fold<double>(0, (a, b) => a + b);
 
     return Row(
       children: [
@@ -294,15 +362,28 @@ class _InverterUsageViewState extends State<InverterUsageView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('This week', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                Text(
+                  'This week',
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
+                ),
                 const SizedBox(height: 4),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(weekTotal == null ? '—' : formatOneDecimal(weekTotal), style: ClaroType.title.copyWith(color: p.text, fontWeight: FontWeight.bold, fontSize: 22)),
+                    Text(
+                      weekTotal == null ? '—' : formatOneDecimal(weekTotal),
+                      style: ClaroType.title.copyWith(
+                        color: p.text,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                      ),
+                    ),
                     const SizedBox(width: 4),
-                    Text('kWh', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                    Text(
+                      'kWh',
+                      style: ClaroType.caption.copyWith(color: p.textMuted),
+                    ),
                   ],
                 ),
               ],
@@ -316,15 +397,28 @@ class _InverterUsageViewState extends State<InverterUsageView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('This month', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                Text(
+                  'This month',
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
+                ),
                 const SizedBox(height: 4),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(monthTotal == null ? '—' : formatOneDecimal(monthTotal), style: ClaroType.title.copyWith(color: p.text, fontWeight: FontWeight.bold, fontSize: 22)),
+                    Text(
+                      monthTotal == null ? '—' : formatOneDecimal(monthTotal),
+                      style: ClaroType.title.copyWith(
+                        color: p.text,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                      ),
+                    ),
                     const SizedBox(width: 4),
-                    Text('kWh', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                    Text(
+                      'kWh',
+                      style: ClaroType.caption.copyWith(color: p.textMuted),
+                    ),
                   ],
                 ),
               ],
@@ -343,16 +437,32 @@ class _InverterUsageViewState extends State<InverterUsageView> {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(color: p.panelHigh, borderRadius: ClaroRadius.md),
-            child: Icon(Icons.calendar_today_rounded, color: p.accentText, size: 20),
+            decoration: BoxDecoration(
+              color: p.panelHigh,
+              borderRadius: ClaroRadius.md,
+            ),
+            child: Icon(
+              Icons.calendar_today_rounded,
+              color: p.accentText,
+              size: 20,
+            ),
           ),
           const SizedBox(width: ClaroSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Monthly report', style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.bold)),
-                Text('Daily generation for November', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                Text(
+                  'Monthly report',
+                  style: ClaroType.subtitle.copyWith(
+                    color: p.text,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Daily generation for November',
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
+                ),
               ],
             ),
           ),
@@ -373,20 +483,51 @@ class _InverterUsageViewState extends State<InverterUsageView> {
         const SizedBox(height: ClaroSpacing.md),
         if (records.isEmpty)
           Panel(
-            child: Text('No readings available for today yet.',
-                style: ClaroType.body.copyWith(color: p.textMuted)),
+            child: Text(
+              'No readings available for today yet.',
+              style: ClaroType.body.copyWith(color: p.textMuted),
+            ),
           )
         else
           Panel(
-            padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: ClaroSpacing.md),
+            padding: const EdgeInsets.symmetric(
+              horizontal: ClaroSpacing.lg,
+              vertical: ClaroSpacing.md,
+            ),
             child: Column(
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text('Time', style: ClaroType.caption.copyWith(color: p.textMuted))),
-                    SizedBox(width: 70, child: Text('Solar', textAlign: TextAlign.right, style: ClaroType.caption.copyWith(color: p.textMuted))),
-                    SizedBox(width: 70, child: Text('Grid', textAlign: TextAlign.right, style: ClaroType.caption.copyWith(color: p.textMuted))),
-                    SizedBox(width: 50, child: Text('Status', textAlign: TextAlign.right, style: ClaroType.caption.copyWith(color: p.textMuted))),
+                    Expanded(
+                      child: Text(
+                        'Time',
+                        style: ClaroType.caption.copyWith(color: p.textMuted),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 70,
+                      child: Text(
+                        'Solar',
+                        textAlign: TextAlign.right,
+                        style: ClaroType.caption.copyWith(color: p.textMuted),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 70,
+                      child: Text(
+                        'Grid',
+                        textAlign: TextAlign.right,
+                        style: ClaroType.caption.copyWith(color: p.textMuted),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 50,
+                      child: Text(
+                        'Status',
+                        textAlign: TextAlign.right,
+                        style: ClaroType.caption.copyWith(color: p.textMuted),
+                      ),
+                    ),
                   ],
                 ),
                 Divider(height: 16, color: p.border),
@@ -397,8 +538,13 @@ class _InverterUsageViewState extends State<InverterUsageView> {
                       children: [
                         Expanded(
                           child: Text(
-                            r.createdAt == null ? '—' : '${r.createdAt!.toLocal().hour > 12 ? r.createdAt!.toLocal().hour - 12 : (r.createdAt!.toLocal().hour == 0 ? 12 : r.createdAt!.toLocal().hour)}:${r.createdAt!.toLocal().minute.toString().padLeft(2, '0')} ${r.createdAt!.toLocal().hour >= 12 ? 'PM' : 'AM'}',
-                            style: ClaroType.body.copyWith(color: p.text, fontWeight: FontWeight.bold),
+                            r.createdAt == null
+                                ? '—'
+                                : '${r.createdAt!.toLocal().hour > 12 ? r.createdAt!.toLocal().hour - 12 : (r.createdAt!.toLocal().hour == 0 ? 12 : r.createdAt!.toLocal().hour)}:${r.createdAt!.toLocal().minute.toString().padLeft(2, '0')} ${r.createdAt!.toLocal().hour >= 12 ? 'PM' : 'AM'}',
+                            style: ClaroType.body.copyWith(
+                              color: p.text,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         SizedBox(
@@ -423,7 +569,9 @@ class _InverterUsageViewState extends State<InverterUsageView> {
                             r.activeFaults.isEmpty ? 'OK' : 'FAULT',
                             textAlign: TextAlign.right,
                             style: ClaroType.caption.copyWith(
-                              color: r.activeFaults.isEmpty ? p.accentText : ClaroColors.fault,
+                              color: r.activeFaults.isEmpty
+                                  ? p.accentText
+                                  : ClaroColors.fault,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -437,7 +585,10 @@ class _InverterUsageViewState extends State<InverterUsageView> {
           ),
         const SizedBox(height: ClaroSpacing.sm),
         Center(
-          child: Text('New reading about every 10 minutes', style: ClaroType.caption.copyWith(color: p.textMuted, fontSize: 11)),
+          child: Text(
+            'New reading about every 10 minutes',
+            style: ClaroType.caption.copyWith(color: p.textMuted, fontSize: 11),
+          ),
         ),
       ],
     );

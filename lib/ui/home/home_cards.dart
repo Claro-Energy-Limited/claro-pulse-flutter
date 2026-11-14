@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_palette.dart';
@@ -9,7 +9,12 @@ import '../common/ui_kit.dart';
 /// "Running now" while the pump runs, otherwise "Last run": when it ran, for
 /// how long, and above all how much water it gave.
 class LastRunCard extends StatelessWidget {
-  const LastRunCard({super.key, required this.run, required this.onSeeAll, required this.onOpenStory});
+  const LastRunCard({
+    super.key,
+    required this.run,
+    required this.onSeeAll,
+    required this.onOpenStory,
+  });
 
   final PumpRun run;
   final VoidCallback onSeeAll;
@@ -29,10 +34,13 @@ class LastRunCard extends StatelessWidget {
       when = '';
     } else if (ongoing) {
       final day = formatDayName(start);
-      final dayText = day == 'Today' || day == 'Yesterday' ? day.toLowerCase() : 'on $day';
+      final dayText = day == 'Today' || day == 'Yesterday'
+          ? day.toLowerCase()
+          : 'on $day';
       when = 'Started ${formatClock(start)} $dayText';
     } else {
-      when = '${formatDayName(start)}, ${formatClock(start)} – ${end == null ? '?' : formatClock(end)}';
+      when =
+          '${formatDayName(start)}, ${formatClock(start)} – ${end == null ? '?' : formatClock(end)}';
     }
 
     return Panel(
@@ -42,7 +50,11 @@ class LastRunCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              IconTile(icon: ongoing ? Icons.water_drop_rounded : Icons.history_rounded),
+              IconTile(
+                icon: ongoing
+                    ? Icons.water_drop_rounded
+                    : Icons.history_rounded,
+              ),
               const SizedBox(width: ClaroSpacing.md),
               Expanded(
                 child: Column(
@@ -55,7 +67,10 @@ class LastRunCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Text(when, style: ClaroType.caption.copyWith(color: p.textMuted)),
+                    Text(
+                      when,
+                      style: ClaroType.caption.copyWith(color: p.textMuted),
+                    ),
                   ],
                 ),
               ),
@@ -64,7 +79,10 @@ class LastRunCard extends StatelessWidget {
                 onTap: onSeeAll,
                 child: Padding(
                   padding: const EdgeInsets.all(ClaroSpacing.xs),
-                  child: Text('All runs', style: ClaroType.label.copyWith(color: p.accentText)),
+                  child: Text(
+                    'All runs',
+                    style: ClaroType.label.copyWith(color: p.accentText),
+                  ),
                 ),
               ),
             ],
@@ -93,9 +111,24 @@ class LastRunCard extends StatelessWidget {
           const SizedBox(height: ClaroSpacing.lg),
           Row(
             children: [
-              Expanded(child: MiniStat(label: 'Duration', value: formatDuration(run.duration()))),
-              Expanded(child: MiniStat(label: 'Average flow', value: '${formatWhole(run.avgFlowLpm)} L/min')),
-              Expanded(child: MiniStat(label: 'Energy', value: '${formatOneDecimal(run.energyKwh)} kWh')),
+              Expanded(
+                child: MiniStat(
+                  label: 'Duration',
+                  value: formatDuration(run.duration()),
+                ),
+              ),
+              Expanded(
+                child: MiniStat(
+                  label: 'Average flow',
+                  value: '${formatWhole(run.avgFlowLpm)} L/min',
+                ),
+              ),
+              Expanded(
+                child: MiniStat(
+                  label: 'Energy',
+                  value: '${formatOneDecimal(run.energyKwh)} kWh',
+                ),
+              ),
             ],
           ),
         ],
@@ -114,7 +147,10 @@ class RecentRunsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return Panel(
-      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: ClaroSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: ClaroSpacing.lg,
+        vertical: ClaroSpacing.xs,
+      ),
       child: Column(
         children: [
           for (var i = 0; i < runs.length; i++) ...[
@@ -140,8 +176,8 @@ class _RunRow extends StatelessWidget {
     final times = start == null
         ? ''
         : run.isOngoing
-            ? '${formatClock(start)} – now'
-            : '${formatClock(start)} – ${end == null ? '?' : formatClock(end)}';
+        ? '${formatClock(start)} – now'
+        : '${formatClock(start)} – ${end == null ? '?' : formatClock(end)}';
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.md),
       child: Row(
@@ -160,7 +196,10 @@ class _RunRow extends StatelessWidget {
                     ),
                     if (run.isOngoing) ...[
                       const SizedBox(width: ClaroSpacing.sm),
-                      Text('Running', style: ClaroType.caption.copyWith(color: p.accentText)),
+                      Text(
+                        'Running',
+                        style: ClaroType.caption.copyWith(color: p.accentText),
+                      ),
                     ],
                   ],
                 ),
@@ -172,7 +211,10 @@ class _RunRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: ClaroSpacing.md),
-          Text('${formatWhole(run.waterLiters)} L', style: ClaroType.readout.copyWith(color: p.text)),
+          Text(
+            '${formatWhole(run.waterLiters)} L',
+            style: ClaroType.readout.copyWith(color: p.text),
+          ),
         ],
       ),
     );
@@ -180,11 +222,11 @@ class _RunRow extends StatelessWidget {
 }
 
 IconData weatherIcon(WeatherCondition c) => switch (c) {
-      WeatherCondition.sunny => Icons.wb_sunny_rounded,
-      WeatherCondition.partlyCloudy => Icons.wb_cloudy_outlined,
-      WeatherCondition.cloudy => Icons.cloud_rounded,
-      WeatherCondition.rain => Icons.grain_rounded,
-    };
+  WeatherCondition.sunny => Icons.wb_sunny_rounded,
+  WeatherCondition.partlyCloudy => Icons.wb_cloudy_outlined,
+  WeatherCondition.cloudy => Icons.cloud_rounded,
+  WeatherCondition.rain => Icons.grain_rounded,
+};
 
 /// One swipeable card in the "For you" row on Home.
 class ContextCardData {
@@ -289,7 +331,8 @@ class _ContextCard extends StatelessWidget {
           children: [
             IconTile(icon: data.icon, color: tint, size: 36),
             const Spacer(),
-            if (data.onTap != null) Icon(Icons.arrow_forward_rounded, size: 18, color: p.textMuted),
+            if (data.onTap != null)
+              Icon(Icons.arrow_forward_rounded, size: 18, color: p.textMuted),
           ],
         ),
         const SizedBox(height: ClaroSpacing.md),
@@ -297,7 +340,10 @@ class _ContextCard extends StatelessWidget {
           data.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.w600),
+          style: ClaroType.subtitle.copyWith(
+            color: p.text,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 2),
         Expanded(
@@ -311,7 +357,11 @@ class _ContextCard extends StatelessWidget {
       ],
     );
     return tinted
-        ? TintedPanel(tint: data.tone == ContextTone.warning ? p.warn : p.accent, onTap: data.onTap, child: content)
+        ? TintedPanel(
+            tint: data.tone == ContextTone.warning ? p.warn : p.accent,
+            onTap: data.onTap,
+            child: content,
+          )
         : Panel(onTap: data.onTap, child: content);
   }
 }

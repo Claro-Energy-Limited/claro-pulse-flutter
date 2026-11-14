@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_palette.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -42,7 +42,8 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
     super.dispose();
   }
 
-  bool get _canSubmit => _category != null && _description.text.trim().length >= 5;
+  bool get _canSubmit =>
+      _category != null && _description.text.trim().length >= 5;
 
   Future<void> _submit() async {
     final category = _category;
@@ -94,7 +95,9 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
     return Scaffold(
       backgroundColor: p.bg,
       body: SafeArea(
-        child: created != null ? _Success(complaint: created, onDone: widget.onSubmitted) : _form(),
+        child: created != null
+            ? _Success(complaint: created, onDone: widget.onSubmitted)
+            : _form(),
       ),
     );
   }
@@ -103,7 +106,9 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
     final p = context.palette;
     final isInverter = widget.device.kind == 'INVERTER';
     final categories = ComplaintCategory.categoriesForKind(widget.device.kind);
-    final icon = isInverter ? Icons.solar_power_outlined : Icons.water_drop_outlined;
+    final icon = isInverter
+        ? Icons.solar_power_outlined
+        : Icons.water_drop_outlined;
     final hintText = isInverter
         ? 'For example: grid voltage is out of range or output power is 0 W.'
         : 'For example: the pump starts but no water comes out.';
@@ -113,7 +118,12 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
         BackHeader(title: 'Raise a complaint', onBack: widget.onBack),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.sm, ClaroSpacing.xl, ClaroSpacing.xxl),
+            padding: const EdgeInsets.fromLTRB(
+              ClaroSpacing.xl,
+              ClaroSpacing.sm,
+              ClaroSpacing.xl,
+              ClaroSpacing.xxl,
+            ),
             children: [
               Panel(
                 padding: const EdgeInsets.all(ClaroSpacing.md),
@@ -131,7 +141,10 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
                 ),
               ),
               const SizedBox(height: ClaroSpacing.xl),
-              Text("What's the problem?", style: ClaroType.subtitle.copyWith(color: p.text)),
+              Text(
+                "What's the problem?",
+                style: ClaroType.subtitle.copyWith(color: p.text),
+              ),
               const SizedBox(height: ClaroSpacing.md),
               Wrap(
                 spacing: ClaroSpacing.sm,
@@ -146,7 +159,10 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
                 ],
               ),
               const SizedBox(height: ClaroSpacing.xl),
-              Text('Tell us more', style: ClaroType.subtitle.copyWith(color: p.text)),
+              Text(
+                'Tell us more',
+                style: ClaroType.subtitle.copyWith(color: p.text),
+              ),
               const SizedBox(height: ClaroSpacing.md),
               Container(
                 padding: const EdgeInsets.all(ClaroSpacing.md),
@@ -171,7 +187,10 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: ClaroSpacing.sm),
-                Text(_error!, style: ClaroType.caption.copyWith(color: p.faultText)),
+                Text(
+                  _error!,
+                  style: ClaroType.caption.copyWith(color: p.faultText),
+                ),
               ],
               const SizedBox(height: ClaroSpacing.xl),
               AccentButton(
@@ -189,7 +208,11 @@ class _NewComplaintScreenState extends State<NewComplaintScreen> {
 }
 
 class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({required this.label, required this.selected, required this.onTap});
+  const _CategoryChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   final String label;
   final bool selected;
@@ -203,7 +226,10 @@ class _CategoryChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: ClaroMotion.fast,
-        padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.md, vertical: ClaroSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: ClaroSpacing.md,
+          vertical: ClaroSpacing.sm,
+        ),
         decoration: BoxDecoration(
           color: selected ? p.accent : p.panel,
           borderRadius: ClaroRadius.pill,
@@ -211,7 +237,9 @@ class _CategoryChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: ClaroType.label.copyWith(color: selected ? p.onAccent : p.text),
+          style: ClaroType.label.copyWith(
+            color: selected ? p.onAccent : p.text,
+          ),
         ),
       ),
     );
@@ -236,11 +264,17 @@ class _Success extends StatelessWidget {
             Container(
               width: 80,
               height: 80,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: p.accentText.withValues(alpha: 0.14)),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: p.accentText.withValues(alpha: 0.14),
+              ),
               child: Icon(Icons.check_rounded, color: p.accentText, size: 40),
             ),
             const SizedBox(height: ClaroSpacing.lg),
-            Text('Complaint raised', style: ClaroType.title.copyWith(color: p.text)),
+            Text(
+              'Complaint raised',
+              style: ClaroType.title.copyWith(color: p.text),
+            ),
             const SizedBox(height: ClaroSpacing.xs),
             Text(
               'Ticket ${complaint.ticketNo}',

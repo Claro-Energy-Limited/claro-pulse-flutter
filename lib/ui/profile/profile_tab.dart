@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_dimens.dart';
 import '../../app/theme/claro_palette.dart';
@@ -12,7 +12,11 @@ import '../components/claro_powered_by.dart';
 import '../dev/component_gallery_screen.dart';
 
 class _AccentSwatch extends StatelessWidget {
-  const _AccentSwatch({required this.accent, required this.selected, required this.onTap});
+  const _AccentSwatch({
+    required this.accent,
+    required this.selected,
+    required this.onTap,
+  });
 
   final ClaroAccent accent;
   final bool selected;
@@ -37,12 +41,22 @@ class _AccentSwatch extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: accent.fill,
-                border: Border.all(color: selected ? p.text : p.border, width: selected ? 3 : 1),
+                border: Border.all(
+                  color: selected ? p.text : p.border,
+                  width: selected ? 3 : 1,
+                ),
               ),
-              child: selected ? Icon(Icons.check_rounded, color: p.onAccent, size: 22) : null,
+              child: selected
+                  ? Icon(Icons.check_rounded, color: p.onAccent, size: 22)
+                  : null,
             ),
             const SizedBox(height: ClaroSpacing.xs),
-            Text(accent.label, style: ClaroType.caption.copyWith(color: selected ? p.text : p.textMuted)),
+            Text(
+              accent.label,
+              style: ClaroType.caption.copyWith(
+                color: selected ? p.text : p.textMuted,
+              ),
+            ),
           ],
         ),
       ),
@@ -51,10 +65,10 @@ class _AccentSwatch extends StatelessWidget {
 }
 
 String themeModeLabel(ThemeMode mode) => switch (mode) {
-      ThemeMode.system => 'System default',
-      ThemeMode.light => 'Light',
-      ThemeMode.dark => 'Dark',
-    };
+  ThemeMode.system => 'System default',
+  ThemeMode.light => 'Light',
+  ThemeMode.dark => 'Dark',
+};
 
 /// Profile: who's signed in, their devices, appearance, help, and log out.
 class ProfileTab extends StatelessWidget {
@@ -91,11 +105,17 @@ class ProfileTab extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel', style: ClaroType.label.copyWith(color: p.textMuted)),
+            child: Text(
+              'Cancel',
+              style: ClaroType.label.copyWith(color: p.textMuted),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Log out', style: ClaroType.label.copyWith(color: p.faultText)),
+            child: Text(
+              'Log out',
+              style: ClaroType.label.copyWith(color: p.faultText),
+            ),
           ),
         ],
       ),
@@ -113,7 +133,12 @@ class ProfileTab extends StatelessWidget {
       builder: (sheetContext) => SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(ClaroSpacing.lg, ClaroSpacing.md, ClaroSpacing.lg, ClaroSpacing.lg),
+          padding: const EdgeInsets.fromLTRB(
+            ClaroSpacing.lg,
+            ClaroSpacing.md,
+            ClaroSpacing.lg,
+            ClaroSpacing.lg,
+          ),
           child: ListenableBuilder(
             listenable: Listenable.merge([settings.themeMode, settings.accent]),
             builder: (context, _) {
@@ -121,52 +146,87 @@ class ProfileTab extends StatelessWidget {
               final sp = context.palette;
               return SingleChildScrollView(
                 child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SheetHandle(),
-                  const SizedBox(height: ClaroSpacing.lg),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm),
-                    child: Text('Appearance', style: ClaroType.title.copyWith(color: sp.text)),
-                  ),
-                  const SizedBox(height: ClaroSpacing.sm),
-                  for (final (mode, icon, hint) in const [
-                    (ThemeMode.system, Icons.brightness_auto_rounded, "Follows your phone's setting"),
-                    (ThemeMode.light, Icons.light_mode_rounded, 'Easier to read in bright sunlight'),
-                    (ThemeMode.dark, Icons.dark_mode_rounded, 'Easier on the eyes at night'),
-                  ])
-                    ListTile(
-                      shape: const RoundedRectangleBorder(borderRadius: ClaroRadius.md),
-                      leading: Icon(icon, color: sp.accentText),
-                      title: Text(themeModeLabel(mode), style: ClaroType.subtitle.copyWith(color: sp.text)),
-                      subtitle: Text(hint, style: ClaroType.caption.copyWith(color: sp.textMuted)),
-                      trailing: mode == current
-                          ? Icon(Icons.check_circle_rounded, color: sp.accentText)
-                          : Icon(Icons.circle_outlined, color: sp.border),
-                      onTap: () {
-                        settings.setThemeMode(mode);
-                        Navigator.of(sheetContext).pop();
-                      },
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SheetHandle(),
+                    const SizedBox(height: ClaroSpacing.lg),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: ClaroSpacing.sm,
+                      ),
+                      child: Text(
+                        'Appearance',
+                        style: ClaroType.title.copyWith(color: sp.text),
+                      ),
                     ),
-                  const SizedBox(height: ClaroSpacing.lg),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm),
-                    child: Text('Accent colour', style: ClaroType.subtitle.copyWith(color: sp.text)),
-                  ),
-                  const SizedBox(height: ClaroSpacing.md),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      for (final accent in ClaroAccent.values)
-                        _AccentSwatch(
-                          accent: accent,
-                          selected: settings.accent.value == accent,
-                          onTap: () => settings.setAccent(accent),
+                    const SizedBox(height: ClaroSpacing.sm),
+                    for (final (mode, icon, hint) in const [
+                      (
+                        ThemeMode.system,
+                        Icons.brightness_auto_rounded,
+                        "Follows your phone's setting",
+                      ),
+                      (
+                        ThemeMode.light,
+                        Icons.light_mode_rounded,
+                        'Easier to read in bright sunlight',
+                      ),
+                      (
+                        ThemeMode.dark,
+                        Icons.dark_mode_rounded,
+                        'Easier on the eyes at night',
+                      ),
+                    ])
+                      ListTile(
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: ClaroRadius.md,
                         ),
-                    ],
-                  ),
-                ],
+                        leading: Icon(icon, color: sp.accentText),
+                        title: Text(
+                          themeModeLabel(mode),
+                          style: ClaroType.subtitle.copyWith(color: sp.text),
+                        ),
+                        subtitle: Text(
+                          hint,
+                          style: ClaroType.caption.copyWith(
+                            color: sp.textMuted,
+                          ),
+                        ),
+                        trailing: mode == current
+                            ? Icon(
+                                Icons.check_circle_rounded,
+                                color: sp.accentText,
+                              )
+                            : Icon(Icons.circle_outlined, color: sp.border),
+                        onTap: () {
+                          settings.setThemeMode(mode);
+                          Navigator.of(sheetContext).pop();
+                        },
+                      ),
+                    const SizedBox(height: ClaroSpacing.lg),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: ClaroSpacing.sm,
+                      ),
+                      child: Text(
+                        'Accent colour',
+                        style: ClaroType.subtitle.copyWith(color: sp.text),
+                      ),
+                    ),
+                    const SizedBox(height: ClaroSpacing.md),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        for (final accent in ClaroAccent.values)
+                          _AccentSwatch(
+                            accent: accent,
+                            selected: settings.accent.value == accent,
+                            onTap: () => settings.setAccent(accent),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               );
             },
@@ -186,12 +246,19 @@ class ProfileTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final demo = DemoUsers.findByPhone(phone);
-    final titleText = demo != null ? '${demo.name} (+91 $phone)' : (phone == null ? 'Signed in' : '+91 $phone');
+    final titleText = demo != null
+        ? '${demo.name} (+91 $phone)'
+        : (phone == null ? 'Signed in' : '+91 $phone');
 
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.lg, ClaroSpacing.xl, kNavClearance),
+        padding: const EdgeInsets.fromLTRB(
+          ClaroSpacing.xl,
+          ClaroSpacing.lg,
+          ClaroSpacing.xl,
+          kNavClearance,
+        ),
         children: [
           const PageTitle(title: 'Profile'),
           const SizedBox(height: ClaroSpacing.xl),
@@ -205,9 +272,15 @@ class ProfileTab extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: p.accentText.withValues(alpha: 0.14),
-                    border: Border.all(color: p.accentText.withValues(alpha: 0.4)),
+                    border: Border.all(
+                      color: p.accentText.withValues(alpha: 0.4),
+                    ),
                   ),
-                  child: Icon(Icons.person_rounded, color: p.accentText, size: 28),
+                  child: Icon(
+                    Icons.person_rounded,
+                    color: p.accentText,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: ClaroSpacing.lg),
                 Expanded(
@@ -219,7 +292,9 @@ class ProfileTab extends StatelessWidget {
                         style: ClaroType.title.copyWith(color: p.text),
                       ),
                       Text(
-                        demo != null ? 'Live SmartNet Inverter Account' : 'Claro Pulse account',
+                        demo != null
+                            ? 'Live SmartNet Inverter Account'
+                            : 'Claro Pulse account',
                         style: ClaroType.caption.copyWith(color: p.textMuted),
                       ),
                     ],
@@ -229,51 +304,57 @@ class ProfileTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: ClaroSpacing.xl),
-          _Menu(items: [
-            _MenuItem(
-              icon: Icons.water_drop_outlined,
-              label: 'My devices',
-              trailing: '$deviceCount',
-              onTap: onOpenDevices,
-            ),
-            _MenuItem(
-              icon: Icons.support_agent_rounded,
-              label: 'Help and complaints',
-              onTap: onOpenComplaints,
-            ),
-          ]),
+          _Menu(
+            items: [
+              _MenuItem(
+                icon: Icons.water_drop_outlined,
+                label: 'My devices',
+                trailing: '$deviceCount',
+                onTap: onOpenDevices,
+              ),
+              _MenuItem(
+                icon: Icons.support_agent_rounded,
+                label: 'Help and complaints',
+                onTap: onOpenComplaints,
+              ),
+            ],
+          ),
           const SizedBox(height: ClaroSpacing.lg),
           ValueListenableBuilder<ThemeMode>(
             valueListenable: settings.themeMode,
-            builder: (context, mode, _) => _Menu(items: [
-              _MenuItem(
-                icon: Icons.contrast_rounded,
-                label: 'Appearance',
-                trailing: themeModeLabel(mode),
-                onTap: () => _chooseAppearance(context),
-              ),
-              _MenuItem(
-                icon: Icons.translate_rounded,
-                label: 'Language',
-                trailing: 'English',
-                onTap: () => _comingSoon(context, 'Choosing a language'),
-              ),
-              _MenuItem(
-                icon: Icons.notifications_none_rounded,
-                label: 'Notifications',
-                onTap: () => _comingSoon(context, 'Notification settings'),
-              ),
-            ]),
+            builder: (context, mode, _) => _Menu(
+              items: [
+                _MenuItem(
+                  icon: Icons.contrast_rounded,
+                  label: 'Appearance',
+                  trailing: themeModeLabel(mode),
+                  onTap: () => _chooseAppearance(context),
+                ),
+                _MenuItem(
+                  icon: Icons.translate_rounded,
+                  label: 'Language',
+                  trailing: 'English',
+                  onTap: () => _comingSoon(context, 'Choosing a language'),
+                ),
+                _MenuItem(
+                  icon: Icons.notifications_none_rounded,
+                  label: 'Notifications',
+                  onTap: () => _comingSoon(context, 'Notification settings'),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: ClaroSpacing.lg),
-          _Menu(items: [
-            _MenuItem(
-              icon: Icons.logout_rounded,
-              label: 'Log out',
-              danger: true,
-              onTap: () => _confirmLogout(context),
-            ),
-          ]),
+          _Menu(
+            items: [
+              _MenuItem(
+                icon: Icons.logout_rounded,
+                label: 'Log out',
+                danger: true,
+                onTap: () => _confirmLogout(context),
+              ),
+            ],
+          ),
           if (isDemo) ...[
             const SizedBox(height: ClaroSpacing.lg),
             Text(
@@ -285,17 +366,27 @@ class ProfileTab extends StatelessWidget {
           const SizedBox(height: ClaroSpacing.xxl),
           Center(child: ClaroPoweredBy(captionColor: p.textMuted)),
           const SizedBox(height: ClaroSpacing.md),
-          Text('Claro Pulse', textAlign: TextAlign.center, style: ClaroType.caption.copyWith(color: p.textMuted)),
+          Text(
+            'Claro Pulse',
+            textAlign: TextAlign.center,
+            style: ClaroType.caption.copyWith(color: p.textMuted),
+          ),
           // Developer-only shortcut, never in release builds.
           if (kDebugMode)
             Center(
               child: TextButton(
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => Theme(data: ClaroTheme.dark, child: const ComponentGalleryScreen()),
+                    builder: (_) => Theme(
+                      data: ClaroTheme.dark,
+                      child: const ComponentGalleryScreen(),
+                    ),
                   ),
                 ),
-                child: Text('Developer: component gallery', style: ClaroType.caption.copyWith(color: p.textMuted)),
+                child: Text(
+                  'Developer: component gallery',
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
+                ),
               ),
             ),
         ],
@@ -337,19 +428,31 @@ class _Menu extends StatelessWidget {
             InkWell(
               onTap: items[i].onTap,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: ClaroSpacing.lg),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: ClaroSpacing.lg,
+                  vertical: ClaroSpacing.lg,
+                ),
                 child: Row(
                   children: [
-                    Icon(items[i].icon, size: 22, color: items[i].danger ? p.faultText : p.accentText),
+                    Icon(
+                      items[i].icon,
+                      size: 22,
+                      color: items[i].danger ? p.faultText : p.accentText,
+                    ),
                     const SizedBox(width: ClaroSpacing.lg),
                     Expanded(
                       child: Text(
                         items[i].label,
-                        style: ClaroType.subtitle.copyWith(color: items[i].danger ? p.faultText : p.text),
+                        style: ClaroType.subtitle.copyWith(
+                          color: items[i].danger ? p.faultText : p.text,
+                        ),
                       ),
                     ),
                     if (items[i].trailing != null)
-                      Text(items[i].trailing!, style: ClaroType.body.copyWith(color: p.textMuted)),
+                      Text(
+                        items[i].trailing!,
+                        style: ClaroType.body.copyWith(color: p.textMuted),
+                      ),
                     if (!items[i].danger) ...[
                       const SizedBox(width: ClaroSpacing.xs),
                       Icon(Icons.chevron_right_rounded, color: p.textMuted),

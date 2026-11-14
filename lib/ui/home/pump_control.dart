@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -14,7 +14,12 @@ import 'pump_state.dart';
 /// It never flips state on its own: after a tap it shows "Starting pump…" or
 /// "Stopping pump…" until the pump's own status confirms the change.
 class PumpControlButton extends StatelessWidget {
-  const PumpControlButton({super.key, required this.visual, required this.onStart, required this.onStop});
+  const PumpControlButton({
+    super.key,
+    required this.visual,
+    required this.onStart,
+    required this.onStop,
+  });
 
   final PumpVisual visual;
   final VoidCallback onStart;
@@ -23,7 +28,8 @@ class PumpControlButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final pending = visual == PumpVisual.starting || visual == PumpVisual.stopping;
+    final pending =
+        visual == PumpVisual.starting || visual == PumpVisual.stopping;
     final running = visual == PumpVisual.running;
 
     final Color background;
@@ -63,23 +69,36 @@ class PumpControlButton extends StatelessWidget {
           onTap: pending ? null : (running ? onStop : onStart),
           child: Container(
             height: 60,
-            decoration: BoxDecoration(borderRadius: ClaroRadius.pill, border: Border.all(color: border)),
+            decoration: BoxDecoration(
+              borderRadius: ClaroRadius.pill,
+              border: Border.all(color: border),
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (pending)
                   SizedBox.square(
                     dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: foreground),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: foreground,
+                    ),
                   )
                 else
-                  Icon(Icons.power_settings_new_rounded, color: foreground, size: 22),
+                  Icon(
+                    Icons.power_settings_new_rounded,
+                    color: foreground,
+                    size: 22,
+                  ),
                 const SizedBox(width: ClaroSpacing.sm),
                 Flexible(
                   child: Text(
                     label,
                     overflow: TextOverflow.ellipsis,
-                    style: ClaroType.subtitle.copyWith(color: foreground, fontWeight: FontWeight.w600),
+                    style: ClaroType.subtitle.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -138,7 +157,12 @@ class _PumpCommandSheet extends StatelessWidget {
     final checks = starting
         ? <(String, bool)>[
             ('Pump is online', s != null && s.connectionStatus == 'ONLINE'),
-            ('Enough water in the well', s != null && !s.protections.dryRun && !s.protections.waterLevelLow),
+            (
+              'Enough water in the well',
+              s != null &&
+                  !s.protections.dryRun &&
+                  !s.protections.waterLevelLow,
+            ),
             ('No faults reported', s != null && s.faultText == null),
           ]
         : const <(String, bool)>[];
@@ -148,7 +172,12 @@ class _PumpCommandSheet extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.md, ClaroSpacing.xl, ClaroSpacing.xl),
+        padding: const EdgeInsets.fromLTRB(
+          ClaroSpacing.xl,
+          ClaroSpacing.md,
+          ClaroSpacing.xl,
+          ClaroSpacing.xl,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -160,7 +189,10 @@ class _PumpCommandSheet extends StatelessWidget {
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: tint.withValues(alpha: 0.14)),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: tint.withValues(alpha: 0.14),
+                  ),
                   child: Icon(Icons.power_settings_new_rounded, color: tint),
                 ),
                 const SizedBox(width: ClaroSpacing.md),
@@ -172,7 +204,10 @@ class _PumpCommandSheet extends StatelessWidget {
                         starting ? 'Start the pump?' : 'Stop the pump?',
                         style: ClaroType.title.copyWith(color: p.text),
                       ),
-                      Text(deviceName, style: ClaroType.caption.copyWith(color: p.textMuted)),
+                      Text(
+                        deviceName,
+                        style: ClaroType.caption.copyWith(color: p.textMuted),
+                      ),
                     ],
                   ),
                 ),
@@ -191,14 +226,21 @@ class _PumpCommandSheet extends StatelessWidget {
                         color: ok ? p.accentText : p.faultText,
                       ),
                       const SizedBox(width: ClaroSpacing.sm),
-                      Expanded(child: Text(label, style: ClaroType.body.copyWith(color: p.text))),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: ClaroType.body.copyWith(color: p.text),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               const SizedBox(height: ClaroSpacing.sm),
               Text(
                 blocked ?? 'Make sure no one is working on or near the pump.',
-                style: ClaroType.caption.copyWith(color: blocked == null ? p.textMuted : p.faultText),
+                style: ClaroType.caption.copyWith(
+                  color: blocked == null ? p.textMuted : p.faultText,
+                ),
               ),
             ] else
               Text(
@@ -207,7 +249,10 @@ class _PumpCommandSheet extends StatelessWidget {
               ),
             if (isDemo) ...[
               const SizedBox(height: ClaroSpacing.md),
-              Text('Demo mode: no real pump is controlled.', style: ClaroType.caption.copyWith(color: p.warnText)),
+              Text(
+                'Demo mode: no real pump is controlled.',
+                style: ClaroType.caption.copyWith(color: p.warnText),
+              ),
             ],
             const SizedBox(height: ClaroSpacing.xl),
             if (starting)
@@ -217,11 +262,17 @@ class _PumpCommandSheet extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(true),
               )
             else
-              _DangerButton(text: 'Stop pump', onPressed: () => Navigator.of(context).pop(true)),
+              _DangerButton(
+                text: 'Stop pump',
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
             const SizedBox(height: ClaroSpacing.sm),
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel', style: ClaroType.subtitle.copyWith(color: p.textMuted)),
+              child: Text(
+                'Cancel',
+                style: ClaroType.subtitle.copyWith(color: p.textMuted),
+              ),
             ),
           ],
         ),
@@ -250,7 +301,10 @@ class _DangerButton extends StatelessWidget {
           child: Center(
             child: Text(
               text,
-              style: ClaroType.subtitle.copyWith(color: const Color(0xFFFFFFFF), fontWeight: FontWeight.w600),
+              style: ClaroType.subtitle.copyWith(
+                color: const Color(0xFFFFFFFF),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),
@@ -282,7 +336,12 @@ Future<void> showBluetoothSheet(
       return SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.md, ClaroSpacing.xl, ClaroSpacing.xl),
+          padding: const EdgeInsets.fromLTRB(
+            ClaroSpacing.xl,
+            ClaroSpacing.md,
+            ClaroSpacing.xl,
+            ClaroSpacing.xl,
+          ),
           child: ValueListenableBuilder<BluetoothLink>(
             valueListenable: link,
             builder: (context, state, _) => Column(
@@ -296,14 +355,24 @@ Future<void> showBluetoothSheet(
                     Container(
                       width: 48,
                       height: 48,
-                      decoration: BoxDecoration(shape: BoxShape.circle, color: p.accentText.withValues(alpha: 0.14)),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: p.accentText.withValues(alpha: 0.14),
+                      ),
                       child: Icon(
-                        state == BluetoothLink.connected ? Icons.bluetooth_connected_rounded : Icons.bluetooth_rounded,
+                        state == BluetoothLink.connected
+                            ? Icons.bluetooth_connected_rounded
+                            : Icons.bluetooth_rounded,
                         color: p.accentText,
                       ),
                     ),
                     const SizedBox(width: ClaroSpacing.md),
-                    Expanded(child: Text('Bluetooth control', style: ClaroType.title.copyWith(color: p.text))),
+                    Expanded(
+                      child: Text(
+                        'Bluetooth control',
+                        style: ClaroType.title.copyWith(color: p.text),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: ClaroSpacing.md),
@@ -314,46 +383,61 @@ Future<void> showBluetoothSheet(
                 const SizedBox(height: ClaroSpacing.xl),
                 switch (state) {
                   BluetoothLink.off => AccentButton(
-                      text: 'Connect to $deviceName',
-                      icon: Icons.bluetooth_rounded,
-                      onPressed: onConnect,
-                    ),
+                    text: 'Connect to $deviceName',
+                    icon: Icons.bluetooth_rounded,
+                    onPressed: onConnect,
+                  ),
                   BluetoothLink.searching => Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: p.accentText),
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: p.accentText,
                         ),
-                        const SizedBox(width: ClaroSpacing.md),
-                        Flexible(
-                          child: Text(
-                            'Looking for your pump nearby…',
-                            style: ClaroType.body.copyWith(color: p.text),
+                      ),
+                      const SizedBox(width: ClaroSpacing.md),
+                      Flexible(
+                        child: Text(
+                          'Looking for your pump nearby…',
+                          style: ClaroType.body.copyWith(color: p.text),
+                        ),
+                      ),
+                    ],
+                  ),
+                  BluetoothLink.connected => Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: p.accentText,
+                            size: 20,
+                          ),
+                          const SizedBox(width: ClaroSpacing.sm),
+                          Flexible(
+                            child: Text(
+                              'Connected to $deviceName',
+                              style: ClaroType.body.copyWith(color: p.text),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: ClaroSpacing.md),
+                      TextButton(
+                        onPressed: onDisconnect,
+                        child: Text(
+                          'Disconnect',
+                          style: ClaroType.subtitle.copyWith(
+                            color: p.faultText,
                           ),
                         ),
-                      ],
-                    ),
-                  BluetoothLink.connected => Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.check_circle_rounded, color: p.accentText, size: 20),
-                            const SizedBox(width: ClaroSpacing.sm),
-                            Flexible(
-                              child: Text('Connected to $deviceName', style: ClaroType.body.copyWith(color: p.text)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: ClaroSpacing.md),
-                        TextButton(
-                          onPressed: onDisconnect,
-                          child: Text('Disconnect', style: ClaroType.subtitle.copyWith(color: p.faultText)),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
                 },
                 if (isDemo) ...[
                   const SizedBox(height: ClaroSpacing.md),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../app/theme/claro_colors.dart';
 import '../../app/theme/claro_dimens.dart';
@@ -33,7 +33,10 @@ class _ComponentGalleryScreenState extends State<ComponentGalleryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: ClaroColors.ink, title: Text('Component gallery', style: ClaroType.title)),
+      appBar: AppBar(
+        backgroundColor: ClaroColors.ink,
+        title: Text('Component gallery', style: ClaroType.title),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(ClaroSpacing.xl),
@@ -103,7 +106,10 @@ class _ComponentGalleryScreenState extends State<ComponentGalleryScreen> {
             const SizedBox(height: ClaroSpacing.sm),
             const ClaroFreshnessStamp(text: 'Updated 2 min ago'),
             const SizedBox(height: ClaroSpacing.xs),
-            const ClaroFreshnessStamp(text: 'Last seen 3 hr ago', isLive: false),
+            const ClaroFreshnessStamp(
+              text: 'Last seen 3 hr ago',
+              isLive: false,
+            ),
             _section('Line chart (with a gap where no data was reported)'),
             const ClaroLineChart(
               points: [2, 3.5, 4, null, null, 5, 6.2, 5.8, 4.1, 3],
@@ -112,20 +118,36 @@ class _ComponentGalleryScreenState extends State<ComponentGalleryScreen> {
             const SizedBox(height: ClaroSpacing.lg),
             const ClaroLineChart(points: [null, null, null], xLabels: []),
             _section('OTP boxes (tap to type)'),
-            ClaroOtpRow(value: _otp, onChanged: (v) => setState(() => _otp = v)),
+            ClaroOtpRow(
+              value: _otp,
+              onChanged: (v) => setState(() => _otp = v),
+            ),
             _section('Buttons'),
             ClaroPrimaryButton(text: 'Send code', onPressed: () {}),
             const SizedBox(height: ClaroSpacing.sm),
-            ClaroPrimaryButton(text: 'Verifying', onPressed: () {}, loading: true),
+            ClaroPrimaryButton(
+              text: 'Verifying',
+              onPressed: () {},
+              loading: true,
+            ),
             const SizedBox(height: ClaroSpacing.sm),
-            ClaroPrimaryButton(text: 'Disabled', onPressed: () {}, enabled: false),
+            ClaroPrimaryButton(
+              text: 'Disabled',
+              onPressed: () {},
+              enabled: false,
+            ),
             _section('Gauge ring (light card; tap to change)'),
             GestureDetector(
               onTap: () => setState(() => _gauge = _gauge == 64 ? 92 : 64),
               child: Container(
                 padding: const EdgeInsets.all(ClaroSpacing.lg),
-                decoration: const BoxDecoration(color: ClaroColors.card, borderRadius: ClaroRadius.lg),
-                child: Center(child: ClaroGaugeRing(percent: _gauge, label: 'Battery')),
+                decoration: const BoxDecoration(
+                  color: ClaroColors.card,
+                  borderRadius: ClaroRadius.lg,
+                ),
+                child: Center(
+                  child: ClaroGaugeRing(percent: _gauge, label: 'Battery'),
+                ),
               ),
             ),
             _section('Icons'),
@@ -155,7 +177,13 @@ class _ComponentGalleryScreenState extends State<ComponentGalleryScreen> {
   }
 
   Widget _section(String title) => Padding(
-        padding: const EdgeInsets.only(top: ClaroSpacing.xxl, bottom: ClaroSpacing.md),
-        child: Text(title, style: ClaroType.label.copyWith(color: ClaroColors.onInkMuted)),
-      );
+    padding: const EdgeInsets.only(
+      top: ClaroSpacing.xxl,
+      bottom: ClaroSpacing.md,
+    ),
+    child: Text(
+      title,
+      style: ClaroType.label.copyWith(color: ClaroColors.onInkMuted),
+    ),
+  );
 }

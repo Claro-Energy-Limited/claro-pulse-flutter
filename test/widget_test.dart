@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -34,9 +34,16 @@ void _tallScreen(WidgetTester tester) {
 void main() {
   setUp(() => FlutterSecureStorage.setMockInitialValues({}));
 
-  testWidgets('sign in with the mock, reach home, then log out', (tester) async {
+  testWidgets('sign in with the mock, reach home, then log out', (
+    tester,
+  ) async {
     _tallScreen(tester);
-    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices, minSplash: Duration.zero));
+    await tester.pumpWidget(
+      const ClaroPulseApp(
+        createServices: _mockServices,
+        minSplash: Duration.zero,
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Sign in'), findsOneWidget);
@@ -74,27 +81,52 @@ void main() {
 
   testWidgets('a saved session skips sign-in', (tester) async {
     _tallScreen(tester);
-    FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r', 'phone': '9876543210'});
-    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices, minSplash: Duration.zero));
+    FlutterSecureStorage.setMockInitialValues({
+      'access_token': 'a',
+      'refresh_token': 'r',
+      'phone': '9876543210',
+    });
+    await tester.pumpWidget(
+      const ClaroPulseApp(
+        createServices: _mockServices,
+        minSplash: Duration.zero,
+      ),
+    );
     await _frames(tester);
     expect(find.text('Water pumped today'), findsOneWidget);
   });
 
-  testWidgets('demo user saved session shows inverter home view', (tester) async {
+  testWidgets('demo user saved session shows inverter home view', (
+    tester,
+  ) async {
     _tallScreen(tester);
-    FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r', 'phone': '9000000001'});
-    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices, minSplash: Duration.zero));
+    FlutterSecureStorage.setMockInitialValues({
+      'access_token': 'a',
+      'refresh_token': 'r',
+      'phone': '9000000001',
+    });
+    await tester.pumpWidget(
+      const ClaroPulseApp(
+        createServices: _mockServices,
+        minSplash: Duration.zero,
+      ),
+    );
     await _frames(tester);
     expect(find.text('Solar inverter'), findsOneWidget);
   });
 
   testWidgets('an expired session drops back to sign-in', (tester) async {
     _tallScreen(tester);
-    FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r'});
+    FlutterSecureStorage.setMockInitialValues({
+      'access_token': 'a',
+      'refresh_token': 'r',
+    });
     late AppServices services;
     Future<AppServices> create() async => services = await _mockServices();
 
-    await tester.pumpWidget(ClaroPulseApp(createServices: create, minSplash: Duration.zero));
+    await tester.pumpWidget(
+      ClaroPulseApp(createServices: create, minSplash: Duration.zero),
+    );
     await _frames(tester);
     expect(find.text('Water pumped today'), findsOneWidget);
 
@@ -113,15 +145,26 @@ void main() {
     expect(find.text('Sign in'), findsOneWidget);
   });
 
-  testWidgets("follows the phone's light or dark setting by default", (tester) async {
+  testWidgets("follows the phone's light or dark setting by default", (
+    tester,
+  ) async {
     _tallScreen(tester);
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-    FlutterSecureStorage.setMockInitialValues({'access_token': 'a', 'refresh_token': 'r'});
+    FlutterSecureStorage.setMockInitialValues({
+      'access_token': 'a',
+      'refresh_token': 'r',
+    });
 
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
-    await tester.pumpWidget(const ClaroPulseApp(createServices: _mockServices, minSplash: Duration.zero));
+    await tester.pumpWidget(
+      const ClaroPulseApp(
+        createServices: _mockServices,
+        minSplash: Duration.zero,
+      ),
+    );
     await _frames(tester);
-    Brightness current() => Theme.of(tester.element(find.text('Water pumped today'))).brightness;
+    Brightness current() =>
+        Theme.of(tester.element(find.text('Water pumped today'))).brightness;
     expect(current(), Brightness.light);
 
     tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;

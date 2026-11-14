@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/theme/claro_palette.dart';
@@ -15,7 +15,12 @@ import 'device_kind.dart';
 /// Everything about the installed pump that doesn't change: model, IMEI,
 /// installation and warranty. The things a farmer reads out on a service call.
 class PumpDetailsScreen extends StatefulWidget {
-  const PumpDetailsScreen({super.key, required this.device, required this.api, required this.onBack});
+  const PumpDetailsScreen({
+    super.key,
+    required this.device,
+    required this.api,
+    required this.onBack,
+  });
 
   final MyDevice device;
   final ClaroPulseApi api;
@@ -47,7 +52,8 @@ class _PumpDetailsScreenState extends State<PumpDetailsScreen> {
 
   void _copy(String label, String value) {
     Clipboard.setData(ClipboardData(text: value));
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label copied')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('$label copied')));
   }
 
   @override
@@ -61,15 +67,32 @@ class _PumpDetailsScreenState extends State<PumpDetailsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            BackHeader(title: isInverter ? 'Inverter details' : 'Pump details', onBack: widget.onBack),
+            BackHeader(
+              title: isInverter ? 'Inverter details' : 'Pump details',
+              onBack: widget.onBack,
+            ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(ClaroSpacing.xl, ClaroSpacing.sm, ClaroSpacing.xl, ClaroSpacing.xxl),
+                padding: const EdgeInsets.fromLTRB(
+                  ClaroSpacing.xl,
+                  ClaroSpacing.sm,
+                  ClaroSpacing.xl,
+                  ClaroSpacing.xxl,
+                ),
                 children: [
-                  _Summary(device: device, details: details, isInverter: isInverter),
+                  _Summary(
+                    device: device,
+                    details: details,
+                    isInverter: isInverter,
+                  ),
                   const SizedBox(height: ClaroSpacing.xl),
                   if (details == null && _error == null)
-                    SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: p.accentText)))
+                    SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: CircularProgressIndicator(color: p.accentText),
+                      ),
+                    )
                   else if (details == null)
                     MessageState(
                       icon: Icons.info_outline_rounded,
@@ -80,19 +103,37 @@ class _PumpDetailsScreenState extends State<PumpDetailsScreen> {
                       isError: true,
                     )
                   else ...[
-                    _Group(title: 'Device', rows: [
-                      _InfoRow('IMEI', details.imei, onCopy: () => _copy('IMEI', details.imei), mono: true),
-                      _InfoRow('Serial number', details.serialNo ?? dash, mono: true),
-                      _InfoRow('Device ID', device.deviceUid, mono: true),
-                      _InfoRow('Controller', details.controller),
-                      _InfoRow('Solar panels', details.panels),
-                    ]),
+                    _Group(
+                      title: 'Device',
+                      rows: [
+                        _InfoRow(
+                          'IMEI',
+                          details.imei,
+                          onCopy: () => _copy('IMEI', details.imei),
+                          mono: true,
+                        ),
+                        _InfoRow(
+                          'Serial number',
+                          details.serialNo ?? dash,
+                          mono: true,
+                        ),
+                        _InfoRow('Device ID', device.deviceUid, mono: true),
+                        _InfoRow('Controller', details.controller),
+                        _InfoRow('Solar panels', details.panels),
+                      ],
+                    ),
                     const SizedBox(height: ClaroSpacing.lg),
-                    _Group(title: 'Installation', rows: [
-                      _InfoRow('Installed on', formatDate(details.installedOn)),
-                      _InfoRow('Installed by', details.installedBy),
-                      _InfoRow('Site', details.siteAddress),
-                    ]),
+                    _Group(
+                      title: 'Installation',
+                      rows: [
+                        _InfoRow(
+                          'Installed on',
+                          formatDate(details.installedOn),
+                        ),
+                        _InfoRow('Installed by', details.installedBy),
+                        _InfoRow('Site', details.siteAddress),
+                      ],
+                    ),
                     const SizedBox(height: ClaroSpacing.lg),
                     _Warranty(until: details.warrantyUntil),
                   ],
@@ -107,7 +148,11 @@ class _PumpDetailsScreenState extends State<PumpDetailsScreen> {
 }
 
 class _Summary extends StatelessWidget {
-  const _Summary({required this.device, required this.details, required this.isInverter});
+  const _Summary({
+    required this.device,
+    required this.details,
+    required this.isInverter,
+  });
 
   final MyDevice device;
   final PumpDetails? details;
@@ -127,9 +172,13 @@ class _Summary extends StatelessWidget {
               width: 96,
               height: 96,
               color: p.panelHigh,
-              padding: isInverter ? EdgeInsets.zero : const EdgeInsets.all(ClaroSpacing.sm),
+              padding: isInverter
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.all(ClaroSpacing.sm),
               child: Image.asset(
-                isInverter ? 'assets/images/device_hero_inverter.png' : 'assets/images/device_hero_pump.png',
+                isInverter
+                    ? 'assets/images/device_hero_inverter.png'
+                    : 'assets/images/device_hero_pump.png',
                 fit: isInverter ? BoxFit.cover : BoxFit.contain,
               ),
             ),
@@ -141,20 +190,32 @@ class _Summary extends StatelessWidget {
               children: [
                 Text(
                   details?.model ?? deviceTitle(device),
-                  style: ClaroType.subtitle.copyWith(color: p.text, fontWeight: FontWeight.w600),
+                  style: ClaroType.subtitle.copyWith(
+                    color: p.text,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: ClaroSpacing.xs),
                 if (details != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.sm, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: ClaroSpacing.sm,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: p.accentText.withValues(alpha: 0.14),
                       borderRadius: ClaroRadius.pill,
                     ),
-                    child: Text(details.capacity, style: ClaroType.caption.copyWith(color: p.accentText)),
+                    child: Text(
+                      details.capacity,
+                      style: ClaroType.caption.copyWith(color: p.accentText),
+                    ),
                   ),
                 const SizedBox(height: ClaroSpacing.xs),
-                Text(device.deviceUid, style: ClaroType.caption.copyWith(color: p.textMuted)),
+                Text(
+                  device.deviceUid,
+                  style: ClaroType.caption.copyWith(color: p.textMuted),
+                ),
               ],
             ),
           ),
@@ -188,26 +249,37 @@ class _Group extends StatelessWidget {
         SectionHeader(title: title),
         const SizedBox(height: ClaroSpacing.sm),
         Panel(
-          padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: ClaroSpacing.xs),
+          padding: const EdgeInsets.symmetric(
+            horizontal: ClaroSpacing.lg,
+            vertical: ClaroSpacing.xs,
+          ),
           child: Column(
             children: [
               for (var i = 0; i < rows.length; i++) ...[
                 if (i > 0) Divider(height: 1, color: p.border),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: ClaroSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: ClaroSpacing.md,
+                  ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(
                         width: 110,
-                        child: Text(rows[i].label, style: ClaroType.body.copyWith(color: p.textMuted)),
+                        child: Text(
+                          rows[i].label,
+                          style: ClaroType.body.copyWith(color: p.textMuted),
+                        ),
                       ),
                       Expanded(
                         child: Text(
                           rows[i].value,
                           textAlign: TextAlign.end,
-                          style: (rows[i].mono ? ClaroType.readoutSm : ClaroType.body)
-                              .copyWith(color: p.text),
+                          style:
+                              (rows[i].mono
+                                      ? ClaroType.readoutSm
+                                      : ClaroType.body)
+                                  .copyWith(color: p.text),
                         ),
                       ),
                       if (rows[i].onCopy != null) ...[
@@ -216,7 +288,11 @@ class _Group extends StatelessWidget {
                           onTap: rows[i].onCopy,
                           child: Tooltip(
                             message: 'Copy ${rows[i].label}',
-                            child: Icon(Icons.copy_rounded, size: 16, color: p.accentText),
+                            child: Icon(
+                              Icons.copy_rounded,
+                              size: 16,
+                              color: p.accentText,
+                            ),
                           ),
                         ),
                       ],
@@ -246,7 +322,10 @@ class _Warranty extends StatelessWidget {
     return Panel(
       child: Row(
         children: [
-          Icon(active ? Icons.verified_user_rounded : Icons.gpp_bad_rounded, color: color),
+          Icon(
+            active ? Icons.verified_user_rounded : Icons.gpp_bad_rounded,
+            color: color,
+          ),
           const SizedBox(width: ClaroSpacing.md),
           Expanded(
             child: Column(

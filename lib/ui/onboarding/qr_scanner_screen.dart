@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../app/theme/claro_colors.dart';
@@ -9,7 +9,10 @@ import 'camera_permission.dart';
 import 'onboarding_widgets.dart';
 
 /// Builds the live camera view. Replaceable in tests, which have no camera.
-typedef ScannerViewBuilder = Widget Function(BuildContext context, ValueChanged<String> onCode);
+typedef ScannerViewBuilder = Widget Function(
+  BuildContext context,
+  ValueChanged<String> onCode,
+);
 
 /// Live QR scan for adding a device, ported from the Kotlin `QrScannerScreen`.
 ///
@@ -41,6 +44,7 @@ class QrScannerScreen extends StatefulWidget {
   final ValueChanged<String> onScanned;
   final VoidCallback onEnterManually;
   final VoidCallback onClose;
+
   /// Defaults to the device's real camera permission.
   final CameraPermission? permission;
   final ScannerViewBuilder? scannerBuilder;
@@ -49,9 +53,12 @@ class QrScannerScreen extends StatefulWidget {
   State<QrScannerScreen> createState() => _QrScannerScreenState();
 }
 
-class _QrScannerScreenState extends State<QrScannerScreen> with WidgetsBindingObserver {
+class _QrScannerScreenState extends State<QrScannerScreen>
+    with WidgetsBindingObserver {
   CameraPermission get _permission =>
-      widget.permission ?? QrScannerScreen.permissionOverride ?? const DeviceCameraPermission();
+      widget.permission ??
+      QrScannerScreen.permissionOverride ??
+      const DeviceCameraPermission();
 
   /// Null while the first check is running.
   CameraAccess? _access;
@@ -72,7 +79,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> with WidgetsBindingOb
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _access != CameraAccess.granted) _check();
+    if (state == AppLifecycleState.resumed && _access != CameraAccess.granted)
+      _check();
   }
 
   Future<void> _check() async {
@@ -107,7 +115,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> with WidgetsBindingOb
       );
     }
 
-    final builder = widget.scannerBuilder ?? (context, onCode) => _CameraView(onCode: onCode);
+    final builder =
+        widget.scannerBuilder ??
+        (context, onCode) => _CameraView(onCode: onCode);
     return Scaffold(
       backgroundColor: ClaroColors.ink,
       body: Stack(
@@ -169,9 +179,15 @@ class _PermissionGate extends StatelessWidget {
           padding: const EdgeInsets.all(ClaroSpacing.xl),
           child: Column(
             children: [
-              Align(alignment: Alignment.centerLeft, child: OnboardingCloseButton(onPressed: onClose)),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OnboardingCloseButton(onPressed: onClose),
+              ),
               const SizedBox(height: ClaroSpacing.huge),
-              Text('Camera access needed', style: ClaroType.title.copyWith(color: ClaroColors.onInk)),
+              Text(
+                'Camera access needed',
+                style: ClaroType.title.copyWith(color: ClaroColors.onInk),
+              ),
               const SizedBox(height: ClaroSpacing.sm),
               Text(
                 permanentlyDenied
@@ -181,9 +197,15 @@ class _PermissionGate extends StatelessWidget {
               ),
               const SizedBox(height: ClaroSpacing.xl),
               if (permanentlyDenied)
-                ClaroPrimaryButton(text: 'Open Settings', onPressed: onOpenSettings)
+                ClaroPrimaryButton(
+                  text: 'Open Settings',
+                  onPressed: onOpenSettings,
+                )
               else
-                ClaroPrimaryButton(text: 'Allow camera access', onPressed: onRequest),
+                ClaroPrimaryButton(
+                  text: 'Allow camera access',
+                  onPressed: onRequest,
+                ),
               const SizedBox(height: ClaroSpacing.lg),
               EnterManuallyLink(onPressed: onEnterManually),
             ],
@@ -236,7 +258,8 @@ class _ScanningIndicator extends StatefulWidget {
   State<_ScanningIndicator> createState() => _ScanningIndicatorState();
 }
 
-class _ScanningIndicatorState extends State<_ScanningIndicator> with SingleTickerProviderStateMixin {
+class _ScanningIndicatorState extends State<_ScanningIndicator>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _pulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 700),
@@ -271,7 +294,10 @@ class _ScanningIndicatorState extends State<_ScanningIndicator> with SingleTicke
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: ClaroSpacing.lg, vertical: ClaroSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: ClaroSpacing.lg,
+        vertical: ClaroSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: ClaroColors.ink.withValues(alpha: 0.6),
         borderRadius: ClaroRadius.pill,

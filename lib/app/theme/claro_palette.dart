@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'claro_colors.dart';
 
@@ -23,10 +23,34 @@ import 'claro_colors.dart';
 /// [claroRed] (the logo red) is the default since the red theme (13 Nov 2026).
 /// It replaced Mint: a farmer who had saved Mint falls back to the default.
 enum ClaroAccent {
-  claroRed('Claro Red', ClaroColors.brand, ClaroColors.brandDeep, ClaroColors.brandBright, ClaroColors.onBrand),
-  sky('Sky', Color(0xFF6CC8FF), Color(0xFF0B6A9E), Color(0xFF6CC8FF), ClaroColors.ink),
-  teal('Teal', Color(0xFF4FE3D1), Color(0xFF0B7A6E), Color(0xFF4FE3D1), ClaroColors.ink),
-  lilac('Lilac', Color(0xFFC3B2FF), Color(0xFF5B43C7), Color(0xFFC3B2FF), ClaroColors.ink);
+  claroRed(
+    'Claro Red',
+    ClaroColors.brand,
+    ClaroColors.brandDeep,
+    ClaroColors.brandBright,
+    ClaroColors.onBrand,
+  ),
+  sky(
+    'Sky',
+    Color(0xFF6CC8FF),
+    Color(0xFF0B6A9E),
+    Color(0xFF6CC8FF),
+    ClaroColors.ink,
+  ),
+  teal(
+    'Teal',
+    Color(0xFF4FE3D1),
+    Color(0xFF0B7A6E),
+    Color(0xFF4FE3D1),
+    ClaroColors.ink,
+  ),
+  lilac(
+    'Lilac',
+    Color(0xFFC3B2FF),
+    Color(0xFF5B43C7),
+    Color(0xFFC3B2FF),
+    ClaroColors.ink,
+  );
 
   const ClaroAccent(this.label, this.fill, this.deep, this.bright, this.onFill);
   final String label;
@@ -129,37 +153,45 @@ class ClaroPalette extends ThemeExtension<ClaroPalette> {
   );
 
   /// The dark palette with the chosen accent.
-  static ClaroPalette darkFor(ClaroAccent a) => dark._withAccent(fill: a.fill, text: a.bright, on: a.onFill);
+  static ClaroPalette darkFor(ClaroAccent a) =>
+      dark._withAccent(fill: a.fill, text: a.bright, on: a.onFill);
 
   /// The light palette with the chosen accent (deeper shade for text).
-  static ClaroPalette lightFor(ClaroAccent a) => light._withAccent(fill: a.fill, text: a.deep, on: a.onFill);
+  static ClaroPalette lightFor(ClaroAccent a) =>
+      light._withAccent(fill: a.fill, text: a.deep, on: a.onFill);
 
-  ClaroPalette _withAccent({required Color fill, required Color text, required Color on}) => ClaroPalette(
-        isDark: isDark,
-        bg: bg,
-        panel: panel,
-        panelHigh: panelHigh,
-        border: border,
-        text: this.text,
-        textMuted: textMuted,
-        accent: fill,
-        accentText: text,
-        onAccent: on,
-        fault: fault,
-        faultText: faultText,
-        warn: warn,
-        warnText: warnText,
-        ok: ok,
-        okText: okText,
-      );
+  ClaroPalette _withAccent({
+    required Color fill,
+    required Color text,
+    required Color on,
+  }) => ClaroPalette(
+    isDark: isDark,
+    bg: bg,
+    panel: panel,
+    panelHigh: panelHigh,
+    border: border,
+    text: this.text,
+    textMuted: textMuted,
+    accent: fill,
+    accentText: text,
+    onAccent: on,
+    fault: fault,
+    faultText: faultText,
+    warn: warn,
+    warnText: warnText,
+    ok: ok,
+    okText: okText,
+  );
 
   @override
   ClaroPalette copyWith() => this;
 
   @override
-  ClaroPalette lerp(ClaroPalette? other, double t) => (other == null || t < 0.5) ? this : other;
+  ClaroPalette lerp(ClaroPalette? other, double t) =>
+      (other == null || t < 0.5) ? this : other;
 }
 
 extension ClaroPaletteContext on BuildContext {
-  ClaroPalette get palette => Theme.of(this).extension<ClaroPalette>() ?? ClaroPalette.dark;
+  ClaroPalette get palette =>
+      Theme.of(this).extension<ClaroPalette>() ?? ClaroPalette.dark;
 }
