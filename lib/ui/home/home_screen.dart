@@ -196,8 +196,9 @@ class _HomeScreenState extends State<HomeScreen> {
         final device = _device;
         if (!mounted ||
             device == null ||
-            _pendingById.containsKey(device.deviceId))
+            _pendingById.containsKey(device.deviceId)) {
           return;
+        }
         if (_route is TabsRoute && _tab == HomeNavTab.home) {
           _loadStatusFor(device.deviceId, quiet: true);
           _loadRunsFor(device.deviceId);

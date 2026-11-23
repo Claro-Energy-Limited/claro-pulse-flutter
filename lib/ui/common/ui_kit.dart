@@ -728,7 +728,7 @@ class _RingPainter extends CustomPainter {
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round;
     canvas.drawArc(rect, 0, math.pi * 2, false, paint(track));
-    if (fraction > 0)
+    if (fraction > 0) {
       canvas.drawArc(
         rect,
         -math.pi / 2,
@@ -736,6 +736,7 @@ class _RingPainter extends CustomPainter {
         false,
         paint(fill),
       );
+    }
   }
 
   @override

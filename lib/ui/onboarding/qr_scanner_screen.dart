@@ -79,8 +79,9 @@ class _QrScannerScreenState extends State<QrScannerScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _access != CameraAccess.granted)
+    if (state == AppLifecycleState.resumed && _access != CameraAccess.granted) {
       _check();
+    }
   }
 
   Future<void> _check() async {
